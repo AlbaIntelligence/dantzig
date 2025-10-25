@@ -139,7 +139,7 @@ defmodule Dantzig.DSL.VariableAccess do
   """
   def is_variable_access?(ast) do
     case ast do
-      {_var_name, [], _indices} when is_list(_indices) ->
+      {_var_name, [], indices} when is_list(indices) ->
         true
       
       _ ->

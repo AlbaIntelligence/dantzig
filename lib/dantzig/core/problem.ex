@@ -215,7 +215,8 @@ defmodule Dantzig.Problem do
         list when is_list(list) ->
           case list do
             [{:<-, _, [var, list_expr]}] ->
-              [{:<-, [], [var, list_expr]}]
+              # Handle variables from outer scope by properly quoting them
+              [{:<-, [], [quote(do: unquote(var)), list_expr]}]
 
             _ ->
               list
@@ -381,7 +382,7 @@ defmodule Dantzig.Problem do
   def variable(problem, var_name, var_type, opts \\ []) do
     min_bound = Keyword.get(opts, :min)
     max_bound = Keyword.get(opts, :max)
-    description = Keyword.get(opts, :description)
+    _description = Keyword.get(opts, :description)
 
     new_variable(problem, var_name, type: var_type, min: min_bound, max: max_bound)
   end
@@ -416,7 +417,7 @@ defmodule Dantzig.Problem do
       problem = Problem.constraint(problem, x <= 10, "Variable bound")
   """
   @spec constraint(t(), any(), String.t() | nil) :: t()
-  def constraint(problem, constraint_expr, description \\ nil) do
+  def constraint(_problem, _constraint_expr, _description \\ nil) do
     # For single constraints, we need to parse the expression
     # This is a simplified version - full implementation would need expression parsing
     # For now, raise a helpful error explaining this limitation

@@ -12,8 +12,8 @@ defmodule Dantzig.DSL.ConstraintParser do
   require Dantzig.Problem, as: Problem
   require Dantzig.Constraint, as: Constraint
   require Dantzig.Polynomial, as: Polynomial
-  alias Dantzig.DSL.SumFunction
-  alias Dantzig.DSL.VariableAccess
+  # alias Dantzig.DSL.SumFunction
+  # alias Dantzig.DSL.VariableAccess
   
   @doc """
   Parse a constraint expression into a Dantzig.Constraint struct.

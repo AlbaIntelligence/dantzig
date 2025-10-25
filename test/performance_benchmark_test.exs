@@ -81,7 +81,7 @@ defmodule PerformanceBenchmarkTest do
     tasks = for i <- 1..size, do: "Task#{i}"
     costs = for w <- workers, into: %{}, do: {
       w,
-      for t <- tasks, into: %{}, do: {"Task#{String.to_integer(String.last(t))}", w <> t}
+      (for t <- tasks, into: %{}, do: {"Task#{String.to_integer(String.last(t))}", w <> t})
     }
 
     problem =

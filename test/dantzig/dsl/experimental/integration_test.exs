@@ -100,7 +100,7 @@ defmodule Dantzig.DSL.IntegrationTest do
     assert map_size(problem.constraints) >= 12
   end
 
-  test "diet problem example works end-to-end" do
+  test "diet problem example with imperative syntax works end-to-end" do
     # Test the diet problem from nqueens_dsl.exs
     food_names = ["apple", "banana", "orange"]
 
@@ -132,7 +132,7 @@ defmodule Dantzig.DSL.IntegrationTest do
     assert problem.objective != nil
   end
 
-  test "chained constraints work correctly" do
+  test "chained constraints with imperative syntax work correctly" do
     # Test chained constraints with single generator
     problem =
       Problem.new(name: "Chained Test")
@@ -149,8 +149,64 @@ defmodule Dantzig.DSL.IntegrationTest do
     assert "row_3" in constraint_names
   end
 
-  test "chained constraints with multiple generators work correctly" do
-    # Test chained constraints with multiple generators
+  test "chained constraints with define syntax work correctly" do
+    # Test chained constraints with single generator
+    problem =
+      Problem.define do
+        new(name: "Chained Test")
+        variables("x", quote(do: [i <- 1..3]), :binary, "Test variable")
+        constraints(quote(do: [i <- 1..3]), quote(do: x(i) == 1), "row_#{i}")
+      end
+
+    # Should create 3 constraints
+    assert map_size(problem.constraints) == 3
+
+    # Verify constraint names
+    constraint_names = Map.keys(problem.constraints)
+    assert "row_1" in constraint_names
+    assert "row_2" in constraint_names
+    assert "row_3" in constraint_names
+  end
+
+  test "chained constraints with imperative syntax with multiple generators work correctly" do
+    problem =
+      Problem.(name: "Multi-Generator Test", description: "Test multiple generators")
+
+    problem = Problem.variables(problem, "x", [i <- 1..2, j <- 1..2], :binary, "Test variable")
+    problem = Problem.constraints(problem, [i <- 1..2, j <- 1..2], x(i, j) <= 1, "pos_constraint")
+
+    # Should create 4 constraints (2x2)
+    assert map_size(problem.constraints) == 4
+
+    # Verify constraint names
+    constraint_names = Map.keys(problem.constraints)
+    assert "pos_1_1" in constraint_names
+    assert "pos_1_2" in constraint_names
+    assert "pos_2_1" in constraint_names
+    assert "pos_2_2" in constraint_names
+  end
+
+  test "chained constraints with define syntax with multiple generators work correctly" do
+    # Test chained constraints with multiple generators using DSL
+    problem =
+      Problem.define do
+        new(name: "Multi-Generator Test", description: "Test multiple generators")
+        variables("x", [i <- 1..2, j <- 1..2], :binary, "Test variable")
+        constraints([i <- 1..2, j <- 1..2], x(i, j) <= 1, "pos_constraint")
+      end
+
+    # Should create 4 constraints (2x2)
+    assert map_size(problem.constraints) == 4
+
+    # Verify constraint names
+    constraint_names = Map.keys(problem.constraints)
+    assert "pos_1_1" in constraint_names
+    assert "pos_1_2" in constraint_names
+    assert "pos_2_1" in constraint_names
+    assert "pos_2_2" in constraint_names
+  end
+
+  test "chained constraints with imperative syntax with multiple generators work correctly" do
     problem =
       Problem.new(name: "Multi-Generator Test")
       |> Problem.variables("x", quote(do: [i <- 1..2, j <- 1..2]), :binary, "Test variable")
@@ -171,7 +227,26 @@ defmodule Dantzig.DSL.IntegrationTest do
     assert "pos_2_2" in constraint_names
   end
 
-  test "sum function works with different patterns" do
+  test "chained constraints with define syntax with multiple generators work correctly" do
+    problem =
+      Problem.define do
+        new(name: "Multi-Generator Test")
+        variables("x", quote(do: [i <- 1..2, j <- 1..2]), :binary, "Test variable")
+        constraints(quote(do: [i <- 1..2, j <- 1..2]), quote(do: x(i, j) <= 1), "pos_#{i}_#{j}")
+      end
+
+    # Should create 4 constraints (2x2)
+    assert map_size(problem.constraints) == 4
+
+    # Verify constraint names
+    constraint_names = Map.keys(problem.constraints)
+    assert "pos_1_1" in constraint_names
+    assert "pos_1_2" in constraint_names
+    assert "pos_2_1" in constraint_names
+    assert "pos_2_2" in constraint_names
+  end
+
+  test "sum function with imperative syntax works with different patterns" do
     problem =
       Problem.new(name: "Sum Test")
       |> Problem.variables("x", quote(do: [i <- 1..3, j <- 1..3]), :binary, "Test variable")
@@ -192,7 +267,16 @@ defmodule Dantzig.DSL.IntegrationTest do
     assert elem(col_sum, 0) == :sum
   end
 
-  test "variable access works with different patterns" do
+  test "sum function with define syntax works with different patterns" do
+    problem =
+      Problem.define do
+        new(name: "Sum Test")
+        variables("x", quote(do: [i <- 1..3, j <- 1..3]), :binary, "Test variable")
+        constraints(quote(do: [i <- 1..3, j <- 1..3]), quote(do: x(i, j) <= 1), "pos_#{i}_#{j}")
+      end
+  end
+
+  test "variable access with imperative syntax works with different patterns" do
     problem =
       Problem.new(name: "Variable Access Test")
       |> Problem.variables("x", quote(do: [i <- 1..3, j <- 1..3]), :binary, "Test variable")
@@ -208,6 +292,21 @@ defmodule Dantzig.DSL.IntegrationTest do
     assert is_tuple(var_access2)
     assert elem(var_access2, 0) == :x
     assert elem(var_access2, 2) == [:_, quote(do: j)]
+
+    # Test x(:_, :_) - all wildcards
+    var_access3 = quote(do: x(:_, :_))
+    assert is_tuple(var_access3)
+    assert elem(var_access3, 0) == :x
+    assert elem(var_access3, 2) == [:_, :_]
+  end
+
+  test "variable access with define syntax works with different patterns" do
+    problem =
+      Problem.define do
+        new(name: "Variable Access Test")
+        variables("x", quote(do: [i <- 1..3, j <- 1..3]), :binary, "Test variable")
+        constraints(quote(do: [i <- 1..3, j <- 1..3]), quote(do: x(i, j) <= 1), "pos_#{i}_#{j}")
+      end
 
     # Test x(:_, :_) - all wildcards
     var_access3 = quote(do: x(:_, :_))

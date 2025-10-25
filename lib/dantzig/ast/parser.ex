@@ -236,7 +236,7 @@ defmodule Dantzig.AST.Parser do
       # Multiple pattern-based arguments: max(x[_], y[_])
       args when is_list(args) ->
         if Enum.all?(args, fn
-             {var_name, _, indices} when is_list(indices) -> Enum.all?(indices, &(&1 == :_))
+              {_var_name, _, indices} when is_list(indices) -> Enum.all?(indices, &(&1 == :_))
              _ -> false
            end) do
           # For now, we'll handle single pattern case

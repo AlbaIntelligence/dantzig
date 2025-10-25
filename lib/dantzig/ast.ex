@@ -137,9 +137,6 @@ defmodule Dantzig.AST do
           }
   end
 
-  @doc """
-  Represents an IF-THEN-ELSE operation: IF condition THEN x ELSE y
-  """
   defmodule IfThenElse do
     defstruct [:condition, :then_expr, :else_expr]
 
@@ -150,9 +147,6 @@ defmodule Dantzig.AST do
           }
   end
 
-  @doc """
-  Union type for all AST nodes
-  """
   @type t ::
           Variable.t()
           | Sum.t()

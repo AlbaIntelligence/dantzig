@@ -5,30 +5,34 @@ require Dantzig.Problem, as: Problem
 
 IO.puts("=== Modern DSL Example ===")
 
-# Create a problem with metadata
+# Create a problem using the DSL
 problem =
-  Problem.new(
-    name: "Simple Test",
-    description: "Testing the modern DSL syntax"
-  )
+  Problem.define do
+    new(
+      name: "Simple Test",
+      description: "Testing the modern DSL syntax",
+      direction: :maximize
+    )
+
+    # Add variables using the modern DSL syntax
+    variables("x", [i <- 1..2, j <- 1..2], :binary, "Test variables")
+
+    # Add constraints
+    constraints([i <- 1..2], sum(x(i, :_)) == 1, "Row constraint")
+    constraints([j <- 1..2], sum(x(:_, j)) == 1, "Column constraint")
+
+    # Add objective
+    objective(sum(x(:_, :_)), direction: :maximize)
+  end
 
 IO.puts("Created problem: #{problem.name}")
 IO.puts("Description: #{problem.description}")
 
-# Add variables using the modern DSL syntax
-problem =
-  Problem.variables(problem, "x", quote(do: [i <- 1..2, j <- 1..2]), :binary,
-    description: "Test variables"
-  )
-
 IO.puts("Added variables:")
 var_map = Problem.get_variables_nd(problem, "x")
 IO.puts("Variable map keys: #{inspect(Map.keys(var_map))}")
-
-# Test the sum function (placeholder)
-# Note: x[_, _] syntax will be implemented as a macro
-# For now, we'll just test the basic structure
 IO.puts("Variables created: #{map_size(var_map)}")
+IO.puts("Constraints created: #{map_size(problem.constraints)}")
 
 IO.puts("\n=== Modern DSL structure working! ===")
-IO.puts("Next steps: Implement constraint and objective parsing")
+IO.puts("DSL syntax fully implemented with variables, constraints, and objectives")

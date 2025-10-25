@@ -195,7 +195,7 @@ This document outlined a comprehensive plan to clean up, enhance, and reorganize
   - Constraints: budget constraint, risk limits
   - Objective: maximize expected return (or minimize risk)
 
-- [ ] **School Timetabling Problem** (`examples/school_timetabling.exs`) ⭐ (Showcase Example)
+- [ ] **School Scheduling Problem** (`examples/school_timetabling.exs`) ⭐ (Showcase Example)
   - **Complex Real-World Problem**: Schedule teachers, students, rooms, and equipment
   - **Scale**: 5 teachers, 3 subjects, 4 time slots, 3 rooms, 2 equipment types
   - **Variables**:

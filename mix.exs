@@ -19,6 +19,13 @@ defmodule Dantzig.MixProject do
       name: "Dantzig",
       description: "Linear programming solver for Elixir",
       source_url: "https://github.com/tmbb/dantzig",
+      test_coverage: [tool: ExCoveralls],
+      preferred_cli_env: [
+        coveralls: :test,
+        "coveralls.detail": :test,
+        "coveralls.post": :test,
+        "coveralls.html": :test
+      ],
       docs: [
         main: "readme",
         extras: [
@@ -88,7 +95,8 @@ defmodule Dantzig.MixProject do
     [
       {:nimble_parsec, "~> 1.4"},
       {:ex_doc, "~> 0.38", only: :dev, runtime: false, warn_if_outdated: true},
-      {:stream_data, "~> 1.1", only: [:test, :dev]}
+      {:stream_data, "~> 1.1", only: [:test, :dev]},
+      {:excoveralls, "~> 0.18", only: :test}
     ]
   end
 

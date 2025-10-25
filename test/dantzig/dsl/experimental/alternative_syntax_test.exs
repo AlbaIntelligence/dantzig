@@ -1,6 +1,7 @@
 defmodule Dantzig.DSL.AlternativeSyntaxTest do
   use ExUnit.Case, async: true
   import Dantzig.Problem.DSL
+  alias Dantzig.Problem, as: Problem
 
   test "Alternative syntax - using for comprehension directly" do
     food_names = ["bread", "milk"]
