@@ -13,7 +13,7 @@ defmodule Dantzig.DSL.SimpleGeneratorTest do
     problem =
       Problem.define do
         new(name: "Simple Test", description: "Test generator syntax")
-        variables("qty", [food <- food_names], :continuous, "Amount of food")
+        variables("qty", [quote(do: food) <- food_names], :continuous, "Amount of food")
       end
 
     assert length(problem.variable_defs) == 2
@@ -27,7 +27,7 @@ defmodule Dantzig.DSL.SimpleGeneratorTest do
     problem =
       Problem.define do
         new(name: "Simple Test", description: "Test generator with objective")
-        variables("qty", [food <- food_names], :continuous, "Amount of food")
+        variables("qty", [quote(do: food) <- food_names], :continuous, "Amount of food")
         objective(sum(for food <- food_names, do: qty(food)), direction: :minimize)
       end
 

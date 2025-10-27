@@ -136,8 +136,8 @@ defmodule Dantzig.DSL.IntegrationTest do
     # Test chained constraints with single generator
     problem =
       Problem.new(name: "Chained Test")
-      |> Problem.add_variables("x", [i <- 1..3], :binary, "Test variable")
-      |> Problem.add_constraints([i <- 1..3], x(i) == 1, "row_#{i}")
+      |> Problem.add_variables("x", [quote(do: i) <- 1..3], :binary, "Test variable")
+      |> Problem.add_constraints([quote(do: i) <- 1..3], x(i) == 1, "row_#{i}")
 
     # Should create 3 constraints
     assert map_size(problem.constraints) == 3
@@ -208,9 +208,14 @@ defmodule Dantzig.DSL.IntegrationTest do
   test "chained constraints with imperative syntax and piping with multiple generators work correctly" do
     problem =
       Problem.new(name: "Multi-Generator Test")
-      |> Problem.add_variables("x", [i <- 1..2, j <- 1..2], :binary, "Test variable")
+      |> Problem.add_variables(
+        "x",
+        [quote(do: i) <- 1..2, quote(do: j) <- 1..2],
+        :binary,
+        "Test variable"
+      )
       |> Problem.add_constraints(
-        [i <- 1..2, j <- 1..2],
+        [quote(do: i) <- 1..2, quote(do: j) <- 1..2],
         x(i, j) <= 1,
         "pos_#{i}_#{j}"
       )

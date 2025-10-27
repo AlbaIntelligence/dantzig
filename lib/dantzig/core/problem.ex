@@ -22,9 +22,6 @@ defmodule Dantzig.Problem do
 
   @nr_of_zeros 8
 
-  # Import DSL macros
-  import Dantzig.Problem.DSL, only: [define: 1, define: 2]
-
   @type t :: %__MODULE__{}
 
   defstruct variable_counter: 0,

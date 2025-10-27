@@ -100,9 +100,9 @@
 
 ### Tests for User Story 2
 
-- [ ] T036 [P] [US2] Create coverage analysis test in test/coverage/coverage_analysis_test.exs
-- [ ] T037 [P] [US2] Create core module coverage validation in test/coverage/core_modules_test.exs
-- [ ] T038 [P] [US2] Create edge case testing framework in test/edge_cases_test.exs
+- [x] T036 [P] [US2] Create coverage analysis test in test/coverage/coverage_analysis_test.exs
+- [x] T037 [P] [US2] Create core module coverage validation in test/coverage/core_modules_test.exs
+- [x] T038 [P] [US2] Create edge case testing framework in test/edge_cases_test.exs
 
 ### Implementation for User Story 2
 
