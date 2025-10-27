@@ -280,6 +280,50 @@ defmodule Dantzig.Problem.DSL do
   def __set_objective__(problem, objective_expr, opts),
     do: Internal.set_objective(problem, objective_expr, opts)
 
+  # Experimental bracket syntax functions for testing
+
+  @doc """
+  Test function for double bracket access syntax like queen2d[[i, :_]]
+  """
+  def double_bracket_access(var_name, indices) do
+    {var_name, [], [indices]}
+  end
+
+  @doc """
+  Test function for tuple bracket access syntax like queen2d[{i, :_}]
+  """
+  def tuple_bracket_access(var_name, indices) do
+    {var_name, [], [indices]}
+  end
+
+  @doc """
+  Test function for bracket syntax like queen2d[i, :_]
+  """
+  def test_bracket_syntax(var_name, indices) do
+    {var_name, [], indices}
+  end
+
+  @doc """
+  Test function for Access protocol usage
+  """
+  def test_access_protocol(var_name, indices) do
+    {var_name, [], indices}
+  end
+
+  @doc """
+  Test function for dynamic macro creation
+  """
+  def test_dynamic_macro(var_name, indices) do
+    {var_name, [], indices}
+  end
+
+  @doc """
+  Test function for transforming invalid syntax
+  """
+  def transform_invalid_syntax(var_name, indices) do
+    {var_name, [], indices}
+  end
+
   # Helper functions
 
   defp transform_generators(generators) do

@@ -94,8 +94,50 @@ defmodule Dantzig.Problem.DSL.ConstraintManager do
   end
 
   def create_constraint_name(description, index_vals) do
-    index_str = index_vals |> Enum.map(&to_string/1) |> Enum.join("_")
-    "#{description}_#{index_str}"
+    # New approach: handle variable interpolation in constraint names
+    # This replaces variable names in the description with actual values
+    case description do
+      # If description contains variable placeholders like "Constraint for i"
+      desc when is_binary(desc) ->
+        # Check if description contains variable placeholders
+        if String.contains?(desc, " ") do
+          # For descriptions with spaces, try to interpolate variables
+          interpolated_desc = interpolate_variables_in_description(desc, index_vals)
+          interpolated_desc
+        else
+          # Simple case: just append index values
+          index_str = index_vals |> Enum.map(&to_string/1) |> Enum.join("_")
+          "#{desc}_#{index_str}"
+        end
+
+      # If description is nil, generate a generic name
+      nil ->
+        index_str = index_vals |> Enum.map(&to_string/1) |> Enum.join("_")
+        "constraint_#{index_str}"
+    end
+  end
+
+  # Helper function to interpolate variables in constraint descriptions
+  defp interpolate_variables_in_description(description, index_vals) do
+    # Proper variable interpolation: replace variable placeholders with actual values
+    # This should create names like "One queen per diagonal i_1" instead of "One queen per ma1n d1agonal"
+
+    # Common variable names that might appear in descriptions
+    variable_names = ["i", "j", "k", "l", "m", "n"]
+
+    # Replace variable names with their corresponding values in a meaningful way
+    # Use word boundaries to avoid replacing letters within words
+    Enum.reduce(Enum.with_index(variable_names), description, fn {var_name, index}, acc_desc ->
+      if index < length(index_vals) do
+        value = Enum.at(index_vals, index)
+        # Use regex with word boundaries to replace only complete variable names
+        # This prevents replacing "i" in "main" -> "mai_1n"
+        pattern = ~r/\b#{var_name}\b/
+        String.replace(acc_desc, pattern, "#{var_name}_#{value}")
+      else
+        acc_desc
+      end
+    end)
   end
 
   # Import functions from VariableManager

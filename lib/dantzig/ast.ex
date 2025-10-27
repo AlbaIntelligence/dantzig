@@ -137,6 +137,9 @@ defmodule Dantzig.AST do
           }
   end
 
+  @doc """
+  Represents a conditional expression: if condition then expr1 else expr2
+  """
   defmodule IfThenElse do
     defstruct [:condition, :then_expr, :else_expr]
 

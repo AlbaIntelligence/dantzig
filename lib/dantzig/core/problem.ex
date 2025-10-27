@@ -176,6 +176,144 @@ defmodule Dantzig.Problem do
     %{problem | variables: Map.put(problem.variables, set_name, var_map)}
   end
 
+  # Imperative API functions for integration tests
+
+  @doc """
+  Add variables to a problem using imperative syntax.
+
+  This macro supports the imperative API used in integration tests.
+  """
+  defmacro add_variables(problem, var_name, generators, var_type, description \\ nil) do
+    # Transform raw generator syntax to proper AST format using the same approach as define macro
+    transformed_generators =
+      Macro.prewalk(generators, fn
+        {:<-, meta, [var, range]} ->
+          # Handle variables from outer scope by properly quoting them
+          {:<-, meta, [quote(do: unquote(var)), range]}
+
+        other ->
+          other
+      end)
+
+    quote do
+      # Ensure modules/macros are available in the generated context
+      require Dantzig.Problem.DSL, as: DSL
+
+      # Process the generators with the current environment
+      unquote(__MODULE__).__add_variables_with_env__(
+        unquote(problem),
+        unquote(Macro.escape(transformed_generators)),
+        unquote(var_name),
+        unquote(var_type),
+        unquote(description),
+        binding()
+      )
+    end
+  end
+
+  @doc """
+  Add constraints to a problem using imperative syntax.
+
+  This macro supports the imperative API used in integration tests.
+  """
+  defmacro add_constraints(problem, generators, constraint_expr, description \\ nil) do
+    # Transform raw generator syntax to proper AST format using the same approach as define macro
+    transformed_generators =
+      Macro.prewalk(generators, fn
+        {:<-, meta, [var, range]} ->
+          # Handle variables from outer scope by properly quoting them
+          {:<-, meta, [quote(do: unquote(var)), range]}
+
+        other ->
+          other
+      end)
+
+    quote do
+      # Ensure modules/macros are available in the generated context
+      require Dantzig.Problem.DSL, as: DSL
+
+      # Process the constraints with the current environment
+      unquote(__MODULE__).__add_constraints_with_env__(
+        unquote(problem),
+        unquote(Macro.escape(transformed_generators)),
+        unquote(Macro.escape(constraint_expr)),
+        unquote(description),
+        binding()
+      )
+    end
+  end
+
+  @doc """
+  Set objective function using imperative syntax.
+
+  This macro supports the imperative API used in integration tests.
+  """
+  defmacro set_objective(problem, objective_expr, opts) do
+    quote do
+      # Ensure modules/macros are available in the generated context
+      require Dantzig.Problem.DSL, as: DSL
+
+      # Process the objective with the current environment
+      unquote(__MODULE__).__set_objective_with_env__(
+        unquote(problem),
+        unquote(Macro.escape(objective_expr)),
+        unquote(opts),
+        binding()
+      )
+    end
+  end
+
+  # Helper functions for imperative API macro transformation
+
+  @doc false
+  defp transform_generators_to_ast(generators) do
+    # Transform raw generator syntax [i <- 1..4, j <- 1..4] into proper AST
+    # This uses the same pattern as the define macro
+    case generators do
+      list when is_list(list) ->
+        # Check if this looks like generator syntax
+        if Enum.all?(list, fn
+             {:<-, _, [var, _range]} when is_atom(var) -> true
+             _ -> false
+           end) do
+          # Transform to proper AST format using the same pattern as define macro
+          Enum.map(list, fn {:<-, meta, [var, range]} ->
+            # Handle variables from outer scope by properly quoting them
+            {:<-, meta, [quote(do: unquote(var)), range]}
+          end)
+        else
+          generators
+        end
+
+      other ->
+        other
+    end
+  end
+
+  @doc false
+  defp transform_constraint_expression_to_ast(expr) do
+    # Transform variable references like queen2d(i, :_) into proper AST
+    # This is a placeholder - the actual implementation would need to
+    # handle variable reference patterns
+    expr
+  end
+
+  @doc false
+  defp transform_objective_expression_to_ast(expr) do
+    # Transform objective expressions to handle variable references
+    # This is a placeholder - the actual implementation would need to
+    # handle variable reference patterns
+    expr
+  end
+
+  @doc false
+  defp transform_description_to_ast(description) do
+    # Transform string interpolation like "row_#{i}" into proper AST
+    # This is a placeholder - the actual implementation would need to
+    # handle string interpolation with generator variables
+    description
+  end
+
   @doc """
   Solve the problem and return both solution and objective value.
 
@@ -242,6 +380,40 @@ defmodule Dantzig.Problem do
     end
   end
 
+  # Helper used by the imperative API macros to process with environment
+  def __add_variables_with_env__(problem, generators, var_name, var_type, description, env) do
+    # Set the environment for variable resolution
+    Process.put(:dantzig_eval_env, env)
+
+    try do
+      Dantzig.Problem.DSL.__add_variables__(problem, generators, var_name, var_type, description)
+    after
+      Process.delete(:dantzig_eval_env)
+    end
+  end
+
+  def __add_constraints_with_env__(problem, generators, constraint_expr, description, env) do
+    # Set the environment for variable resolution
+    Process.put(:dantzig_eval_env, env)
+
+    try do
+      Dantzig.Problem.DSL.__add_constraints__(problem, generators, constraint_expr, description)
+    after
+      Process.delete(:dantzig_eval_env)
+    end
+  end
+
+  def __set_objective_with_env__(problem, objective_expr, opts, env) do
+    # Set the environment for variable resolution
+    Process.put(:dantzig_eval_env, env)
+
+    try do
+      Dantzig.Problem.DSL.__set_objective__(problem, objective_expr, opts)
+    after
+      Process.delete(:dantzig_eval_env)
+    end
+  end
+
   # Helper used by the macro to reduce the block at compile-time into runtime calls
   def __define_reduce__(exprs) when is_list(exprs) do
     {initial_problem, rest} =
@@ -293,7 +465,7 @@ defmodule Dantzig.Problem do
       {:constraints, _, [constraint_expr]} = _ast, acc when is_tuple(constraint_expr) ->
         # For simple constraints, parse the expression directly without generators
         constraint = parse_simple_constraint_expression(constraint_expr, nil)
-        Problem.add_constraint(acc, constraint)
+        Dantzig.Problem.add_constraint(acc, constraint)
 
       # Generator-based constraints: constraints(generators, expr, desc)
       {:constraints, _, [generators, constraint_expr, desc]} = _ast, acc ->

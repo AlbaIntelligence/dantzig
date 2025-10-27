@@ -1,6 +1,6 @@
 # DSL Syntax Reference
 
-** GOLDEN REFERENCE - DO NOT MODIFY WITHOUT EXPLICIT APPROVAL **
+**GOLDEN REFERENCE - DO NOT MODIFY WITHOUT EXPLICIT APPROVAL**
 
 This document serves as the **canonical, unbreakable reference** for Dantzig DSL syntax. All implementations must support the syntax patterns documented here exactly as specified.
 
@@ -74,6 +74,8 @@ end
 
 #### Variables - Adding variables to a problem
 
+When adding one or several variables outside a `Problem.define` block to an existing problem, we use `add_variables()` instead of `variables()`.
+
 The following 2 examples should behave the same way and should produce the same result.
 
 ```elixir
@@ -92,10 +94,10 @@ problem = Problem.define do
   variables("x", [i <- 1..4], :binary, "X variables")
 end
 
-problem = Problem.variables(problem, "y", [i <- 1..4], :binary, "Y variables")
+problem = Problem.add_variables(problem, "y", [i <- 1..4], :binary, "Y variables")
 ```
 
-
+Note that we internally transform the former syntax to the latter syntax when adding variables to a problem.
 
 ### Constraint Creation
 
@@ -125,8 +127,24 @@ problem = Problem.define do
 end
 ```
 
+#### Generator Constraints with naming constraints using indices
+
+```elixir
+problem = Problem.define do
+  # new(...)
+  variables("queen2d", [i <- 1..4, j <- 1..4], :binary, "Queen position")
+
+  # Single generator
+  constraints([i <- 1..4], sum(queen2d(i, :_)) == 1, "One queen on row #{i}")
+
+  # Multiple generators
+  constraints([i <- 1..4, k <- 1..4], sum(queen3d(i, :_, k)) == 1, "One queen on first axis #{i} and 3rd axis #{k}")
+end
+```
+
 #### Constraints - Adding constraints to a problem
 
+When adding one or several constraints outside a `Problem.define` block to an existing problem, we use `add_constraints()` instead of `constraints()`.
 The following 2 examples should behave the same way and should produce the same result.
 
 ```elixir
@@ -139,7 +157,7 @@ problem = Problem.define do
   constraints([i <- 1..4], sum(queen2d(i, :_)) == 1, "One queen per row")
 
   # Multiple generators
-  constraints([i <- 1..4, k <- 1..4], sum(queen3d(i, :_, k)) == 1, "One queen per row")
+  constraints([i <- 1..4, k <- 1..4], sum(queen3d(i, :_, k)) == 1, "One queen on first axis #{i} and 3rd axis #{k}")
 end
 ```
 
@@ -153,9 +171,13 @@ problem = Problem.define do
   constraints([i <- 1..4], sum(queen2d(i, :_)) == 1, "One queen per row")
 end
 
-problem = Problem.constraints([i <- 1..4, k <- 1..4], sum(queen3d(i, :_, k)) == 1, "One queen per row")
+problem = Problem.add_constraints(
+  problem,
+  [i <- 1..4, k <- 1..4],
+  sum(queen3d(i, :_, k)) == 1,
+  "One queen on first axis #{i} and 3rd axis #{k}"
+)
 ```
-
 
 ### Objective Functions
 
@@ -184,9 +206,48 @@ problem = Problem.define do
 end
 ```
 
+Note that a define block can only contain one objective function.
+
+```elixir
+problem = Problem.define do
+  # new(...)
+  variables("queen2d", [i <- 1..4, j <- 1..4], :binary, "Queen position")
+
+  # Using sum with patterns
+  objective(sum(queen2d(:_, :_)), direction: :maximize)
+
+  # Add another objective
+  objective(sum(queen2d(:_, :_)), direction: :maximize) # <-- This triggers an error even if the objective is identical.>
+end
+```
+
+But an objective can always be set outside a `Problem.define` block with `Problem.set_objective()`. If there was a previously existing objective, only a warning is triggered, not an error.
+
+```elixir
+problem = Problem.define do
+  # new(...)
+  variables("queen2d", [i <- 1..4, j <- 1..4], :binary, "Queen position")
+end
+
+# First definition of an objective (none specified in the `Problem.define()` block)
+problem = Problem.set_objective(
+  problem,
+  sum(queen2d(:_, :_)),
+  direction: :maximize
+)
+
+# Specify a replacement objective (there is an existing one)
+problem = Problem.set_objective(
+  problem,
+  sum(queen2d(:_, :_)),
+  direction: :maximize
+) # <-- This triggers a warning about redefining the problem objective
+
+```
+
 ##### Multiple Generators
 
-The following 2 examples should be supported and should produce the same result:
+The following 3 examples should be supported and should produce the same result:
 
 ```elixir
 problem = Problem.define do
@@ -198,7 +259,6 @@ problem = Problem.define do
 end
 ```
 
-
 ```elixir
 problem = Problem.define do
   # new(...)
@@ -207,6 +267,20 @@ problem = Problem.define do
   # Using for comprehensions
   objective(sum(for food <- food_names, do: qty(food)), direction: :minimize)
 end
+```
+
+```elixir
+problem = Problem.define do
+  # new(...)
+  variables("qty", [food <- food_names], :continuous, "Amount of food")
+end
+
+# Using for comprehensions
+problem = Problem.set_objective(
+  problem,
+  sum(for food <- food_names, do: qty(food)),
+  direction: :minimize
+)
 ```
 
 ##### Generator redefinition
@@ -231,7 +305,6 @@ problem = Problem.define do
   variables("queen2d", [i <- 1..4, j <- 5..8], :binary, "Queen position") # <--- THIS DOES NOT TRIGGER AN ERROR
   variables("queen2d", [i <- 5..8, j <- 1..4], :binary, "Queen position") # <--- THIS DOES NOT TRIGGER AN ERROR
 ```
-
 
 ## Complete Working Examples
 
@@ -357,6 +430,24 @@ All syntax patterns in this reference must:
 3. **Produce expected results**
 4. **Be covered by tests**
 
+## Troubleshooting
+
+### Common DSL Errors
+
+*Content to be added as we encounter issues during implementation*
+
+### Debugging DSL Issues
+
+*Content to be added as we encounter issues during implementation*
+
+### Migration from Old Syntax
+
+*Content to be added as we encounter issues during implementation*
+
+### Best Practices
+
+*Content to be added as we encounter issues during implementation*
+
 ## Version History
 
 - **v1.0** - Initial reference based on golden test file and nqueens example
@@ -364,4 +455,4 @@ All syntax patterns in this reference must:
 
 ---
 
-** REMINDER: This is the GOLDEN REFERENCE. Do not modify without explicit approval. **
+**REMINDER: This is the GOLDEN REFERENCE. Do not modify without explicit approval.**

@@ -46,6 +46,10 @@
 - [ ] T012 [P] Create test coverage validation scripts in scripts/coverage_validation.exs
 - [ ] T013 [P] Setup performance monitoring infrastructure in test/performance/
 - [ ] T014 [P] Create example execution validation framework in test/examples/
+- [ ] T015 [P] Fix compilation errors in all test files beyond integration_test.exs
+- [ ] T016 [P] Resolve all undefined function errors across the codebase
+- [ ] T017 [P] Fix all type compatibility warnings in expression parser
+- [ ] T018 [P] Ensure all test files pass compilation with zero warnings
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -63,21 +67,24 @@
 
 - [ ] T015 [P] [US1] Create compilation validation test in test/compilation_test.exs
 - [ ] T016 [P] [US1] Create test suite execution validation in test/test_suite_validation_test.exs
+- [ ] T017 [P] [US1] Create backward compatibility validation test in test/backward_compatibility_test.exs
+- [ ] T018 [P] [US1] Create error message quality validation test in test/error_message_quality_test.exs
 
 ### Implementation for User Story 1
 
-- [ ] T017 [US1] Fix undefined variables in test/dantzig/dsl/experimental/integration_test.exs
-- [ ] T018 [US1] Fix variable scope issues in test generators (lines 140, 160)
-- [ ] T019 [US1] Resolve unused variable warnings in lib/dantzig/ast.ex
-- [ ] T020 [US1] Fix unused variable warnings in lib/dantzig/core/problem.ex
-- [ ] T021 [US1] Resolve unused variable warnings in lib/dantzig/dsl/constraint_parser.ex
-- [ ] T022 [US1] Fix unused variable warnings in lib/dantzig/dsl/variable_access.ex
-- [ ] T023 [US1] Fix undefined function warnings in lib/dantzig/problem/dsl.ex
-- [ ] T024 [US1] Resolve typing violations in lib/dantzig/problem/dsl/expression_parser.ex
-- [ ] T025 [US1] Fix missing imports and dependencies across all test files
-- [ ] T026 [US1] Validate all tests compile successfully with `mix test --compile`
-
-**Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
+- [ ] T019 [US1] Fix undefined variables in test/dantzig/dsl/experimental/integration_test.exs
+- [ ] T020 [US1] Fix variable scope issues in test generators (lines 140, 160)
+- [ ] T021 [US1] Resolve unused variable warnings in lib/dantzig/ast.ex
+- [ ] T022 [US1] Fix unused variable warnings in lib/dantzig/core/problem.ex
+- [ ] T023 [US1] Resolve unused variable warnings in lib/dantzig/dsl/constraint_parser.ex
+- [ ] T024 [US1] Fix unused variable warnings in lib/dantzig/dsl/variable_access.ex
+- [ ] T025 [US1] Fix undefined function warnings in lib/dantzig/problem/dsl.ex
+- [ ] T026 [US1] Resolve typing violations in lib/dantzig/problem/dsl/expression_parser.ex
+- [ ] T027 [US1] Fix missing imports and dependencies across all test files
+- [ ] T028 [US1] Validate all tests compile successfully with `mix test --compile`
+- [ ] T029 [US1] Implement backward compatibility validation for existing API usage patterns
+- [ ] T030 [US1] Enhance error messages for common DSL usage mistakes with clear, actionable guidance
+- [ ] T031 [US1] Add error message tests for at least 90% of common usage mistakes
 
 ---
 

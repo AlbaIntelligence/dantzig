@@ -104,13 +104,15 @@
 - **FR-001**: System MUST compile all test files without errors or warnings
 - **FR-002**: System MUST achieve at least 80% overall test coverage across the codebase
 - **FR-003**: System MUST achieve at least 85% test coverage for core modules (Problem, DSL, AST, Solver)
-- **FR-004**: System MUST provide comprehensive documentation for all example files explaining syntax, reasoning, and gotchas
+- **FR-004**: System MUST provide comprehensive documentation for all example files explaining syntax, reasoning, and gotchas, and validate that all examples execute successfully and produce expected results
 - **FR-005**: System MUST include real-world examples covering at least 5 different optimization problem types
-- **FR-006**: System MUST validate that all examples execute successfully and produce expected results
-- **FR-007**: System MUST provide clear error messages for common DSL usage mistakes
-- **FR-008**: System MUST include performance benchmarks for problems of varying sizes
-- **FR-009**: System MUST handle edge cases gracefully with appropriate error messages
-- **FR-010**: System MUST maintain backward compatibility with existing API usage patterns
+- **FR-006**: System MUST provide clear error messages for common DSL usage mistakes
+- **FR-007**: System MUST include performance benchmarks for problems of varying sizes
+- **FR-008**: System MUST handle edge cases gracefully with appropriate error messages
+- **FR-009**: System MUST maintain backward compatibility with existing API usage patterns
+- **FR-010**: System MUST resolve all compilation errors in integration_test.exs and related test files
+- **FR-011**: System MUST enable new user onboarding within 30 minutes through comprehensive documentation
+- **FR-012**: System MUST complete problems up to 1000 variables within 30 seconds and use less than 100MB memory
 
 ### Key Entities
 
