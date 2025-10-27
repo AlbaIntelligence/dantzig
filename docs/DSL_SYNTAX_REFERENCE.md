@@ -612,7 +612,7 @@ The DSL supports several pattern functions that expand expressions with wildcard
 - **Pattern count**: `count(queen2d(i, :_))` expands to `queen2d_1_1 + queen2d_1_2 + queen2d_1_3 + queen2d_1_4` for each value of `i` (same as sum for binary variables)
 - **All variables**: `count(queen2d(:_, :_))` expands to sum of all queen2d variables
 
-Note: `max()` and `min()` functions require linearization techniques for optimization solvers.
+Note: `max()` and `min()` functions require linearization techniques for linear optimization solvers.
 
 ### 5. Constraint Descriptions
 
