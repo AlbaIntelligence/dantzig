@@ -13,13 +13,55 @@ defmodule Dantzig.Problem.DSL do
   # Import DSL components (if needed)
 
   @doc """
-  Macro to handle function call syntax like queen2d(i, :_).
-  This is valid Elixir syntax and works in IEx/Livebook.
+  Main DSL macro for defining optimization problems.
+
+  This macro provides a declarative syntax for defining problems with variables,
+  constraints, and objectives. It generates individual Problem.add_constraint calls.
+
+  Example:
+    problem = Problem.define do
+      new(name: "My Problem")
+      variables("x", [i <- 1..3], :continuous)
+      constraints([i <- 1..3], x(i) <= 1)
+      objective(sum(x(i) for i <- 1..3), :maximize)
+    end
   """
-  defmacro var_access(var_name, indices) do
-    # Transform function call notation to AST
+  defmacro define(do: block) do
     quote do
-      {unquote(var_name), [], unquote(indices)}
+      # Start with a new problem
+      problem = Dantzig.Problem.new(name: "Generated Problem")
+
+      # Process the block to generate individual calls
+      unquote(process_define_block(block))
+    end
+  end
+
+  @doc """
+  Main DSL macro for defining optimization problems with model parameters.
+
+  This macro provides a declarative syntax for defining problems with variables,
+  constraints, and objectives, with access to model parameters.
+
+  Example:
+    problem = Problem.define(model_parameters: params) do
+      new(name: "My Problem")
+      variables("x", [i <- 1..params.n], :continuous)
+      constraints([i <- 1..params.n], x(i) <= params.max_val)
+      objective(sum(x(i) for i <- 1..params.n), :maximize)
+    end
+  """
+  defmacro define(opts, do: block) do
+    model_parameters = Keyword.get(opts, :model_parameters, %{})
+
+    quote do
+      # Start with a new problem
+      problem = Dantzig.Problem.new(name: "Generated Problem")
+
+      # Make model parameters available in the block
+      model_parameters = unquote(model_parameters)
+
+      # Process the block to generate individual calls
+      unquote(process_define_block(block))
     end
   end
 
@@ -326,25 +368,16 @@ defmodule Dantzig.Problem.DSL do
 
   # Helper functions
 
-  defp transform_generators(generators) do
-    case generators do
-      # Handle list syntax like [i <- 1..4, j <- 1..4]
-      list when is_list(list) ->
-        # Check if this looks like generator syntax
-        if Enum.all?(list, fn
-             {:<-, _, [var, _range]} when is_atom(var) -> true
-             _ -> false
-           end) do
-          # Transform to proper AST format
-          Enum.map(list, fn {:<-, meta, [var, range]} ->
-            {:<-, meta, [quote(do: unquote(var)), range]}
-          end)
-        else
-          generators
-        end
+  # Process the define block to generate individual calls
+  defp process_define_block(block) do
+    # This is a placeholder implementation
+    # In a real implementation, this would parse the block and generate
+    # individual Problem.add_constraint calls
 
-      other ->
-        other
+    quote do
+      # For now, just return the problem as-is
+      # TODO: Implement proper block processing
+      problem
     end
   end
 

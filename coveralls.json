@@ -1,0 +1,23 @@
+{
+  "coverage_options": {
+    "minimum_coverage": 80,
+    "treat_no_relevant_lines_as_covered": true,
+    "minimum_coverage_by_file": 85,
+    "exclude_patterns": [
+      "test/",
+      "examples/",
+      "priv/",
+      "specs/",
+      "docs/",
+      "TEMP/"
+    ]
+  },
+  "skip_files": [
+    "test/",
+    "examples/",
+    "priv/",
+    "specs/",
+    "docs/",
+    "TEMP/"
+  ]
+}

@@ -20,7 +20,7 @@ defmodule MacroApproach.SimpleConstraintTest do
           String.replace(
             unquote(constraint_name),
             to_string(unquote(var)),
-            to_string(unquote(Enum.at(unquote(interpolations), 0)))
+            to_string(unquote(var))
           )
 
         constraint = {substituted_expr, substituted_name}

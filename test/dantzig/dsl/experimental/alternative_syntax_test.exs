@@ -8,7 +8,7 @@ defmodule Dantzig.DSL.AlternativeSyntaxTest do
 
     problem =
       Problem.define do
-        new(name: "Alternative Test", description: "Test alternative syntax")
+        Problem.new(name: "Alternative Test", description: "Test alternative syntax")
 
         # Use for comprehension directly in variables
         for food <- food_names do
@@ -26,7 +26,7 @@ defmodule Dantzig.DSL.AlternativeSyntaxTest do
 
     problem =
       Problem.define do
-        new(name: "Explicit Test", description: "Test explicit variable creation")
+        Problem.new(name: "Explicit Test", description: "Test explicit variable creation")
 
         # Create variables explicitly
         variables("qty_bread", [], :continuous, "Amount of bread")

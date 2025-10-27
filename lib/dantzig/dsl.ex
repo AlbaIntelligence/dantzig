@@ -1,0 +1,19 @@
+defmodule Dantzig.DSL do
+  @moduledoc """
+  Main DSL module for the Dantzig package.
+
+  This module provides the main DSL interface and re-exports functionality
+  from the Problem.DSL module.
+  """
+
+  # Re-export DSL functionality from Problem.DSL
+  import Dantzig.Problem.DSL, only: [define: 1, define: 2]
+
+  @doc """
+  Parse an expression using the DSL.
+  """
+  def parse_expression(expr) do
+    # Placeholder implementation
+    expr
+  end
+end

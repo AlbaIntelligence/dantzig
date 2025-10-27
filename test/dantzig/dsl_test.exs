@@ -19,12 +19,23 @@ defmodule Dantzig.DSLTest do
   defp create_test_problem_with_define do
     Dantzig.Problem.define do
       new(name: "test", description: "Test problem")
-      variables("queen2d", [i <- 1..2, j <- 1..2], :binary, "Queen position")
+
+      variables(
+        "queen2d",
+        [quote(do: i) <- 1..2, quote(do: j) <- 1..2],
+        :binary,
+        "Queen position"
+      )
     end
   end
 
   defp create_test_problem_with_imperative_syntax do
     Dantzig.Problem.new(name: "test")
-    |> Dantzig.Problem.variables("queen2d", [i <- 1..2, j <- 1..2], :binary, "Queen position")
+    |> Dantzig.Problem.variables(
+      "queen2d",
+      [quote(do: i) <- 1..2, quote(do: j) <- 1..2],
+      :binary,
+      "Queen position"
+    )
   end
 end
