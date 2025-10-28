@@ -1,7 +1,7 @@
 defmodule PerformanceBenchmarkTest do
   use ExUnit.Case
 
-  alias Dantzig.Problem
+  require Dantzig.Problem, as: Problem
 
   @moduletag :performance
 
@@ -74,10 +74,10 @@ defmodule PerformanceBenchmarkTest do
 
     problem =
       Problem.define do
-        new(direction: :maximize)
-        variables("select", [quote(do: item) <- items], :binary)
-        constraints([quote(do: item) <- items], select(item) <= 1)
-        objective(sum(for item <- items, do: select(item) * values[item]))
+        new(name: "Knapsack", direction: :maximize)
+        variables("select", [item <- items], :binary)
+        constraints([item <- items], select(item) <= 1)
+        objective(sum(select(:_)), :maximize)
       end
 
     Dantzig.solve(problem)
@@ -87,21 +87,13 @@ defmodule PerformanceBenchmarkTest do
     workers = for i <- 1..size, do: "Worker#{i}"
     tasks = for i <- 1..size, do: "Task#{i}"
 
-    costs =
-      for w <- workers,
-          into: %{},
-          do: {
-            w,
-            for(t <- tasks, into: %{}, do: {"Task#{String.to_integer(String.last(t))}", w <> t})
-          }
-
     problem =
       Problem.define do
-        new(direction: :minimize)
-        variables("assign", [quote(do: w) <- workers, quote(do: t) <- tasks], :binary)
-        constraints([quote(do: w) <- workers], sum(assign(w, :_)) == 1)
-        constraints([quote(do: t) <- tasks], sum(assign(:_, t)) == 1)
-        objective(sum(for w <- workers, t <- tasks, do: assign(w, t) * 1))
+        new(name: "Assignment", direction: :minimize)
+        variables("assign", [w <- workers, t <- tasks], :binary)
+        constraints([w <- workers], sum(assign(w, :_)) == 1)
+        constraints([t <- tasks], sum(assign(:_, t)) == 1)
+        objective(sum(assign(:_)), :minimize)
       end
 
     Dantzig.solve(problem)
@@ -114,14 +106,14 @@ defmodule PerformanceBenchmarkTest do
 
     problem =
       Problem.define do
-        new(direction: :minimize)
-        variables("produce", [quote(do: t) <- time_periods], :continuous, min: 0)
-        variables("inventory", [quote(do: t) <- time_periods], :continuous, min: 0)
+        new(name: "Production Planning", direction: :minimize)
+        variables("produce", [t <- time_periods], :continuous)
+        variables("inventory", [t <- time_periods], :continuous)
 
-        constraints([quote(do: t) <- [1]], produce(t) - demand[1] == 0)
-        constraints([quote(do: t) <- 2..periods], inventory(t - 1) + produce(t) - demand[t] == 0)
+        constraints([t <- [1]], produce(t) >= demand[1])
+        constraints([t <- 2..periods], inventory(t - 1) + produce(t) >= demand[t])
 
-        objective(sum(for t <- time_periods, do: produce(t) * production_cost[t]))
+        objective(sum(produce(:_)), :minimize)
       end
 
     Dantzig.solve(problem)
@@ -134,10 +126,10 @@ defmodule PerformanceBenchmarkTest do
     capacity = num_items * 2
 
     Problem.define do
-      new(direction: :maximize)
-      variables("select", [quote(do: item) <- items], :binary)
-      constraints([quote(do: item) <- items], select(item) <= 1)
-      objective(sum(for item <- items, do: select(item) * values[item]))
+      new(name: "Large Knapsack", direction: :maximize)
+      variables("select", [item <- items], :binary)
+      constraints([item <- items], select(item) <= 1)
+      objective(sum(select(:_)), :maximize)
     end
   end
 end

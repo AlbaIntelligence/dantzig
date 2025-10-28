@@ -27,8 +27,10 @@ defmodule Dantzig.DSL.Integration do
       import Dantzig.DSL.VariableAccess, only: [var_access: 2]
       import Dantzig.DSL.SumFunction, only: [sum: 1, sum: 3]
       
-      # Import Problem module
+      # Import Problem module with all macros
       require Dantzig.Problem, as: Problem
+      import Dantzig.Problem, only: [add_variables: 4, add_constraints: 4, set_objective: 3, variables: 4]
+      import Dantzig.Problem.DSL, only: [add_variables: 4, add_constraints: 4]
       
       # Import Math module for sum function
       require Dantzig.Problem.Math, as: Math

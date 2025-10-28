@@ -9,8 +9,9 @@ defmodule Dantzig.Problem.DSL do
   require Dantzig.Constraint, as: Constraint
   require Dantzig.Polynomial, as: Polynomial
   alias Dantzig.Problem.DSL.Internal
-
-  # Import DSL components (if needed)
+  
+  # Import DSL components
+  import Dantzig.DSL.SumFunction, only: [sum: 1, sum: 3]
 
   @doc """
   Main DSL macro for defining optimization problems.
