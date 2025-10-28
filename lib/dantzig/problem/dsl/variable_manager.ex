@@ -13,8 +13,18 @@ defmodule Dantzig.Problem.DSL.VariableManager do
 
   # Public implementation entrypoints used by macros in Dantzig.Problem.DSL
   def add_variables(problem, generators, var_name, var_type, _description) do
-    parsed_generators = parse_generators(generators)
-    combinations = generate_combinations_from_parsed_generators(parsed_generators)
+    # Support empty generators (variables/3 equivalence)
+    parsed_generators =
+      case generators do
+        [] -> []
+        _ -> parse_generators(generators)
+      end
+
+    combinations =
+      case parsed_generators do
+        [] -> [[]]
+        _ -> generate_combinations_from_parsed_generators(parsed_generators)
+      end
 
     {final_problem, var_map} =
       Enum.reduce(combinations, {problem, %{}}, fn index_vals, {current_problem, acc} ->
@@ -32,8 +42,12 @@ defmodule Dantzig.Problem.DSL.VariableManager do
   end
 
   def create_var_name(var_name, index_vals) do
-    index_str = index_vals |> Enum.map(&to_string/1) |> Enum.join("_")
-    "#{var_name}_#{index_str}"
+    case index_vals do
+      [] -> var_name
+      _ -> 
+        index_str = index_vals |> Enum.map(&to_string/1) |> Enum.join("_")
+        "#{var_name}_#{index_str}"
+    end
   end
 
   # Generator parsing and management

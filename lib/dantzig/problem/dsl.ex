@@ -164,9 +164,10 @@ defmodule Dantzig.Problem.DSL do
   end
 
   @doc """
-  Public DSL macro for variables - matches nqueens_dsl.exs syntax.
+  External API for adding variables to an existing problem.
+  This is the public macro that takes a problem as the first argument.
   """
-  defmacro variables(problem, var_name, generators, var_type, opts \\ []) do
+  defmacro add_variables_external(problem, var_name, generators, var_type, opts \\ []) do
     # The generators parameter contains the raw AST from [i <- 1..4, j <- 1..4]
     # We need to transform this into a valid format
     transformed_generators =
@@ -198,6 +199,17 @@ defmodule Dantzig.Problem.DSL do
         unquote(var_type),
         unquote(opts)
       )
+    end
+  end
+
+  @doc """
+  Internal DSL syntax for variables inside Problem.define/modify blocks.
+  This is the clean syntax used within define blocks without needing to pass the problem.
+  """
+  defmacro variables(var_name, generators, var_type, description) do
+    quote do
+      # This will be handled by the Problem.define reducer
+      {:variables, [], [unquote(var_name), unquote(generators), unquote(var_type), unquote(description)]}
     end
   end
 
@@ -269,6 +281,18 @@ defmodule Dantzig.Problem.DSL do
         unquote(objective_expr),
         unquote(opts)
       )
+    end
+  end
+
+  @doc """
+  Backward-compatible helper used by experimental tests to build bracket variable access AST.
+
+  Example:
+      var_bracket(:queen2d, [:_, :_])
+  """
+  defmacro var_bracket(var_name, indices) do
+    quote do
+      {unquote(var_name), [], unquote(indices)}
     end
   end
 

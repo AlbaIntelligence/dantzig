@@ -457,6 +457,13 @@ defmodule Dantzig.Problem do
             variables(acc, name, generators, type, opts)
         end
 
+      # Simple variables/3 syntax: variables("name", :type, "description")
+      {:variables, _, [name, type, description]} = _ast, acc
+      when is_binary(name) and is_atom(type) and is_binary(description) ->
+        # Create single variable with simple syntax
+        {new_problem, _} = new_variable(acc, name, type: type, description: description)
+        new_problem
+
       # Simple constraints: constraints(expr, desc) - no generators
       {:constraints, _, [constraint_expr, desc]} = _ast, acc
       when is_tuple(constraint_expr) and is_binary(desc) ->
