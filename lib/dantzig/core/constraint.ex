@@ -20,6 +20,7 @@ defmodule Dantzig.Constraint do
             operator: nil,
             left_hand_side: nil,
             right_hand_side: nil,
+            description: nil,
             metadata: nil
 
   @operators [
@@ -57,12 +58,13 @@ defmodule Dantzig.Constraint do
   def new(left, operator, right, opts \\ [])
       when operator in @operators do
     name = Keyword.get(opts, :name)
+    description = Keyword.get(opts, :description)
     # Convert raw numbers into polynomials
     left = Polynomial.to_polynomial(left)
     right = Polynomial.to_polynomial(right)
 
     difference = Polynomial.subtract(left, right)
-    new_constraint_from_difference(difference, operator, name)
+    new_constraint_from_difference(difference, operator, name, description)
   end
 
   @doc """
@@ -80,13 +82,14 @@ defmodule Dantzig.Constraint do
   def new_linear(left, operator, right, opts \\ [])
       when operator in @operators do
     name = Keyword.get(opts, :name)
+    description = Keyword.get(opts, :description)
     # Convert raw numbers into polynomials
     left = Polynomial.to_polynomial(left)
     right = Polynomial.to_polynomial(right)
 
     difference = Polynomial.subtract(left, right)
     validate_linear_constraint!(left, right, difference)
-    new_constraint_from_difference(difference, operator, name)
+    new_constraint_from_difference(difference, operator, name, description)
   end
 
   defmacro new_linear(comparison, opts \\ []) do
@@ -102,7 +105,7 @@ defmodule Dantzig.Constraint do
     end
   end
 
-  defp new_constraint_from_difference(difference, operator, name)
+  defp new_constraint_from_difference(difference, operator, name, description)
        when operator in @operators do
     {%Polynomial{} = left_hand_side, minus_right_hand_side} =
       Polynomial.split_constant(difference)
@@ -111,7 +114,8 @@ defmodule Dantzig.Constraint do
       name: name,
       operator: operator,
       left_hand_side: left_hand_side,
-      right_hand_side: -minus_right_hand_side
+      right_hand_side: -minus_right_hand_side,
+      description: description
     }
   end
 

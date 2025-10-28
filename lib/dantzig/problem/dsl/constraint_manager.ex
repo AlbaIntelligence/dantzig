@@ -25,7 +25,44 @@ defmodule Dantzig.Problem.DSL.ConstraintManager do
       constraint_name =
         if description, do: create_constraint_name(description, bindings, index_vals), else: nil
 
-      constraint = if constraint_name, do: %{constraint | name: constraint_name}, else: constraint
+      # Propagate both name and human description
+      constraint =
+        cond do
+          constraint_name && is_binary(description) ->
+            interp_desc =
+              interpolate_variables_in_description(to_string(description), bindings, index_vals)
+              |> String.trim()
+
+            %{constraint | name: constraint_name, description: interp_desc}
+
+          constraint_name ->
+            %{constraint | name: constraint_name}
+
+          is_tuple(description) ->
+            # Evaluate AST description like {:<<>>, ...} using current bindings
+            var_bindings = Map.to_list(bindings)
+
+            evaluated =
+              try do
+                {val, _} = Code.eval_quoted(description, var_bindings)
+                to_string(val)
+              rescue
+                _ -> nil
+              end
+
+            if evaluated, do: %{constraint | description: evaluated}, else: constraint
+
+          is_binary(description) ->
+            interp_desc =
+              interpolate_variables_in_description(to_string(description), bindings, index_vals)
+              |> String.trim()
+
+            %{constraint | description: interp_desc}
+
+          true ->
+            constraint
+        end
+
       Problem.add_constraint(current_problem, constraint)
     end)
   end
@@ -104,16 +141,9 @@ defmodule Dantzig.Problem.DSL.ConstraintManager do
     case description do
       # If description contains variable placeholders like "Constraint for i"
       desc when is_binary(desc) ->
-        # Check if description contains variable placeholders
-        if String.contains?(desc, " ") do
-          # For descriptions with spaces, try to interpolate variables
-          interpolated_desc = interpolate_variables_in_description(desc, index_vals)
-          interpolated_desc
-        else
-          # Simple case: just append index values
-          index_str = index_vals |> Enum.map(&to_string/1) |> Enum.join("_")
-          "#{desc}_#{index_str}"
-        end
+        # Replace any binding keys (like l_name, i, j) with their bound values if present
+        interpolated = interpolate_variables_in_description(desc, bindings, index_vals)
+        interpolated
 
       # Handle interpolated binaries (AST like {:<<>>, ...}) by evaluating with actual generator bindings
       desc_ast when is_tuple(desc_ast) ->
@@ -138,21 +168,22 @@ defmodule Dantzig.Problem.DSL.ConstraintManager do
   end
 
   # Helper function to interpolate variables in constraint descriptions
-  defp interpolate_variables_in_description(description, index_vals) do
-    # Proper variable interpolation: replace variable placeholders with actual values
-    # This should create names like "One queen per diagonal i_1" instead of "One queen per ma1n d1agonal"
+  defp interpolate_variables_in_description(description, bindings, index_vals) do
+    # First, replace any named bindings, e.g., l_name -> "calories"
+    by_binding =
+      Enum.reduce(bindings, description, fn {var_atom, value}, acc_desc ->
+        var_name = to_string(var_atom)
+        pattern = ~r/\b#{Regex.escape(var_name)}\b/
+        String.replace(acc_desc, pattern, to_string(value))
+      end)
 
-    # Common variable names that might appear in descriptions
+    # Then, for conventional i/j/k ... placeholders (when numeric), append index values like i_1
     variable_names = ["i", "j", "k", "l", "m", "n"]
 
-    # Replace variable names with their corresponding values in a meaningful way
-    # Use word boundaries to avoid replacing letters within words
-    Enum.reduce(Enum.with_index(variable_names), description, fn {var_name, index}, acc_desc ->
+    Enum.reduce(Enum.with_index(variable_names), by_binding, fn {var_name, index}, acc_desc ->
       if index < length(index_vals) do
         value = Enum.at(index_vals, index)
-        # Use regex with word boundaries to replace only complete variable names
-        # This prevents replacing "i" in "main" -> "mai_1n"
-        pattern = ~r/\b#{var_name}\b/
+        pattern = ~r/\b#{Regex.escape(var_name)}\b/
         String.replace(acc_desc, pattern, "#{var_name}_#{value}")
       else
         acc_desc
