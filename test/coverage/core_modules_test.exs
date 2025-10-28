@@ -139,7 +139,7 @@ defmodule Dantzig.Coverage.CoreModulesTest do
     problem = Dantzig.Problem.new(name: "Integration Test")
 
     # Add a variable
-    problem = Dantzig.Problem.add_variable(problem, "x", type: :continuous)
+    problem = Dantzig.Problem.new_variable(problem, "x", type: :continuous)
 
     # Add a constraint
     left = Dantzig.Polynomial.new(%{"x" => 1.0})
@@ -163,7 +163,7 @@ defmodule Dantzig.Coverage.CoreModulesTest do
 
     # Create a simple problem
     problem = Dantzig.Problem.new(name: "Performance Test")
-    problem = Dantzig.Problem.add_variable(problem, "x", type: :continuous)
+    problem = Dantzig.Problem.new_variable(problem, "x", type: :continuous)
 
     end_time = System.monotonic_time()
     execution_time = end_time - start_time

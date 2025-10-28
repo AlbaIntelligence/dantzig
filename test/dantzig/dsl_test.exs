@@ -3,7 +3,7 @@ defmodule Dantzig.DSLTest do
   Test framework for DSL implementation
   """
   use ExUnit.Case, async: true
-  
+
   # Import DSL components
   require Dantzig.Problem, as: Problem
   import Dantzig.Problem.DSL, only: [variables: 4, constraints: 3, objective: 2]

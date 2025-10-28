@@ -1,6 +1,6 @@
 defmodule MacroApproach.DSLConstraintTest do
   use ExUnit.Case
-  
+
   # Import DSL components
   require Dantzig.Problem, as: Problem
   import Dantzig.Problem.DSL, only: [variables: 4, constraints: 3, objective: 2]

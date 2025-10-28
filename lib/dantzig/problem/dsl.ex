@@ -9,7 +9,7 @@ defmodule Dantzig.Problem.DSL do
   require Dantzig.Constraint, as: Constraint
   require Dantzig.Polynomial, as: Polynomial
   alias Dantzig.Problem.DSL.Internal
-  
+
   # Import DSL components
   import Dantzig.DSL.SumFunction, only: [sum: 1, sum: 3]
 
@@ -367,7 +367,51 @@ defmodule Dantzig.Problem.DSL do
     {var_name, [], indices}
   end
 
-  # Helper functions
+  # Helper functions for AST creation (used in tests)
+
+  @doc """
+  Create a function call AST for variable access syntax.
+  Used for testing realistic syntax approaches.
+
+  Example: func_call(:queen2d, [1, :_]) creates AST for queen2d(1, :_)
+  """
+  def func_call(var_name, args) do
+    {var_name, [], args}
+  end
+
+  @doc """
+  Create a variable helper AST for variable access syntax.
+  Used for testing realistic syntax approaches.
+
+  Example: var_helper("queen3d", [1, 2, 3]) creates AST for queen3d(1, 2, 3)
+  """
+  def var_helper(var_name, args) when is_binary(var_name) do
+    {String.to_atom(var_name), [], args}
+  end
+
+  def var_helper(var_name, args) when is_atom(var_name) do
+    {var_name, [], args}
+  end
+
+  @doc """
+  Create a single bracket access AST for variable access syntax.
+  Used for testing realistic syntax approaches.
+
+  Example: single_bracket(:queen2d, [1]) creates AST for queen2d[1]
+  """
+  def single_bracket(var_name, args) do
+    {var_name, [], args}
+  end
+
+  @doc """
+  Create a dynamic variable access AST for variable access syntax.
+  Used for testing realistic syntax approaches.
+
+  Example: dynamic_var_access(:queen2d, [1, :_]) creates AST for queen2d(1, :_)
+  """
+  def dynamic_var_access(var_name, args) do
+    {var_name, [], args}
+  end
 
   # Process the define block to generate individual calls
   defp process_define_block(block) do

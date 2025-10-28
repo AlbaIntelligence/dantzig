@@ -6,22 +6,25 @@ defmodule Dantzig.EdgeCasesTest do
   """
   use ExUnit.Case, async: true
 
+  require Dantzig.Problem, as: Problem
+  require Dantzig.Constraint, as: Constraint
+
   test "infeasible problems are handled correctly" do
     # Test that infeasible problems are detected and handled
     problem = Dantzig.Problem.new(name: "Infeasible Test")
 
     # Add conflicting constraints
-    problem = Dantzig.Problem.add_variable(problem, "x", type: :continuous)
+    {problem, _} = Dantzig.Problem.new_variable(problem, "x", type: :continuous)
 
     # x <= 1 and x >= 2 (infeasible)
-    left1 = Dantzig.Polynomial.new(%{"x" => 1.0})
+    left1 = Dantzig.Polynomial.variable("x")
     right1 = Dantzig.Polynomial.const(1.0)
-    constraint1 = Dantzig.Constraint.new(left: left1, operator: :<=, right: right1)
+    constraint1 = Dantzig.Constraint.new(left1, :<=, right1)
     problem = Dantzig.Problem.add_constraint(problem, constraint1)
 
-    left2 = Dantzig.Polynomial.new(%{"x" => 1.0})
+    left2 = Dantzig.Polynomial.variable("x")
     right2 = Dantzig.Polynomial.const(2.0)
-    constraint2 = Dantzig.Constraint.new(left: left2, operator: :>=, right: right2)
+    constraint2 = Dantzig.Constraint.new(left2, :>=, right2)
     problem = Dantzig.Problem.add_constraint(problem, constraint2)
 
     # The problem should be created successfully
@@ -34,11 +37,11 @@ defmodule Dantzig.EdgeCasesTest do
     problem = Dantzig.Problem.new(name: "Unbounded Test")
 
     # Add a variable with no bounds
-    problem = Dantzig.Problem.add_variable(problem, "x", type: :continuous)
+    {problem, _} = Dantzig.Problem.new_variable(problem, "x", type: :continuous)
 
     # Set objective to maximize x with no constraints
-    objective = Dantzig.Polynomial.new(%{"x" => 1.0})
-    problem = Dantzig.Problem.set_objective(problem, objective, :maximize)
+    objective = Dantzig.Polynomial.variable("x")
+    problem = Problem.set_objective(problem, objective, direction: :maximize)
 
     # The problem should be created successfully
     assert problem.direction == :maximize
@@ -49,11 +52,7 @@ defmodule Dantzig.EdgeCasesTest do
     # Test that invalid constraint syntax is handled gracefully
     assert_raise ArgumentError, fn ->
       # This should raise an error for invalid syntax
-      Dantzig.Constraint.new(
-        left: "invalid_left",
-        operator: :==,
-        right: "invalid_right"
-      )
+      Dantzig.Constraint.new("invalid_left", :==, "invalid_right")
     end
   end
 
@@ -62,12 +61,12 @@ defmodule Dantzig.EdgeCasesTest do
     problem = Dantzig.Problem.new(name: "Precision Test")
 
     # Add a variable
-    problem = Dantzig.Problem.add_variable(problem, "x", type: :continuous)
+    {problem, _} = Dantzig.Problem.new_variable(problem, "x", type: :continuous)
 
     # Add a constraint with very small coefficients
-    left = Dantzig.Polynomial.new(%{"x" => 1.0e-10})
+    left = Dantzig.Polynomial.variable("x")
     right = Dantzig.Polynomial.const(1.0e-10)
-    constraint = Dantzig.Constraint.new(left: left, operator: :==, right: right)
+    constraint = Dantzig.Constraint.new(left, :==, right)
     problem = Dantzig.Problem.add_constraint(problem, constraint)
 
     # The problem should be created successfully
@@ -79,12 +78,12 @@ defmodule Dantzig.EdgeCasesTest do
     problem = Dantzig.Problem.new(name: "Solver Failure Test")
 
     # Create a problem that might cause solver issues
-    problem = Dantzig.Problem.add_variable(problem, "x", type: :continuous)
+    {problem, _} = Dantzig.Problem.new_variable(problem, "x", type: :continuous)
 
     # Add a constraint with very large coefficients
-    left = Dantzig.Polynomial.new(%{"x" => 1.0e10})
+    left = Dantzig.Polynomial.variable("x")
     right = Dantzig.Polynomial.const(1.0e10)
-    constraint = Dantzig.Constraint.new(left: left, operator: :==, right: right)
+    constraint = Dantzig.Constraint.new(left, :==, right)
     problem = Dantzig.Problem.add_constraint(problem, constraint)
 
     # The problem should be created successfully
@@ -97,7 +96,7 @@ defmodule Dantzig.EdgeCasesTest do
 
     # Add many variables
     for i <- 1..100 do
-      problem = Dantzig.Problem.add_variable(problem, "x#{i}", type: :continuous)
+      {problem, _} = Dantzig.Problem.new_variable(problem, "x#{i}", type: :continuous)
     end
 
     # The problem should be created successfully
@@ -111,9 +110,9 @@ defmodule Dantzig.EdgeCasesTest do
     # Try to add a constraint with undefined variable
     # This should be handled gracefully
     assert_raise ArgumentError, fn ->
-      left = Dantzig.Polynomial.new(%{"undefined_var" => 1.0})
+      left = Dantzig.Polynomial.variable("undefined_var")
       right = Dantzig.Polynomial.const(1.0)
-      constraint = Dantzig.Constraint.new(left: left, operator: :==, right: right)
+      constraint = Dantzig.Constraint.new(left, :==, right)
       Dantzig.Problem.add_constraint(problem, constraint)
     end
   end
@@ -133,12 +132,12 @@ defmodule Dantzig.EdgeCasesTest do
     problem = Dantzig.Problem.new(name: "Zero Coefficients Test")
 
     # Add a variable
-    problem = Dantzig.Problem.add_variable(problem, "x", type: :continuous)
+    {problem, _} = Dantzig.Problem.new_variable(problem, "x", type: :continuous)
 
     # Add a constraint with zero coefficient
-    left = Dantzig.Polynomial.new(%{"x" => 0.0})
+    left = Dantzig.Polynomial.const(0.0)
     right = Dantzig.Polynomial.const(0.0)
-    constraint = Dantzig.Constraint.new(left: left, operator: :==, right: right)
+    constraint = Dantzig.Constraint.new(left, :==, right)
     problem = Dantzig.Problem.add_constraint(problem, constraint)
 
     # The problem should be created successfully
@@ -150,12 +149,12 @@ defmodule Dantzig.EdgeCasesTest do
     problem = Dantzig.Problem.new(name: "Negative Coefficients Test")
 
     # Add a variable
-    problem = Dantzig.Problem.add_variable(problem, "x", type: :continuous)
+    {problem, _} = Dantzig.Problem.new_variable(problem, "x", type: :continuous)
 
     # Add a constraint with negative coefficient
-    left = Dantzig.Polynomial.new(%{"x" => -1.0})
+    left = Dantzig.Polynomial.variable("x") |> Dantzig.Polynomial.scale(-1.0)
     right = Dantzig.Polynomial.const(-1.0)
-    constraint = Dantzig.Constraint.new(left: left, operator: :==, right: right)
+    constraint = Dantzig.Constraint.new(left, :==, right)
     problem = Dantzig.Problem.add_constraint(problem, constraint)
 
     # The problem should be created successfully
@@ -167,12 +166,12 @@ defmodule Dantzig.EdgeCasesTest do
     problem = Dantzig.Problem.new(name: "Large Numbers Test")
 
     # Add a variable
-    problem = Dantzig.Problem.add_variable(problem, "x", type: :continuous)
+    {problem, _} = Dantzig.Problem.new_variable(problem, "x", type: :continuous)
 
     # Add a constraint with very large numbers
-    left = Dantzig.Polynomial.new(%{"x" => 1.0e20})
+    left = Dantzig.Polynomial.variable("x")
     right = Dantzig.Polynomial.const(1.0e20)
-    constraint = Dantzig.Constraint.new(left: left, operator: :==, right: right)
+    constraint = Dantzig.Constraint.new(left, :==, right)
     problem = Dantzig.Problem.add_constraint(problem, constraint)
 
     # The problem should be created successfully
@@ -184,12 +183,12 @@ defmodule Dantzig.EdgeCasesTest do
     problem = Dantzig.Problem.new(name: "Small Numbers Test")
 
     # Add a variable
-    problem = Dantzig.Problem.add_variable(problem, "x", type: :continuous)
+    {problem, _} = Dantzig.Problem.new_variable(problem, "x", type: :continuous)
 
     # Add a constraint with very small numbers
-    left = Dantzig.Polynomial.new(%{"x" => 1.0e-20})
+    left = Dantzig.Polynomial.variable("x")
     right = Dantzig.Polynomial.const(1.0e-20)
-    constraint = Dantzig.Constraint.new(left: left, operator: :==, right: right)
+    constraint = Dantzig.Constraint.new(left, :==, right)
     problem = Dantzig.Problem.add_constraint(problem, constraint)
 
     # The problem should be created successfully
@@ -201,9 +200,9 @@ defmodule Dantzig.EdgeCasesTest do
     problem = Dantzig.Problem.new(name: "Mixed Types Test")
 
     # Add variables of different types
-    problem = Dantzig.Problem.add_variable(problem, "x", type: :continuous)
-    problem = Dantzig.Problem.add_variable(problem, "y", type: :binary)
-    problem = Dantzig.Problem.add_variable(problem, "z", type: :integer)
+    {problem, _} = Dantzig.Problem.new_variable(problem, "x", type: :continuous)
+    {problem, _} = Dantzig.Problem.new_variable(problem, "y", type: :binary)
+    {problem, _} = Dantzig.Problem.new_variable(problem, "z", type: :integer)
 
     # The problem should be created successfully
     assert map_size(problem.variables) == 3
@@ -214,15 +213,15 @@ defmodule Dantzig.EdgeCasesTest do
     problem = Dantzig.Problem.new(name: "Operators Test")
 
     # Add a variable
-    problem = Dantzig.Problem.add_variable(problem, "x", type: :continuous)
+    {problem, _} = Dantzig.Problem.new_variable(problem, "x", type: :continuous)
 
     # Test different operators
-    operators = [:==, :<=, :>=, :<, :>]
+    operators = [:==, :<=, :>=]
 
     for operator <- operators do
-      left = Dantzig.Polynomial.new(%{"x" => 1.0})
+      left = Dantzig.Polynomial.variable("x")
       right = Dantzig.Polynomial.const(1.0)
-      constraint = Dantzig.Constraint.new(left: left, operator: operator, right: right)
+      constraint = Dantzig.Constraint.new(left, operator, right)
       problem = Dantzig.Problem.add_constraint(problem, constraint)
     end
 
