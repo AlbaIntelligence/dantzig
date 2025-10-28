@@ -43,8 +43,10 @@ defmodule Dantzig.Problem.DSL.VariableManager do
 
   def create_var_name(var_name, index_vals) do
     case index_vals do
-      [] -> var_name
-      _ -> 
+      [] ->
+        var_name
+
+      _ ->
         index_str = index_vals |> Enum.map(&to_string/1) |> Enum.join("_")
         "#{var_name}_#{index_str}"
     end

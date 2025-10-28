@@ -386,7 +386,12 @@ defmodule Dantzig.Problem do
 
     quote do
       require Dantzig.Problem.DSL, as: DSL
-      unquote(__MODULE__).__modify_with_env__(unquote(problem), unquote(Macro.escape(exprs)), binding())
+
+      unquote(__MODULE__).__modify_with_env__(
+        unquote(problem),
+        unquote(Macro.escape(exprs)),
+        binding()
+      )
     end
   end
 
@@ -423,6 +428,60 @@ defmodule Dantzig.Problem do
       end
 
     Enum.reduce(rest, initial_problem, fn
+      # Support simple for-comprehension inside define for variables expansion
+      # Example: for food <- food_names, do: variables("qty", [food], :continuous, "desc")
+      {:for, _, [{:<-, _, [var_ast, domain_expr]}, [do: inner_ast]]} = _ast, acc ->
+        # Evaluate domain in caller env
+        values = Dantzig.Problem.DSL.VariableManager.evaluate_expression(domain_expr)
+
+        Enum.reduce(values, acc, fn value, acc_problem ->
+          case {var_ast, inner_ast} do
+            {head_var_ast, {:variables, meta, [name, gen_list, type, desc]}}
+            when is_list(gen_list) ->
+              # If inner is variables("base", [var], type, desc), expand to scalar variables/3
+              expanded_problem =
+                case gen_list do
+                  [gen_var_ast] ->
+                    # Compare variable names ignoring meta
+                    head_atom =
+                      case head_var_ast do
+                        {atom, _, _} when is_atom(atom) -> atom
+                        atom when is_atom(atom) -> atom
+                        _ -> nil
+                      end
+
+                    gen_atom =
+                      case gen_var_ast do
+                        {atom, _, _} when is_atom(atom) -> atom
+                        atom when is_atom(atom) -> atom
+                        _ -> nil
+                      end
+
+                    if head_atom && gen_atom && head_atom == gen_atom do
+                      new_name = name <> "_" <> to_string(value)
+
+                      {new_p, _} =
+                        new_variable(acc_problem, new_name, type: type, description: desc)
+
+                      new_p
+                    else
+                      raise ArgumentError,
+                            "Unsupported for-comprehension body: #{inspect(inner_ast)}"
+                    end
+
+                  _ ->
+                    raise ArgumentError,
+                          "Unsupported for-comprehension body: #{inspect(inner_ast)}"
+                end
+
+              expanded_problem
+
+            _ ->
+              raise ArgumentError,
+                    "Unsupported for-comprehension structure: #{inspect({var_ast, inner_ast})}"
+          end
+        end)
+
       # Simple syntax: variables("name", :type, "description")
       {:variables, _, [name, type, description]} = _ast, acc
       when is_binary(name) and is_atom(type) and is_binary(description) ->
@@ -456,13 +515,6 @@ defmodule Dantzig.Problem do
           opts when is_list(opts) ->
             variables(acc, name, generators, type, opts)
         end
-
-      # Simple variables/3 syntax: variables("name", :type, "description")
-      {:variables, _, [name, type, description]} = _ast, acc
-      when is_binary(name) and is_atom(type) and is_binary(description) ->
-        # Create single variable with simple syntax
-        {new_problem, _} = new_variable(acc, name, type: type, description: description)
-        new_problem
 
       # Simple constraints: constraints(expr, desc) - no generators
       {:constraints, _, [constraint_expr, desc]} = _ast, acc
@@ -555,19 +607,23 @@ defmodule Dantzig.Problem do
       when is_binary(name) and is_atom(type) and is_list(opts) ->
         description = Keyword.get(opts, :description)
         var_opts = Keyword.delete(opts, :description)
+
         {new_problem, _} =
           new_variable(acc, name, [type: type, description: description] ++ var_opts)
+
         new_problem
 
       {:variables, _, [name, generators, type, opts_or_desc]} = _ast, acc ->
         case opts_or_desc do
           desc when is_binary(desc) ->
             variables(acc, name, generators, type, description: desc)
+
           opts when is_list(opts) ->
             variables(acc, name, generators, type, opts)
         end
 
-      {:constraints, _, [constraint_expr, desc]} = _ast, acc when is_tuple(constraint_expr) and is_binary(desc) ->
+      {:constraints, _, [constraint_expr, desc]} = _ast, acc
+      when is_tuple(constraint_expr) and is_binary(desc) ->
         constraint = parse_simple_constraint_expression(constraint_expr, desc)
         Dantzig.Problem.add_constraint(acc, constraint)
 
