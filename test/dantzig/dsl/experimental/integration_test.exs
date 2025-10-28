@@ -13,6 +13,7 @@ defmodule Dantzig.DSL.IntegrationTest do
     # Test the exact syntax from nqueens_dsl.exs
     problem =
       Problem.define do
+        new(name: "N-Queens")
         variables("queen2d", [i <- 1..4, j <- 1..4], :binary, description: "Queen position")
         constraints([i <- 1..4], queen2d(i, :_) == 1, "One queen per row")
         constraints([j <- 1..4], queen2d(:_, j) == 1, "One queen per column")
@@ -124,7 +125,7 @@ defmodule Dantzig.DSL.IntegrationTest do
     assert map_size(problem.constraints) == 3
 
     # Verify constraint names
-    constraint_names = Map.keys(problem.constraints)
+    constraint_names = problem.constraints |> Map.values() |> Enum.map(& &1.name)
     assert "row_1" in constraint_names
     assert "row_2" in constraint_names
     assert "row_3" in constraint_names
@@ -143,7 +144,7 @@ defmodule Dantzig.DSL.IntegrationTest do
     assert map_size(problem.constraints) == 4
 
     # Verify constraint names
-    constraint_names = Map.keys(problem.constraints)
+    constraint_names = problem.constraints |> Map.values() |> Enum.map(& &1.name)
     assert "pos_1_1" in constraint_names
     assert "pos_1_2" in constraint_names
     assert "pos_2_1" in constraint_names
@@ -168,8 +169,10 @@ defmodule Dantzig.DSL.IntegrationTest do
       |> Map.values()
       |> Enum.map(& &1.name)
 
-    assert "pos_constraint" in constraint_names
-    assert length(constraint_names) == 4
+    assert "pos_constraint_1_1" in constraint_names
+    assert "pos_constraint_1_2" in constraint_names
+    assert "pos_constraint_2_1" in constraint_names
+    assert "pos_constraint_2_2" in constraint_names
   end
 
   test "chained constraints with imperative syntax and piping with multiple generators work correctly" do

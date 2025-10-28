@@ -228,12 +228,33 @@ defmodule Dantzig.Problem.DSL do
           other
       end
 
+    # Handle description interpolation - convert string literals with #{var} to AST
+    transformed_description =
+      case description do
+        # If description is a string literal with interpolation, convert to AST
+        {:<<>>, meta, parts} when is_list(parts) ->
+          # This is already an interpolated string AST, pass it through
+          description
+
+        # If description is a simple string, pass it through
+        desc when is_binary(desc) ->
+          description
+
+        # If description is nil, pass it through
+        nil ->
+          description
+
+        # For other cases, pass through
+        other ->
+          other
+      end
+
     quote do
       Problem.constraints(
         unquote(problem),
         unquote(transformed_generators),
         unquote(constraint_expr),
-        unquote(description)
+        unquote(transformed_description)
       )
     end
   end
