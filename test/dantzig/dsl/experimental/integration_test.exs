@@ -157,7 +157,7 @@ defmodule Dantzig.DSL.IntegrationTest do
       Problem.define do
         new(name: "Multi-Generator Test", description: "Test multiple generators")
         variables("x", [i <- 1..2, j <- 1..2], :binary, "Test variable")
-        constraints([i <- 1..2, j <- 1..2], x(i, j) <= 1, "pos_constraint")
+        constraints([i <- 1..2, j <- 1..2], x(i, j) <= 1, "pos_constraint_#{i}_#{j}")
       end
 
     # Should create 4 constraints (2x2)
