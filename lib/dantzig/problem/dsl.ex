@@ -26,6 +26,45 @@ defmodule Dantzig.Problem.DSL do
     end
   end
 
+  # DEPRECATED: Backward compatibility wrapper for tests that call DSL.variables with problem as first arg
+  # Use add_variables/5 instead
+  @deprecated "Use add_variables/5 instead of variables/5"
+  defmacro variables(problem, var_name, generators, var_type, opts) do
+    quote do
+      Dantzig.Problem.DSL.VariableManager.add_variables(
+        unquote(problem),
+        unquote(generators),
+        unquote(var_name),
+        unquote(var_type),
+        unquote(opts)
+      )
+    end
+  end
+
+  @doc """
+  External API for adding variables to an existing problem.
+  This is the preferred way to add variables outside of Problem.define/modify blocks.
+  
+  ## Examples
+  
+      # Add variables with generators
+      problem = DSL.add_variables(problem, "x", [i <- 1..4], :continuous, "Decision variables")
+      
+      # Add single variable
+      problem = DSL.add_variables(problem, "y", [], :binary, "Binary variable")
+  """
+  defmacro add_variables(problem, var_name, generators, var_type, description) do
+    quote do
+      Dantzig.Problem.DSL.VariableManager.add_variables(
+        unquote(problem),
+        unquote(generators),
+        unquote(var_name),
+        unquote(var_type),
+        unquote(description)
+      )
+    end
+  end
+
   @doc """
   Main DSL macro for defining optimization problems.
 
@@ -156,64 +195,7 @@ defmodule Dantzig.Problem.DSL do
     end
   end
 
-  @doc """
-  Add variables to a problem using generator syntax.
 
-  ## Examples
-
-      # 2D binary variables
-      problem = Problem.DSL.add_variables(problem, [i <- 1..4, j <- 1..4], "x", :binary, "Queen position")
-  """
-  defmacro add_variables(problem, generators, var_name, var_type, description \\ nil) do
-    quote do
-      unquote(__MODULE__).__add_variables__(
-        unquote(problem),
-        unquote(generators),
-        unquote(var_name),
-        unquote(var_type),
-        unquote(description)
-      )
-    end
-  end
-
-  @doc """
-  External API for adding variables to an existing problem.
-  This is the public macro that takes a problem as the first argument.
-  """
-  defmacro add_variables_external(problem, var_name, generators, var_type, opts \\ []) do
-    # The generators parameter contains the raw AST from [i <- 1..4, j <- 1..4]
-    # We need to transform this into a valid format
-    transformed_generators =
-      case generators do
-        # Handle list syntax like [i <- 1..4, j <- 1..4]
-        list when is_list(list) ->
-          # Check if this looks like generator syntax
-          if Enum.all?(list, fn
-               {:<-, _, [var, _range]} when is_atom(var) -> true
-               _ -> false
-             end) do
-            # Transform to proper AST format
-            Enum.map(list, fn {:<-, meta, [var, range]} ->
-              {:<-, meta, [quote(do: unquote(var)), range]}
-            end)
-          else
-            generators
-          end
-
-        other ->
-          other
-      end
-
-    quote do
-      Problem.variables(
-        unquote(problem),
-        unquote(var_name),
-        unquote(transformed_generators),
-        unquote(var_type),
-        unquote(opts)
-      )
-    end
-  end
 
   @doc """
   Internal DSL syntax for variables inside Problem.define/modify blocks.
@@ -222,7 +204,8 @@ defmodule Dantzig.Problem.DSL do
   defmacro variables(var_name, generators, var_type, description) do
     quote do
       # This will be handled by the Problem.define reducer
-      {:variables, [], [unquote(var_name), unquote(generators), unquote(var_type), unquote(description)]}
+      {:variables, [],
+       [unquote(var_name), unquote(generators), unquote(var_type), unquote(description)]}
     end
   end
 
