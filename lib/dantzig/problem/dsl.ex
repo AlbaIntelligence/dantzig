@@ -13,6 +13,19 @@ defmodule Dantzig.Problem.DSL do
   # Import DSL components
   import Dantzig.DSL.SumFunction, only: [sum: 1, sum: 3]
 
+  # Test functions for experimental features
+  defmacro access_variable_test(var_name, indices) do
+    quote do
+      {:access_test, unquote(var_name), unquote(indices)}
+    end
+  end
+
+  defmacro access_transform_test(var_name, indices) do
+    quote do
+      {:access_transform, unquote(var_name), unquote(indices)}
+    end
+  end
+
   @doc """
   Main DSL macro for defining optimization problems.
 

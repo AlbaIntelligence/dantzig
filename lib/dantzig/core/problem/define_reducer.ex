@@ -8,5 +8,3 @@ defmodule Dantzig.Problem.DefineReducer do
     Dantzig.Problem.__define_reduce__(exprs)
   end
 end
-
-

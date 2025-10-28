@@ -21,5 +21,3 @@ defmodule Dantzig.Problem.Imperative do
     )
   end
 end
-
-

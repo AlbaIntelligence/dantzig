@@ -101,6 +101,22 @@ defmodule Dantzig.Problem.AST do
           {:*, v, %Polynomial{} = p} when is_number(v) ->
             Polynomial.scale(p, v)
 
+          {:*, %Polynomial{} = p1, %Polynomial{} = p2} ->
+            # Handle polynomial * polynomial (limited cases)
+            case {p1, p2} do
+              {%Polynomial{simplified: %{[] => val1}}, %Polynomial{simplified: %{[] => val2}}} ->
+                # Both are constants
+                Polynomial.const(val1 * val2)
+              {%Polynomial{simplified: %{[] => val}}, %Polynomial{}} ->
+                # First is constant, second is polynomial
+                Polynomial.scale(p2, val)
+              {%Polynomial{}, %Polynomial{simplified: %{[] => val}}} ->
+                # First is polynomial, second is constant
+                Polynomial.scale(p1, val)
+              _ ->
+                raise ArgumentError, "Unsupported polynomial multiplication: #{inspect({p1, p2})}"
+            end
+
           _ ->
             try do
               left_val = evaluate_simple_expression(left)

@@ -14,7 +14,10 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
   require Dantzig.Polynomial, as: Polynomial
 
   def parse_expression_to_polynomial(expr, bindings, problem) do
-    expr = normalize_sum_ast(expr)
+    expr =
+      expr
+      |> normalize_sum_ast()
+      |> normalize_polynomial_ops()
 
     case expr do
       {:sum, [], [sum_expr]} ->
@@ -246,6 +249,46 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
 
       _ ->
         raise ArgumentError, "Unsupported expression: #{inspect(expr)}"
+    end
+  end
+
+  # Normalize Dantzig.Polynomial operator calls (from Polynomial.algebra) back to Kernel ops
+  defp normalize_polynomial_ops(ast) do
+    Macro.prewalk(ast, fn
+      {{:., meta1, [Dantzig.Polynomial, :add]}, meta2, [l, r]} ->
+        {:+, merge_meta(meta1, meta2), [l, r]}
+
+      {{:., meta1, [Dantzig.Polynomial, :subtract]}, meta2, [l, r]} ->
+        {:-, merge_meta(meta1, meta2), [l, r]}
+
+      {{:., meta1, [Dantzig.Polynomial, :multiply]}, meta2, [l, r]} ->
+        {:*, merge_meta(meta1, meta2), [l, r]}
+
+      {{:., meta1, [Dantzig.Polynomial, :divide]}, meta2, [l, r]} ->
+        {:/, merge_meta(meta1, meta2), [l, r]}
+
+      # Handle __aliases__ form for the module
+      {{:., meta1, [{:__aliases__, _, [:Dantzig, :Polynomial]}, :add]}, meta2, [l, r]} ->
+        {:+, merge_meta(meta1, meta2), [l, r]}
+
+      {{:., meta1, [{:__aliases__, _, [:Dantzig, :Polynomial]}, :subtract]}, meta2, [l, r]} ->
+        {:-, merge_meta(meta1, meta2), [l, r]}
+
+      {{:., meta1, [{:__aliases__, _, [:Dantzig, :Polynomial]}, :multiply]}, meta2, [l, r]} ->
+        {:*, merge_meta(meta1, meta2), [l, r]}
+
+      {{:., meta1, [{:__aliases__, _, [:Dantzig, :Polynomial]}, :divide]}, meta2, [l, r]} ->
+        {:/, merge_meta(meta1, meta2), [l, r]}
+
+      other ->
+        other
+    end)
+  end
+
+  defp merge_meta(m1, m2) do
+    case {m1, m2} do
+      {m1, m2} when is_list(m1) and is_list(m2) -> Keyword.merge(m1, m2)
+      {m1, _} -> m1
     end
   end
 
