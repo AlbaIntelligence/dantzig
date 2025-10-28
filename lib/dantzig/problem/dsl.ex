@@ -26,6 +26,12 @@ defmodule Dantzig.Problem.DSL do
     end
   end
 
+  defmacro access_proof_of_concept(var_name, indices) do
+    quote do
+      {:access_proof_of_concept, unquote(var_name), unquote(indices)}
+    end
+  end
+
   # DEPRECATED: Backward compatibility wrapper for tests that call DSL.variables with problem as first arg
   # Use add_variables/5 instead
   @deprecated "Use add_variables/5 instead of variables/5"
@@ -44,12 +50,12 @@ defmodule Dantzig.Problem.DSL do
   @doc """
   External API for adding variables to an existing problem.
   This is the preferred way to add variables outside of Problem.define/modify blocks.
-  
+
   ## Examples
-  
+
       # Add variables with generators
       problem = DSL.add_variables(problem, "x", [i <- 1..4], :continuous, "Decision variables")
-      
+
       # Add single variable
       problem = DSL.add_variables(problem, "y", [], :binary, "Binary variable")
   """
@@ -194,8 +200,6 @@ defmodule Dantzig.Problem.DSL do
         end
     end
   end
-
-
 
   @doc """
   Internal DSL syntax for variables inside Problem.define/modify blocks.
