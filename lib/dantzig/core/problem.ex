@@ -234,53 +234,20 @@ defmodule Dantzig.Problem do
   # Helper functions for imperative API macro transformation
 
   @doc false
-  defp transform_generators_to_ast(generators) do
-    # Transform raw generator syntax [i <- 1..4, j <- 1..4] into proper AST
-    # This uses the same pattern as the define macro
-    case generators do
-      list when is_list(list) ->
-        # Check if this looks like generator syntax
-        if Enum.all?(list, fn
-             {:<-, _, [var, _range]} when is_atom(var) -> true
-             _ -> false
-           end) do
-          # Transform to proper AST format using the same pattern as define macro
-          Enum.map(list, fn {:<-, meta, [var, range]} ->
-            # Handle variables from outer scope by properly quoting them
-            {:<-, meta, [quote(do: unquote(var)), range]}
-          end)
-        else
-          generators
-        end
-
-      other ->
-        other
-    end
-  end
+  defp transform_generators_to_ast(generators),
+    do: Dantzig.Problem.AST.transform_generators_to_ast(generators)
 
   @doc false
-  defp transform_constraint_expression_to_ast(expr) do
-    # Transform variable references like queen2d(i, :_) into proper AST
-    # This is a placeholder - the actual implementation would need to
-    # handle variable reference patterns
-    expr
-  end
+  defp transform_constraint_expression_to_ast(expr),
+    do: Dantzig.Problem.AST.transform_constraint_expression_to_ast(expr)
 
   @doc false
-  defp transform_objective_expression_to_ast(expr) do
-    # Transform objective expressions to handle variable references
-    # This is a placeholder - the actual implementation would need to
-    # handle variable reference patterns
-    expr
-  end
+  defp transform_objective_expression_to_ast(expr),
+    do: Dantzig.Problem.AST.transform_objective_expression_to_ast(expr)
 
   @doc false
-  defp transform_description_to_ast(description) do
-    # Transform string interpolation like "row_#{i}" into proper AST
-    # This is a placeholder - the actual implementation would need to
-    # handle string interpolation with generator variables
-    description
-  end
+  defp transform_description_to_ast(description),
+    do: Dantzig.Problem.AST.transform_description_to_ast(description)
 
   @doc """
   Solve the problem and return both solution and objective value.
@@ -520,13 +487,15 @@ defmodule Dantzig.Problem do
       {:constraints, _, [constraint_expr, desc]} = _ast, acc
       when is_tuple(constraint_expr) and is_binary(desc) ->
         # For simple constraints, parse the expression directly without generators
-        constraint = parse_simple_constraint_expression(constraint_expr, desc)
+        transformed = transform_constraint_expression_to_ast(constraint_expr)
+        constraint = parse_simple_constraint_expression(transformed, desc)
         Dantzig.Problem.add_constraint(acc, constraint)
 
       # Simple constraints: constraints(expr) - no generators, no description
       {:constraints, _, [constraint_expr]} = _ast, acc when is_tuple(constraint_expr) ->
         # For simple constraints, parse the expression directly without generators
-        constraint = parse_simple_constraint_expression(constraint_expr, nil)
+        transformed = transform_constraint_expression_to_ast(constraint_expr)
+        constraint = parse_simple_constraint_expression(transformed, nil)
         Dantzig.Problem.add_constraint(acc, constraint)
 
       # Generator-based constraints: constraints(generators, expr, desc)
@@ -545,11 +514,13 @@ defmodule Dantzig.Problem do
         constraints(acc, [], constraint_expr, nil)
 
       {:objective, _, [objective_expr, opts]} = _ast, acc ->
-        objective(acc, objective_expr, opts)
+        transformed = transform_objective_expression_to_ast(objective_expr)
+        objective(acc, transformed, opts)
 
       # Allow objective([], expr, opts) – ignore first list for now
       {:objective, _, [[], objective_expr, opts]} = _ast, acc ->
-        objective(acc, objective_expr, opts)
+        transformed = transform_objective_expression_to_ast(objective_expr)
+        objective(acc, transformed, opts)
 
       # Allow tap(fun) to inspect/log the current problem and continue
       {:tap, _, [fun_ast]} = _ast, acc ->
@@ -801,115 +772,10 @@ defmodule Dantzig.Problem do
   end
 
   # Evaluate simple expressions to numeric values where possible
-  defp evaluate_simple_expression(expr) do
-    case expr do
-      val when is_number(val) ->
-        val
-
-      {:-, _, [v]} ->
-        -evaluate_simple_expression(v)
-
-      {op, _, [left, right]} when op in [:+, :-, :*, :/] ->
-        left_val = evaluate_simple_expression(left)
-        right_val = evaluate_simple_expression(right)
-
-        case op do
-          :+ -> left_val + right_val
-          :- -> left_val - right_val
-          :* -> left_val * right_val
-          :/ -> left_val / right_val
-        end
-
-      _ ->
-        raise ArgumentError, "Cannot evaluate to number: #{inspect(expr)}"
-    end
-  end
+  defp evaluate_simple_expression(expr),
+    do: Dantzig.Problem.AST.evaluate_simple_expression(expr)
 
   # Parse simple expressions to polynomials (no bindings needed for simple variables)
-  defp parse_simple_expression_to_polynomial(expr) do
-    case expr do
-      # Simple variable access: {var_name, _, nil}
-      {var_name, _, nil} when is_atom(var_name) or is_binary(var_name) ->
-        var_name_str =
-          case var_name do
-            str when is_binary(str) -> str
-            atom when is_atom(atom) -> to_string(atom)
-            _ -> raise ArgumentError, "Invalid variable name: #{inspect(var_name)}"
-          end
-
-        Polynomial.variable(var_name_str)
-
-      # Unary minus
-      {:-, _meta, [v]} ->
-        case parse_simple_expression_to_polynomial(v) do
-          %Polynomial{} = p -> Polynomial.scale(p, -1)
-          other -> raise ArgumentError, "Unsupported unary minus: #{inspect(other)}"
-        end
-
-      # Arithmetic between expressions
-      {op, _, [left, right]} when op in [:+, :-, :*, :/] ->
-        # First try to parse both sides as polynomials
-        left_poly = parse_simple_expression_to_polynomial(left)
-        right_poly = parse_simple_expression_to_polynomial(right)
-
-        case {op, left_poly, right_poly} do
-          # Polynomial + Polynomial
-          {:+, %Polynomial{} = p1, %Polynomial{} = p2} ->
-            Polynomial.add(p1, p2)
-
-          # Polynomial + number
-          {:+, %Polynomial{} = p, v} when is_number(v) ->
-            Polynomial.add(p, Polynomial.const(v))
-
-          # number + Polynomial
-          {:+, v, %Polynomial{} = p} when is_number(v) ->
-            Polynomial.add(Polynomial.const(v), p)
-
-          # Polynomial - Polynomial
-          {:-, %Polynomial{} = p1, %Polynomial{} = p2} ->
-            Polynomial.add(p1, Polynomial.scale(p2, -1))
-
-          # Polynomial - number
-          {:-, %Polynomial{} = p, v} when is_number(v) ->
-            Polynomial.add(p, Polynomial.const(-v))
-
-          # number - Polynomial
-          {:-, v, %Polynomial{} = p} when is_number(v) ->
-            Polynomial.add(Polynomial.const(v), Polynomial.scale(p, -1))
-
-          # Polynomial * number
-          {:*, %Polynomial{} = p, v} when is_number(v) ->
-            Polynomial.scale(p, v)
-
-          # number * Polynomial
-          {:*, v, %Polynomial{} = p} when is_number(v) ->
-            Polynomial.scale(p, v)
-
-          # For any other combinations, try to evaluate as numbers
-          _ ->
-            try do
-              left_val = evaluate_simple_expression(left)
-              right_val = evaluate_simple_expression(right)
-
-              result_val =
-                case op do
-                  :+ -> left_val + right_val
-                  :- -> left_val - right_val
-                  :* -> left_val * right_val
-                  :/ -> left_val / right_val
-                end
-
-              Polynomial.const(result_val)
-            rescue
-              _ -> raise ArgumentError, "Unsupported arithmetic: #{inspect({op, left, right})}"
-            end
-        end
-
-      val when is_number(val) ->
-        Polynomial.const(val)
-
-      _ ->
-        raise ArgumentError, "Unsupported simple expression: #{inspect(expr)}"
-    end
-  end
+  defp parse_simple_expression_to_polynomial(expr),
+    do: Dantzig.Problem.AST.parse_simple_expression_to_polynomial(expr)
 end
