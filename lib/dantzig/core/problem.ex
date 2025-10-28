@@ -517,26 +517,22 @@ defmodule Dantzig.Problem do
   end
 
   @doc """
-  Add constraints with JuMP-like syntax.
-
-  ## Examples
-
-      # Simple constraint
-      problem = Problem.constraint(problem, x <= 10, "Variable bound")
-
-      # Pattern-based constraint
-      problem = Problem.constraints(problem, [i <- 1..4], x[i, :_] == 1, "One per row")
+  Add constraints within Problem.define blocks.
+  
+  This function is used internally by Problem.define to process constraint expressions.
+  It generates individual Problem.add_constraint calls.
   """
   @spec constraints(t(), list(), any(), String.t() | nil) :: t()
   def constraints(problem, generators, constraint_expr, description \\ nil) do
-    # Use the existing DSL implementation
-    Dantzig.Problem.DSL.__add_constraints__(
+    # Use the working constraint manager implementation
+    Dantzig.Problem.DSL.ConstraintManager.add_constraints(
       problem,
       generators,
       constraint_expr,
       description
     )
   end
+
 
   @doc """
   Add a single constraint with JuMP-like syntax.

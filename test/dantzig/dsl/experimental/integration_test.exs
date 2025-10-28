@@ -12,28 +12,12 @@ defmodule Dantzig.DSL.IntegrationTest do
   test "nqueens 2D example works end-to-end" do
     # Test the exact syntax from nqueens_dsl.exs
     problem =
-      Problem.new(
-        name: "N-Queens",
-        description:
-          "Place N queens on an N×N chessboard so that no two queens attack each other."
-      )
-      |> Problem.add_variables(
-        "queen2d",
-        [i <- 1..4, j <- 1..4],
-        :binary,
-        "Queen position"
-      )
-      |> Problem.add_constraints(
-        [i <- 1..4],
-        queen2d(i, :_) == 1,
-        "One queen per row"
-      )
-      |> Problem.add_constraints(
-        [j <- 1..4],
-        queen2d(:_, j) == 1,
-        "One queen per column"
-      )
-      |> Problem.set_objective(sum(queen2d(:_, :_)), direction: :minimize)
+      Problem.define do
+        variables("queen2d", [i <- 1..4, j <- 1..4], :binary, description: "Queen position")
+        constraints([i <- 1..4], queen2d(i, :_) == 1, "One queen per row")
+        constraints([j <- 1..4], queen2d(:_, j) == 1, "One queen per column")
+        objective(sum(queen2d(:_, :_)), :minimize)
+      end
 
     # Verify problem structure
     assert problem.name == "N-Queens"

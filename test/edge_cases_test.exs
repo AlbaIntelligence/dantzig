@@ -217,12 +217,12 @@ defmodule Dantzig.EdgeCasesTest do
     # Test different operators
     operators = [:==, :<=, :>=]
 
-    for operator <- operators do
+    problem = Enum.reduce(operators, problem, fn operator, acc_problem ->
       left = Dantzig.Polynomial.variable("x")
       right = Dantzig.Polynomial.const(1.0)
       constraint = Dantzig.Constraint.new(left, operator, right)
-      problem = Dantzig.Problem.add_constraint(problem, constraint)
-    end
+      Dantzig.Problem.add_constraint(acc_problem, constraint)
+    end)
 
     # The problem should be created successfully
     assert map_size(problem.constraints) == length(operators)
