@@ -40,8 +40,7 @@ defmodule Dantzig.EdgeCasesTest do
     {problem, _} = Dantzig.Problem.new_variable(problem, "x", type: :continuous)
 
     # Set objective to maximize x with no constraints
-    objective = Dantzig.Polynomial.variable("x")
-    problem = Problem.set_objective(problem, objective, direction: :maximize)
+    problem = Problem.set_objective(problem, quote(do: x), direction: :maximize)
 
     # The problem should be created successfully
     assert problem.direction == :maximize

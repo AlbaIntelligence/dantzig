@@ -262,32 +262,6 @@ defmodule Dantzig.Problem.DSL do
   end
 
   @doc """
-  Add constraints to a problem using natural mathematical syntax.
-
-  ## Examples
-
-      # One queen per row
-      problem = Problem.DSL.add_constraints(problem, [i <- 1..4], x[i, _] == 1, "One queen per row")
-  """
-  defmacro add_constraints(problem, generators, constraint_expr, description \\ nil) do
-    quote do
-      unquote(__MODULE__).__add_constraints__(
-        unquote(problem),
-        unquote(generators),
-        unquote(constraint_expr),
-        unquote(description)
-      )
-    end
-  end
-
-  @doc """
-  Shim for backward compatibility - delegates to Problem.constraints/4
-  """
-  def add_constraints_shim(problem, generators, constraint_expr, description) do
-    Problem.constraints(problem, generators, constraint_expr, description)
-  end
-
-  @doc """
   Set the objective function with direction.
 
   ## Examples
@@ -316,9 +290,6 @@ defmodule Dantzig.Problem.DSL do
 
   def __add_variables__(problem, generators, var_name, var_type, description),
     do: Internal.add_variables(problem, generators, var_name, var_type, description)
-
-  def __add_constraints__(problem, generators, constraint_expr, description),
-    do: Internal.add_constraints(problem, generators, constraint_expr, description)
 
   def __set_objective__(problem, objective_expr, opts),
     do: Internal.set_objective(problem, objective_expr, opts)

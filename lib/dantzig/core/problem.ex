@@ -212,38 +212,6 @@ defmodule Dantzig.Problem do
   end
 
   @doc """
-  Add constraints to a problem using imperative syntax.
-
-  This macro supports the imperative API used in integration tests.
-  """
-  defmacro add_constraints(problem, generators, constraint_expr, description \\ nil) do
-    # Transform raw generator syntax to proper AST format using the same approach as define macro
-    transformed_generators =
-      Macro.prewalk(generators, fn
-        {:<-, meta, [var, range]} ->
-          # Handle variables from outer scope by properly quoting them
-          {:<-, meta, [quote(do: unquote(var)), range]}
-
-        other ->
-          other
-      end)
-
-    quote do
-      # Ensure modules/macros are available in the generated context
-      require Dantzig.Problem.DSL, as: DSL
-
-      # Process the constraints with the current environment
-      unquote(__MODULE__).__add_constraints_with_env__(
-        unquote(problem),
-        unquote(Macro.escape(transformed_generators)),
-        unquote(Macro.escape(constraint_expr)),
-        unquote(description),
-        binding()
-      )
-    end
-  end
-
-  @doc """
   Set objective function using imperative syntax.
 
   This macro supports the imperative API used in integration tests.
@@ -387,17 +355,6 @@ defmodule Dantzig.Problem do
 
     try do
       Dantzig.Problem.DSL.__add_variables__(problem, generators, var_name, var_type, description)
-    after
-      Process.delete(:dantzig_eval_env)
-    end
-  end
-
-  def __add_constraints_with_env__(problem, generators, constraint_expr, description, env) do
-    # Set the environment for variable resolution
-    Process.put(:dantzig_eval_env, env)
-
-    try do
-      Dantzig.Problem.DSL.__add_constraints__(problem, generators, constraint_expr, description)
     after
       Process.delete(:dantzig_eval_env)
     end
