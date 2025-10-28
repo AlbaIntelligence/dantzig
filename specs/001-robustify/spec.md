@@ -66,7 +66,7 @@
 
 1. **Given** examples covering different problem types (assignment, transportation, production, scheduling), **When** I run each example, **Then** all produce valid optimization solutions
 2. **Given** examples with different complexity levels, **When** I review the problem formulations, **Then** each demonstrates appropriate modeling techniques for its domain
-3. **Given** examples with varying problem sizes, **When** I run performance tests, **Then** all examples complete within reasonable time limits
+3. **Given** examples with varying problem sizes, **When** I run performance tests, **Then** all examples complete within 30 seconds and use <100MB memory (aligned with FR-012/SC-006)
 
 ---
 
@@ -101,7 +101,7 @@
 
 ### Functional Requirements
 
-- **FR-001**: System MUST compile all test files without errors or warnings
+- **FR-001**: System MUST compile all test files without errors or warnings (including integration tests and related files)
 - **FR-002**: System MUST achieve at least 80% overall test coverage across the codebase
 - **FR-003**: System MUST achieve at least 85% test coverage for core modules (Problem, DSL, AST, Solver)
 - **FR-004**: System MUST provide comprehensive documentation for all example files explaining syntax, reasoning, and gotchas, and validate that all examples execute successfully and produce expected results
@@ -110,9 +110,11 @@
 - **FR-007**: System MUST include performance benchmarks for problems of varying sizes
 - **FR-008**: System MUST handle edge cases gracefully with appropriate error messages
 - **FR-009**: System MUST maintain backward compatibility with existing API usage patterns
-- **FR-010**: System MUST resolve all compilation errors in integration_test.exs and related test files
+- ~~**FR-010**: System MUST resolve all compilation errors in integration_test.exs and related test files~~ (Merged into FR-001)
 - **FR-011**: System MUST enable new user onboarding within 30 minutes through comprehensive documentation
 - **FR-012**: System MUST complete problems up to 1000 variables within 30 seconds and use less than 100MB memory
+- **FR-013**: System MUST support model parameters in `Problem.define`, enabling external values to be bound into generators, expressions, and descriptions
+- **FR-014**: System MUST provide a `Problem.modify` macro to declaratively apply additional variables/constraints/objective updates to an existing problem without rebuilding from scratch
 
 ### Key Entities
 

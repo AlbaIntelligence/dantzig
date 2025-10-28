@@ -23,7 +23,7 @@ defmodule Dantzig.Problem.DSL.ConstraintManager do
       constraint = parse_constraint_expression(constraint_expr, bindings, current_problem)
 
       constraint_name =
-        if description, do: create_constraint_name(description, index_vals), else: nil
+        if description, do: create_constraint_name(description, bindings, index_vals), else: nil
 
       constraint = if constraint_name, do: %{constraint | name: constraint_name}, else: constraint
       Problem.add_constraint(current_problem, constraint)
@@ -31,7 +31,12 @@ defmodule Dantzig.Problem.DSL.ConstraintManager do
   end
 
   def set_objective(problem, objective_expr, opts) do
-    direction = Keyword.get(opts, :direction)
+    direction =
+      cond do
+        is_atom(opts) and opts in [:minimize, :maximize] -> opts
+        is_list(opts) -> Keyword.get(opts, :direction)
+        true -> nil
+      end
 
     if direction not in [:minimize, :maximize] do
       raise ArgumentError,
@@ -93,7 +98,7 @@ defmodule Dantzig.Problem.DSL.ConstraintManager do
     end
   end
 
-  def create_constraint_name(description, index_vals) do
+  def create_constraint_name(description, bindings, index_vals) do
     # New approach: handle variable interpolation in constraint names
     # This replaces variable names in the description with actual values
     case description do
@@ -108,6 +113,21 @@ defmodule Dantzig.Problem.DSL.ConstraintManager do
           # Simple case: just append index values
           index_str = index_vals |> Enum.map(&to_string/1) |> Enum.join("_")
           "#{desc}_#{index_str}"
+        end
+
+      # Handle interpolated binaries (AST like {:<<>>, ...}) by evaluating with actual generator bindings
+      desc_ast when is_tuple(desc_ast) ->
+        # Convert bindings map to a variable list acceptable to Code.eval_quoted
+        var_bindings = Map.to_list(bindings)
+
+        try do
+          {evaluated, _} = Code.eval_quoted(desc_ast, var_bindings)
+          to_string(evaluated)
+        rescue
+          _ ->
+            # Fallback to simple suffix if evaluation fails
+            index_str = index_vals |> Enum.map(&to_string/1) |> Enum.join("_")
+            "constraint_#{index_str}"
         end
 
       # If description is nil, generate a generic name

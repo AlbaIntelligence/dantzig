@@ -10,6 +10,7 @@
 **Primary Requirement**: Robustify the existing Dantzig Elixir package by fixing compilation issues, achieving comprehensive test coverage (80%+ overall, 85%+ core modules), and enhancing documentation with well-documented examples covering 5+ optimization problem types.
 
 **Technical Approach**: Leverage existing Elixir/OTP architecture with HiGHS solver integration, enhance test suite with ExUnit, improve DSL documentation, and add classical textbook examples with comprehensive inline documentation.
+Additionally: add model parameters support to `Problem.define` and introduce a `Problem.modify` macro for incremental updates.
 
 ## Technical Context
 
@@ -21,6 +22,7 @@
 **Project Type**: Library package (Hex.pm distribution)
 **Performance Goals**: Handle problems up to 1000 variables within 30 seconds, memory usage <100MB for typical problems
 **Constraints**: Maintain backward compatibility with existing DSL API, zero breaking changes
+Model parameters and `Problem.modify` must not break existing DSL syntax; provide migration-free usage.
 **Scale/Scope**: Support 5+ optimization problem types, comprehensive test coverage, production-ready reliability
 
 ## Constitution Check
@@ -28,26 +30,31 @@
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
 ### Library-First Principle ✅
+
 - **Requirement**: Every feature starts as a standalone library
 - **Compliance**: Dantzig is already a self-contained Hex package with clear purpose
 - **Status**: PASS - Package is independently testable and documented
 
 ### Test-First Principle ✅
+
 - **Requirement**: TDD mandatory - Tests written → User approved → Tests fail → Then implement
 - **Compliance**: Will implement comprehensive test coverage (80%+ overall, 85%+ core modules)
 - **Status**: PASS - Test coverage requirements clearly defined in specification
 
 ### Integration Testing ✅
+
 - **Requirement**: Focus on new library contract tests, contract changes, inter-service communication
 - **Compliance**: Will add integration tests for DSL functionality and HiGHS solver integration
 - **Status**: PASS - Integration testing scope defined for DSL and solver components
 
 ### Observability ✅
+
 - **Requirement**: Structured logging and debuggability
-- **Compliance**: Will enhance error messages and add performance monitoring
-- **Status**: PASS - Error handling and performance benchmarks specified
+- **Compliance**: Will enhance error messages and add performance monitoring; add structured logging/diagnostic hooks for DSL parsing and solver integration (see task T154)
+- **Status**: PASS - Error handling, performance benchmarks, and observability hooks specified
 
 ### Simplicity ✅
+
 - **Requirement**: Start simple, YAGNI principles
 - **Compliance**: Focus on robustifying existing functionality rather than adding new features
 - **Status**: PASS - Scope limited to improving existing package without breaking changes
@@ -104,6 +111,7 @@ docs/                          # Documentation
 ```
 
 **Structure Decision**: Elixir library package structure with clear separation of concerns:
+
 - `lib/dantzig/` contains all library modules organized by functionality
 - `test/` mirrors the lib structure for comprehensive testing
 - `examples/` provides learning resources with comprehensive documentation

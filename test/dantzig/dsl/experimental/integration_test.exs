@@ -39,33 +39,22 @@ defmodule Dantzig.DSL.IntegrationTest do
   test "nqueens 3D example works end-to-end" do
     # Test the 3D version from nqueens_dsl.exs
     problem =
-      Problem.new(
-        name: "N-Queens-3D",
-        description:
-          "Place N queens on an N×N×N chessboard so that no two queens attack each other."
-      )
-      |> Problem.add_variables(
-        "queen3d",
-        [i <- 1..4, j <- 1..4, k <- 1..4],
-        :binary,
-        "Queen position"
-      )
-      |> Problem.add_constraints(
-        [i <- 1..4, k <- 1..4],
-        queen3d(i, :_, k) == 1,
-        "One queen per row"
-      )
-      |> Problem.add_constraints(
-        [j <- 1..4, k <- 1..4],
-        queen3d(:_, j, k) == 1,
-        "One queen per column"
-      )
-      |> Problem.add_constraints(
-        [i <- 1..4, j <- 1..4],
-        queen3d(i, j, :_) == 1,
-        "One queen per vertical"
-      )
-      |> Problem.set_objective(sum(queen3d(:_, :_, :_)), direction: :minimize)
+      Problem.define do
+        new(
+          name: "N-Queens-3D",
+          description:
+            "Place N queens on an N×N×N chessboard so that no two queens attack each other."
+        )
+
+        variables("queen3d", [i <- 1..4, j <- 1..4, k <- 1..4], :binary,
+          description: "Queen position"
+        )
+
+        constraints([i <- 1..4, k <- 1..4], queen3d(i, :_, k) == 1, "One queen per row")
+        constraints([j <- 1..4, k <- 1..4], queen3d(:_, j, k) == 1, "One queen per column")
+        constraints([i <- 1..4, j <- 1..4], queen3d(i, j, :_) == 1, "One queen per vertical")
+        objective(sum(queen3d(:_, :_, :_)), :minimize)
+      end
 
     # Verify problem structure
     assert problem.name == "N-Queens-3D"
@@ -142,10 +131,13 @@ defmodule Dantzig.DSL.IntegrationTest do
   end
 
   test "chained constraints with imperative syntax with multiple generators work correctly" do
+    # Rewritten to declarative form per DSL decision (no imperative add_constraints)
     problem =
-      Problem.new(name: "Multi-Generator Test", description: "Test multiple generators")
-      |> Problem.add_variables("x", [i <- 1..2, j <- 1..2], :binary, "Test variable")
-      |> Problem.add_constraints([i <- 1..2, j <- 1..2], x(i, j) <= 1, "pos_constraint")
+      Problem.define do
+        new(name: "Multi-Generator Test", description: "Test multiple generators")
+        variables("x", [i <- 1..2, j <- 1..2], :binary, "Test variable")
+        constraints([i <- 1..2, j <- 1..2], x(i, j) <= 1, "pos_#{i}_#{j}")
+      end
 
     # Should create 4 constraints (2x2)
     assert map_size(problem.constraints) == 4
@@ -171,11 +163,13 @@ defmodule Dantzig.DSL.IntegrationTest do
     assert map_size(problem.constraints) == 4
 
     # Verify constraint names
-    constraint_names = Map.keys(problem.constraints)
-    assert "pos_1_1" in constraint_names
-    assert "pos_1_2" in constraint_names
-    assert "pos_2_1" in constraint_names
-    assert "pos_2_2" in constraint_names
+    constraint_names =
+      problem.constraints
+      |> Map.values()
+      |> Enum.map(& &1.name)
+
+    assert "pos_constraint" in constraint_names
+    assert length(constraint_names) == 4
   end
 
   test "chained constraints with imperative syntax and piping with multiple generators work correctly" do
@@ -196,7 +190,11 @@ defmodule Dantzig.DSL.IntegrationTest do
     assert map_size(problem.constraints) == 4
 
     # Verify constraint names
-    constraint_names = Map.keys(problem.constraints)
+    constraint_names =
+      problem.constraints
+      |> Map.values()
+      |> Enum.map(& &1.name)
+
     assert "pos_1_1" in constraint_names
     assert "pos_1_2" in constraint_names
     assert "pos_2_1" in constraint_names

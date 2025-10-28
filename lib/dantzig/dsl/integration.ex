@@ -31,9 +31,9 @@ defmodule Dantzig.DSL.Integration do
       require Dantzig.Problem, as: Problem
 
       import Dantzig.Problem,
-        only: [add_variables: 4, add_constraints: 4, set_objective: 3, variables: 4]
+        only: [add_variables: 4, set_objective: 3, variables: 4]
 
-      import Dantzig.Problem.DSL, only: [add_variables: 4, add_constraints: 4]
+      # Old imperative add_constraints is removed; use declarative Problem.define
 
       # Import Math module for sum function
       require Dantzig.Problem.Math, as: Math

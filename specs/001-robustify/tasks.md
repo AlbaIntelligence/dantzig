@@ -55,13 +55,34 @@
 
 ---
 
+## Active Work: DSL Nested Generators & Integration
+
+> Outstanding tasks aligned to current nested-loop DSL work. Uses standard task format.
+
+- [ ] T142 [P] [US1] Implement `transform_constraint_expression_to_ast/1` for variable refs (e.g., `queen2d(i, :_)`) in `lib/dantzig/core/problem.ex`
+- [ ] T143 [P] [US1] Implement `transform_objective_expression_to_ast/1` for variable refs inside objectives in `lib/dantzig/core/problem.ex`
+- [ ] T144 [P] [US1] Implement `transform_description_to_ast/1` for `"name_#{i}_#{j}"` interpolation in `lib/dantzig/core/problem.ex`
+- [ ] T145 [P] [US1] Implement `Problem.constraint/3` parsing for no‑generator single constraints in `lib/dantzig/core/problem.ex`
+- [ ] T146 [P] [US1] Finalize `interpolate_variables_in_description/2` in `lib/dantzig/problem/dsl/constraint_manager.ex`
+- [ ] T147 [P] [BC] Align or remove placeholder `process_define_block/1` in `lib/dantzig/problem/dsl.ex` to avoid drift with `Problem.define`
+- [ ] T148 [P] [US1] Add model parameters support to `Problem.define` in `lib/dantzig/core/problem.ex` or `lib/dantzig/problem/dsl.ex`
+- [ ] T149 [P] [BC] Implement or deprecate `Problem.modify` macro; update related tests in `test/macro_approach/*`
+- [ ] T150 [P] [US2] Fix macro availability and unskip imperative chained‑constraints tests in `test/dantzig/dsl/experimental/integration_test.exs`
+- [ ] T151 [P] [US2] Fix variable access macro generation and unskip tests in `test/dantzig/dsl/experimental/simple_integration_test.exs`
+- [ ] T152 [P] [US2] Audit and update tests under `test/macro_approach/*` to match new DSL or retire
+- [ ] T153 [P] [DOC] Update DSL docs to reflect description interpolation and single‑constraint syntax in `docs/DSL_SYNTAX_REFERENCE.md`
+
+> Note: Phase 2 is complete; this Active Work section is an overlay focus list. IDs remain unique and do not alter phase sequencing.
+
+---
+
 ## Phase 3: User Story 1 - Fix Compilation Issues (Priority: P1) 🎯 MVP
 
 **Goal**: Resolve all test compilation errors to enable development and testing
 
 **Independent Test**: Run `mix test` and verify all tests compile and execute without errors
 
-**Requirements Coverage**: FR-001, FR-010
+**Requirements Coverage**: FR-001
 
 ### Tests for User Story 1
 
@@ -121,6 +142,30 @@
 - [ ] T051 [P] [US2] Add edge case tests for undefined variables in test/edge_cases/undefined_variables_test.exs
 - [ ] T052 [US2] Add performance tests for scalability in test/performance/scalability_test.exs
 - [ ] T053 [US2] Validate coverage targets: 80%+ overall, 85%+ core modules
+
+---
+
+## Phase 12: Model Parameters & Problem.modify (Priority: P1)
+
+**Goal**: Add model parameters to `Problem.define` and provide `Problem.modify` for incremental updates, without breaking existing DSL.
+
+**Independent Test**: New tests under `test/dantzig/dsl/` fail first, then pass after implementation.
+
+**Requirements Coverage**: FR-013, FR-014, FR-009
+
+### Tests
+
+- [ ] T155 [P] [US1] Create model parameters tests in `test/dantzig/dsl/model_parameters_test.exs`
+- [ ] T156 [P] [US1] Create Problem.modify tests in `test/dantzig/dsl/problem_modify_test.exs`
+
+### Implementation
+
+- [ ] T157 [US1] Implement model parameters in `Problem.define` (thread env/bindings) in `lib/dantzig/core/problem.ex` and/or `lib/dantzig/problem/dsl.ex`
+- [ ] T158 [US1] Ensure parameters can be used in generators, expressions, descriptions
+- [ ] T159 [BC] Implement `Problem.modify` macro in `lib/dantzig/core/problem.ex` or `lib/dantzig/problem/dsl.ex`
+- [ ] T160 [BC] Support adding variables/constraints/objective updates without rebuild
+- [ ] T161 [BC] Update `test/macro_approach/*` to reflect `Problem.modify` behavior
+- [ ] T162 [DOC] Document parameters and modify in `docs/DSL_SYNTAX_REFERENCE.md`
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
 
@@ -274,6 +319,12 @@
 - [ ] T116 [DOC] Create migration guide for existing users in docs/MIGRATION_GUIDE.md
 - [ ] T117 [P] [DOC] Validate documentation enables 30-minute onboarding
 - [ ] T118 [P] [DOC] Validate all documentation is comprehensive and user-friendly
+
+---
+
+## Observability Alignment (Cross-Cutting)
+
+- [ ] T154 [P] [OBS] Add structured logging/diagnostic hooks for DSL parsing and solver integration
 
 ---
 

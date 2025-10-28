@@ -348,6 +348,48 @@ defmodule Dantzig.Problem do
     end
   end
 
+  @doc """
+  Modify an existing problem by applying additional DSL statements inside a block.
+
+  Supports inside the block (same as in define, but without `new/1`):
+  - `variables(name, generators, type, opts_or_desc)` – adds variables
+  - `constraints(generators, expr, desc \\ nil)` – adds constraints
+  - `objective(expr, opts)` – sets or updates objective
+
+  Additionally, rewrites nested `sum(...)` calls to `Dantzig.Problem.DSL.sum/1`
+  so they expand correctly without requiring explicit imports in user code.
+  """
+  defmacro modify(problem, do: block) do
+    rewritten_block =
+      Macro.prewalk(block, fn
+        {:sum, meta, args} ->
+          {{:., meta, [Dantzig.Problem.DSL, :sum]}, meta, args}
+
+        list when is_list(list) ->
+          case list do
+            [{:<-, _, [var, list_expr]}] ->
+              [{:<-, [], [quote(do: unquote(var)), list_expr]}]
+
+            _ ->
+              list
+          end
+
+        other ->
+          other
+      end)
+
+    exprs =
+      case rewritten_block do
+        {:__block__, _, list} -> list
+        single -> [single]
+      end
+
+    quote do
+      require Dantzig.Problem.DSL, as: DSL
+      unquote(__MODULE__).__modify_with_env__(unquote(problem), unquote(Macro.escape(exprs)), binding())
+    end
+  end
+
   # Helper used by the imperative API macros to process with environment
   def __add_variables_with_env__(problem, generators, var_name, var_type, description, env) do
     # Set the environment for variable resolution
@@ -402,10 +444,14 @@ defmodule Dantzig.Problem do
 
       # Generator syntax: variables("name", [generators], :type, opts_or_desc)
       {:variables, _, [name, generators, type, opts_or_desc]} = _ast, acc ->
-        # Allow either description string or keyword opts
+        # Allow either description string or keyword opts; if interpolated binary AST, skip description
         case opts_or_desc do
           desc when is_binary(desc) ->
             variables(acc, name, generators, type, description: desc)
+
+          {:<<>>, _meta, _parts} ->
+            # Interpolated binary with generator vars – defer naming; pass no description
+            variables(acc, name, generators, type, [])
 
           opts when is_list(opts) ->
             variables(acc, name, generators, type, opts)
@@ -473,6 +519,77 @@ defmodule Dantzig.Problem do
     end
   end
 
+  # Internal helper to run modify with caller's runtime bindings available
+  def __modify_with_env__(%__MODULE__{} = problem, exprs, env)
+      when is_list(exprs) and is_list(env) do
+    previous = Process.get(:dantzig_eval_env)
+    Process.put(:dantzig_eval_env, env)
+
+    try do
+      __modify_reduce__(problem, exprs)
+    after
+      if previous do
+        Process.put(:dantzig_eval_env, previous)
+      else
+        Process.delete(:dantzig_eval_env)
+      end
+    end
+  end
+
+  # Reduce over modify expressions reusing same handlers as define (minus new/1)
+  def __modify_reduce__(%__MODULE__{} = initial_problem, exprs) when is_list(exprs) do
+    Enum.reduce(exprs, initial_problem, fn
+      {:variables, _, [name, type, description]} = _ast, acc
+      when is_binary(name) and is_atom(type) and is_binary(description) ->
+        {new_problem, _} = new_variable(acc, name, type: type, description: description)
+        new_problem
+
+      {:variables, _, [name, type | opts]} = _ast, acc
+      when is_binary(name) and is_atom(type) and is_list(opts) ->
+        description = Keyword.get(opts, :description)
+        var_opts = Keyword.delete(opts, :description)
+        {new_problem, _} =
+          new_variable(acc, name, [type: type, description: description] ++ var_opts)
+        new_problem
+
+      {:variables, _, [name, generators, type, opts_or_desc]} = _ast, acc ->
+        case opts_or_desc do
+          desc when is_binary(desc) ->
+            variables(acc, name, generators, type, description: desc)
+          opts when is_list(opts) ->
+            variables(acc, name, generators, type, opts)
+        end
+
+      {:constraints, _, [constraint_expr, desc]} = _ast, acc when is_tuple(constraint_expr) and is_binary(desc) ->
+        constraint = parse_simple_constraint_expression(constraint_expr, desc)
+        Dantzig.Problem.add_constraint(acc, constraint)
+
+      {:constraints, _, [constraint_expr]} = _ast, acc when is_tuple(constraint_expr) ->
+        constraint = parse_simple_constraint_expression(constraint_expr, nil)
+        Dantzig.Problem.add_constraint(acc, constraint)
+
+      {:constraints, _, [generators, constraint_expr, desc]} = _ast, acc ->
+        constraints(acc, generators, constraint_expr, desc)
+
+      {:constraints, _, [generators, constraint_expr]} = _ast, acc ->
+        constraints(acc, generators, constraint_expr, nil)
+
+      {:objective, _, [objective_expr, opts]} = _ast, acc ->
+        objective(acc, objective_expr, opts)
+
+      {:objective, _, [[], objective_expr, opts]} = _ast, acc ->
+        objective(acc, objective_expr, opts)
+
+      {:tap, _, [fun_ast]} = _ast, acc ->
+        {fun, _} = Code.eval_quoted(fun_ast, [])
+        _ = fun.(acc)
+        acc
+
+      other, _acc ->
+        raise ArgumentError, "Unsupported expression inside modify: #{inspect(other)}"
+    end)
+  end
+
   # New DSL Functions (JuMP-like API)
 
   @doc """
@@ -516,12 +633,8 @@ defmodule Dantzig.Problem do
     new_variable(problem, var_name, type: var_type, min: min_bound, max: max_bound)
   end
 
-  @doc """
-  Add constraints within Problem.define blocks.
-  
-  This function is used internally by Problem.define to process constraint expressions.
-  It generates individual Problem.add_constraint calls.
-  """
+  # Public: Add constraints with JuMP-like syntax.
+  # Used by both the define/modify reducers and publicly in tests.
   @spec constraints(t(), list(), any(), String.t() | nil) :: t()
   def constraints(problem, generators, constraint_expr, description \\ nil) do
     # Use the working constraint manager implementation
@@ -532,7 +645,6 @@ defmodule Dantzig.Problem do
       description
     )
   end
-
 
   @doc """
   Add a single constraint with JuMP-like syntax.
