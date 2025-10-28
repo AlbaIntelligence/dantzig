@@ -406,10 +406,47 @@ defmodule Dantzig.Problem.DSL do
   @doc """
   Create a dynamic variable access AST for variable access syntax.
   Used for testing realistic syntax approaches.
-
+  
   Example: dynamic_var_access(:queen2d, [1, :_]) creates AST for queen2d(1, :_)
   """
   def dynamic_var_access(var_name, args) do
+    {var_name, [], args}
+  end
+
+  # Additional test helper functions for bracket syntax experiments
+
+  @doc """
+  Test function for bracket breakthrough syntax.
+  """
+  def bracket_breakthrough(var_name, args) do
+    {var_name, [], args}
+  end
+
+  @doc """
+  Test function for syntax transformer.
+  """
+  def syntax_transformer(var_name, args) do
+    {var_name, [], args}
+  end
+
+  @doc """
+  Test function for access protocol.
+  """
+  def access_protocol_test(var_name, args) do
+    {var_name, [], args}
+  end
+
+  @doc """
+  Test function for alternative bracket syntax.
+  """
+  def alternative_bracket(var_name, args) do
+    {var_name, [], args}
+  end
+
+  @doc """
+  Test function for bracket macro.
+  """
+  def bracket_macro_test(var_name, args) do
     {var_name, [], args}
   end
 
