@@ -11,7 +11,7 @@ defmodule Dantzig.DSL.SimpleGeneratorTest do
     food_names = ["bread", "milk"]
 
     problem =
-      Problem.define do
+      Problem.define model_parameters: %{food_names: food_names} do
         new(name: "Simple Test", description: "Test generator syntax")
         variables("qty", [food <- food_names], :continuous, "Amount of food")
       end
@@ -26,7 +26,7 @@ defmodule Dantzig.DSL.SimpleGeneratorTest do
     food_names = ["bread", "milk"]
 
     problem =
-      Problem.define do
+      Problem.define model_parameters: %{food_names: food_names} do
         new(name: "Simple Test", description: "Test generator with objective")
         variables("qty", [food <- food_names], :continuous, "Amount of food")
         objective(sum(qty(:_)), :minimize)
