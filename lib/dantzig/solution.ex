@@ -21,6 +21,14 @@ defmodule Dantzig.Solution do
             constraints: %{}
 
   @doc """
+  Compatibility constructor used in coverage tests.
+  Accepts a keyword list with fields to populate the solution struct.
+  """
+  def new(opts) when is_list(opts) do
+    struct(__MODULE__, opts)
+  end
+
+  @doc """
   Evaluate a number or polynomial at the solution variable assignment.
 
   Returns a number if the expression becomes constant; otherwise returns the

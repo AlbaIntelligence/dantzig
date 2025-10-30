@@ -126,6 +126,14 @@ defmodule Dantzig.Problem do
     new_variable(problem, name, opts)
   end
 
+  @doc """
+  Compatibility: add a variable with default settings.
+  Returns {problem, monomial}.
+  """
+  def add_variable(problem, name) do
+    new_variable(problem, name, [])
+  end
+
   @spec new_variables(t(), [String.t()], keyword()) :: {t(), [Polynomial.t()]}
   def new_variables(problem, names, opts \\ []) do
     Enum.reduce(names, {problem, []}, fn name, {current_problem, monomials} ->
