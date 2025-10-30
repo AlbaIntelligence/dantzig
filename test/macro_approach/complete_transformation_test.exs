@@ -1,6 +1,15 @@
 defmodule MacroApproach.CompleteTransformationTest do
   use ExUnit.Case
 
+  @moduledoc """
+  LEGACY: Mock DSL prototype tests.
+  Tests verify a mock DSL transformation that was superseded by the real Problem.define.
+  The actual DSL functionality is tested in test/dantzig/dsl/experimental/
+  
+  Marked as @tag :legacy - can be skipped in test runs.
+  """
+
+  @tag :legacy
   # Mock Problem module for testing
   defmodule MockProblem do
     def new(_env \\ %{}), do: %{type: :problem, vars: %{}, constraints: [], objective: nil}

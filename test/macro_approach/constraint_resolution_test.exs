@@ -1,6 +1,15 @@
 defmodule MacroApproach.ConstraintResolutionTest do
   use ExUnit.Case
 
+  @moduledoc """
+  LEGACY: Prototype tests for constraint resolution internals.
+  Tests verify internal constraint resolution patterns that are now obsolete.
+  The actual DSL functionality is tested in test/dantzig/dsl/experimental/
+  
+  Marked as @tag :legacy - can be skipped in test runs.
+  """
+
+  @tag :legacy
   # Test constraint expression resolution functions
   defp resolve_constraint_with_iterators(constraint_expr, iterator_values, _env) do
     # Replace iterator variables in constraint expression

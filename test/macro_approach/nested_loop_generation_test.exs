@@ -1,6 +1,15 @@
 defmodule MacroApproach.NestedLoopGenerationTest do
   use ExUnit.Case
 
+  @moduledoc """
+  LEGACY: Prototype tests for loop generation internals.
+  Tests verify nested loop generation patterns that are now obsolete.
+  The actual DSL functionality is tested in test/dantzig/dsl/experimental/
+  
+  Marked as @tag :legacy - can be skipped in test runs.
+  """
+
+  @tag :legacy
   # Test nested loop generation functions
   defp generate_combinations_loop(
          var_name,

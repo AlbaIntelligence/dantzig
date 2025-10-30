@@ -5,7 +5,7 @@ defmodule MacroApproach.SimpleConstraintTest do
   LEGACY: Prototype tests for macro generation internals.
   These tests verify AST manipulation and macro generation patterns that are now obsolete.
   The actual DSL functionality is tested in test/dantzig/dsl/experimental/
-  
+
   Marked as @tag :legacy - can be skipped in test runs.
   """
 

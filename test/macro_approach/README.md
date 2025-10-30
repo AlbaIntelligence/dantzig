@@ -5,6 +5,7 @@ This directory contains tests from the prototype/experimental "macro approach" p
 ## Migration Strategy
 
 Tests have been categorized as:
+
 - **KEEP & UPDATE**: Tests that verify real DSL functionality - update to use `Problem.define`
 - **KEEP AS-IS**: Tests already using `Problem.define` correctly
 - **RETIRE**: Prototype tests that verify internal macro generation logic (obsolete)
@@ -12,16 +13,19 @@ Tests have been categorized as:
 ## Status
 
 ### KEEP & UPDATE (Using old imperative API → Convert to Problem.define)
+
 - [x] `nqueens_integration_test.exs` - ✅ Updated, all tests passing
 - [ ] `multiple_generator_constraint_test.exs` - Needs update
-- [ ] `complex_constraint_expression_test.exs` - Needs update  
+- [ ] `complex_constraint_expression_test.exs` - Needs update
 - [ ] `constraint_from_scratch_test.exs` - Needs update
 
 ### KEEP AS-IS (Already using Problem.define correctly)
+
 - [ ] `nqueens_integration_test_rewrite.exs` - Already correct, verify it passes
 - [ ] `dsl_constraint_test.exs` - Already correct, verify it passes
 
 ### RETIRE (Prototype/experimental macro generation tests - no longer relevant)
+
 - [ ] `simple_constraint_test.exs` - Tests macro generation internals
 - [ ] `constraint_generation_test.exs` - Tests macro generation internals
 - [ ] `simple_constraint_generation_test.exs` - Tests macro generation internals
@@ -37,4 +41,3 @@ Tests have been categorized as:
 - Real DSL functionality is now tested in `test/dantzig/dsl/experimental/`
 - The macro_approach tests were experimental prototypes for how to generate code
 - Now that we have `Problem.define` working, the prototype macro generation tests are obsolete
-

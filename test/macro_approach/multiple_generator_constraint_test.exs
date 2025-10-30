@@ -44,7 +44,11 @@ defmodule MacroApproach.MultipleGeneratorConstraintTest do
         variables("queen3d", [i <- 1..2, j <- 1..2, k <- 1..2], :binary, "Queen position")
 
         # Test constraint generation with three generators
-        constraints([i <- 1..2, j <- 1..2, k <- 1..2], queen3d(i, j, k) <= 1, "constraint_#{i}_#{j}_#{k}")
+        constraints(
+          [i <- 1..2, j <- 1..2, k <- 1..2],
+          queen3d(i, j, k) <= 1,
+          "constraint_#{i}_#{j}_#{k}"
+        )
       end
 
     # Check that constraints were added (2x2x2 = 8 combinations)

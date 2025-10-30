@@ -1,6 +1,15 @@
 defmodule MacroApproach.IntegrationTest do
   use ExUnit.Case
 
+  @moduledoc """
+  LEGACY: Mock DSL prototype tests.
+  Tests verify a mock DSL implementation that was superseded by the real Problem.define.
+  The actual DSL functionality is tested in test/dantzig/dsl/experimental/
+  
+  Marked as @tag :legacy - can be skipped in test runs.
+  """
+
+  @tag :legacy
   # Mock implementation of the complete approach
   defmodule MockDSL do
     def define(env \\ %{}, do: block) do

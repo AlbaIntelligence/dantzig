@@ -1,6 +1,15 @@
 defmodule MacroApproach.ConstraintGenerationTest do
   use ExUnit.Case
 
+  @moduledoc """
+  LEGACY: Prototype tests for macro generation internals.
+  Tests verify AST manipulation and macro generation patterns that are now obsolete.
+  The actual DSL functionality is tested in test/dantzig/dsl/experimental/
+  
+  Marked as @tag :legacy - can be skipped in test runs.
+  """
+
+  @tag :legacy
   # Test constraint generation functions
   defp generate_constraint_loop(
          generators,

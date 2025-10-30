@@ -1,6 +1,15 @@
 defmodule MacroApproach.EnvResolutionTest do
   use ExUnit.Case
 
+  @moduledoc """
+  LEGACY: Prototype tests for environment resolution internals.
+  Tests verify environment resolution patterns that are now obsolete.
+  The actual DSL functionality is tested in test/dantzig/dsl/experimental/
+  
+  Marked as @tag :legacy - can be skipped in test runs.
+  """
+
+  @tag :legacy
   # Test environment resolution functions
   defp resolve_expression_with_env(expr, env) do
     Macro.prewalk(expr, fn

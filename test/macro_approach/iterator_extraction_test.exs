@@ -1,6 +1,15 @@
 defmodule MacroApproach.IteratorExtractionTest do
   use ExUnit.Case
 
+  @moduledoc """
+  LEGACY: Prototype tests for AST parsing internals.
+  Tests verify iterator extraction patterns that are now obsolete.
+  The actual DSL functionality is tested in test/dantzig/dsl/experimental/
+  
+  Marked as @tag :legacy - can be skipped in test runs.
+  """
+
+  @tag :legacy
   # Test iterator extraction functions
   defp extract_iterators_and_ranges(generators, env) do
     {iterators, ranges} =
