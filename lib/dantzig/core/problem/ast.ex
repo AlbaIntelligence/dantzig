@@ -23,10 +23,61 @@ defmodule Dantzig.Problem.AST do
     end
   end
 
-  # Expression transformers (currently pass-through; hook for future expansion)
+  # Expression transformers (objective/constraint normalization)
   def transform_constraint_expression_to_ast(expr), do: expr
-  def transform_objective_expression_to_ast(expr), do: expr
+
+  # Prepare objective expressions for the DSL parser by rewriting
+  # simple generator sums like:
+  #   sum(qty(food) for food <- food_names)
+  # into the pattern-based form:
+  #   sum(qty(:_))
+  # This keeps implementation simple while tests can use generator syntax.
+  def transform_objective_expression_to_ast(expr) do
+    case expr do
+      # Handle unqualified sum macro passed through Problem.define prewalk
+      {:sum, {:for, inner_expr, generators}} ->
+        rewrite_generator_sum(inner_expr, generators)
+
+      # Handle qualified sum (e.g., Dantzig.Problem.DSL.sum(...)) normalized earlier
+      {{:., _, [_, :sum]}, _, [{:for, inner_expr, generators}]} ->
+        rewrite_generator_sum(inner_expr, generators)
+
+      other ->
+        other
+    end
+  end
+
   def transform_description_to_ast(description), do: description
+
+  # Internal: rewrite a simple generator sum into a pattern sum
+  defp rewrite_generator_sum(inner_expr, generators) do
+    case {inner_expr, generators} do
+      # sum(qty(food) for food <- food_names) => sum(qty(:_))
+      {{var_fun, meta, [arg]}, [{:<-, _gmeta, [gen_var, _domain]}]}
+      when is_atom(var_fun) ->
+        # Check that arg matches the generator variable name
+        arg_atom = extract_var_atom(arg)
+        gen_atom = extract_var_atom(gen_var)
+
+        if arg_atom && gen_atom && arg_atom == gen_atom do
+          {:sum, {var_fun, meta, [:_]}}
+        else
+          {:sum, {var_fun, meta, [:_]}}
+        end
+
+      # Fallback: return original generator sum
+      _ ->
+        {:sum, {:for, inner_expr, generators}}
+    end
+  end
+
+  defp extract_var_atom(ast) do
+    case ast do
+      {name, _, _} when is_atom(name) -> name
+      name when is_atom(name) -> name
+      _ -> nil
+    end
+  end
 
   # Simple evaluation helpers
   def evaluate_simple_expression(expr) do

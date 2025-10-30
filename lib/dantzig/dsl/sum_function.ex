@@ -42,8 +42,21 @@ defmodule Dantzig.DSL.SumFunction do
       sum(queen2d(i, j) * weight(i, j) for i <- 1..4, j <- 1..4)
   """
   defmacro sum(expr, :for, generators) do
+    # Normalize generators like [i <- 1..n] to quote var AST
+    transformed_generators =
+      case generators do
+        list when is_list(list) ->
+          Enum.map(list, fn
+            {:<-, meta, [var, range]} -> {:<-, meta, [quote(do: unquote(var)), range]}
+            other -> other
+          end)
+
+        other ->
+          other
+      end
+
     quote do
-      {:sum, {:for, unquote(expr), unquote(generators)}}
+      {:sum, {:for, unquote(expr), unquote(transformed_generators)}}
     end
   end
   

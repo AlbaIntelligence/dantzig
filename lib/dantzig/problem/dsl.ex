@@ -87,11 +87,9 @@ defmodule Dantzig.Problem.DSL do
   """
   defmacro define(do: block) do
     quote do
-      # Start with a new problem
-      problem = Dantzig.Problem.new(name: "Generated Problem")
-
-      # Process the block to generate individual calls
-      unquote(process_define_block(block))
+      Dantzig.Problem.define do
+        unquote(block)
+      end
     end
   end
 
@@ -110,17 +108,10 @@ defmodule Dantzig.Problem.DSL do
     end
   """
   defmacro define(opts, do: block) do
-    model_parameters = Keyword.get(opts, :model_parameters, %{})
-
     quote do
-      # Start with a new problem
-      problem = Dantzig.Problem.new(name: "Generated Problem")
-
-      # Make model parameters available in the block
-      model_parameters = unquote(model_parameters)
-
-      # Process the block to generate individual calls
-      unquote(process_define_block(block))
+      Dantzig.Problem.define unquote(opts) do
+        unquote(block)
+      end
     end
   end
 
@@ -206,10 +197,22 @@ defmodule Dantzig.Problem.DSL do
   This is the clean syntax used within define blocks without needing to pass the problem.
   """
   defmacro variables(var_name, generators, var_type, description) do
+    # Normalize generator syntax like [i <- 1..n] to quoted var AST
+    transformed_generators =
+      case generators do
+        list when is_list(list) ->
+          Enum.map(list, fn
+            {:<-, meta, [var, range]} -> {:<-, meta, [quote(do: unquote(var)), range]}
+            other -> other
+          end)
+
+        other ->
+          other
+      end
+
     quote do
-      # This will be handled by the Problem.define reducer
       {:variables, [],
-       [unquote(var_name), unquote(generators), unquote(var_type), unquote(description)]}
+       [unquote(var_name), unquote(transformed_generators), unquote(var_type), unquote(description)]}
     end
   end
 
@@ -487,18 +490,7 @@ defmodule Dantzig.Problem.DSL do
     {var_name, [], args}
   end
 
-  # Process the define block to generate individual calls
-  defp process_define_block(block) do
-    # This is a placeholder implementation
-    # In a real implementation, this would parse the block and generate
-    # individual Problem.add_constraint calls
-
-    quote do
-      # For now, just return the problem as-is
-      # TODO: Implement proper block processing
-      problem
-    end
-  end
+  # Removed placeholder process_define_block/1 to avoid drift with Problem.define
 
   defp parse_generators(generators), do: Internal.parse_generators(generators)
 
