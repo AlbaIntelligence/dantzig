@@ -212,7 +212,12 @@ defmodule Dantzig.Problem.DSL do
 
     quote do
       {:variables, [],
-       [unquote(var_name), unquote(transformed_generators), unquote(var_type), unquote(description)]}
+       [
+         unquote(var_name),
+         unquote(transformed_generators),
+         unquote(var_type),
+         unquote(description)
+       ]}
     end
   end
 
@@ -220,25 +225,14 @@ defmodule Dantzig.Problem.DSL do
   Public DSL macro for constraints - matches nqueens_dsl.exs syntax.
   """
   defmacro constraints(problem, generators, constraint_expr, description \\ nil) do
-    # The generators parameter contains the raw AST from [i <- 1..4]
-    # We need to transform this into a valid format
+    # Normalize any generator list entries like [i <- 1..4] to quoted var AST
     transformed_generators =
       case generators do
-        # Handle list syntax like [i <- 1..4]
         list when is_list(list) ->
-          # Check if this looks like generator syntax
-          if Enum.all?(list, fn
-               {:<-, _, [var, _range]} when is_atom(var) -> true
-               _ -> false
-             end) do
-            # Transform to proper AST format
-            Enum.map(list, fn {:<-, meta, [var, range]} ->
-              {:<-, meta, [quote(do: unquote(var)), range]}
-            end)
-          else
-            generators
-          end
-
+          Enum.map(list, fn
+            {:<-, meta, [var, range]} -> {:<-, meta, [quote(do: unquote(var)), range]}
+            other -> other
+          end)
         other ->
           other
       end
@@ -490,6 +484,7 @@ defmodule Dantzig.Problem.DSL do
     {var_name, [], args}
   end
 
+  # TODO: REMOVE THE FOLLOWING UNUSED PLACEHOLDER FUNCTIONS AFTER CHECKING THEY ARE ACTUALLY UNUSED
   # Removed placeholder process_define_block/1 to avoid drift with Problem.define
 
   defp parse_generators(generators), do: Internal.parse_generators(generators)

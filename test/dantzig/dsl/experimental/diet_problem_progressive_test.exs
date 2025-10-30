@@ -41,7 +41,7 @@ defmodule Dantzig.DSL.DietProblemProgressiveTest do
         Problem.define model_parameters: %{food_names: food_names} do
           new(name: "Simple Diet", description: "Test basic variable creation")
 
-          variables("qty", [food <- food_names], :continuous, "Amount of food")
+          variables("qty", DSL.generators([food <- food_names]), :continuous, "Amount of food")
         end
 
       assert map_size(problem.variable_defs) == 6
@@ -55,7 +55,7 @@ defmodule Dantzig.DSL.DietProblemProgressiveTest do
         Problem.define model_parameters: %{food_names: food_names} do
           new(name: "Simple Diet", description: "Test basic objective")
 
-          variables("qty", [food <- food_names], :continuous, "Amount of food")
+          variables("qty", DSL.generators([food <- food_names]), :continuous, "Amount of food")
           objective(sum(for food <- food_names, do: qty(food) * 1.0), direction: :minimize)
         end
 
@@ -71,7 +71,7 @@ defmodule Dantzig.DSL.DietProblemProgressiveTest do
         Problem.define model_parameters: %{food_names: food_names, foods: foods} do
           new(name: "Simple Diet", description: "Test map access in objective")
 
-          variables("qty", [food <- food_names], :continuous, "Amount of food")
+          variables("qty", DSL.generators([food <- food_names]), :continuous, "Amount of food")
 
           objective(sum(for food <- food_names, do: qty(food) * foods[food]["cost"]),
             direction: :minimize
@@ -87,7 +87,7 @@ defmodule Dantzig.DSL.DietProblemProgressiveTest do
         Problem.define model_parameters: %{food_names: food_names} do
           new(name: "Simple Diet", description: "Test basic constraint")
 
-          variables("qty", [food <- food_names], :continuous, "Amount of food")
+          variables("qty", DSL.generators([food <- food_names]), :continuous, "Amount of food")
           constraints([], sum(for food <- food_names, do: qty(food)) >= 1, "Min total food")
         end
 
@@ -102,7 +102,7 @@ defmodule Dantzig.DSL.DietProblemProgressiveTest do
         Problem.define model_parameters: %{food_names: food_names, foods: foods} do
           new(name: "Simple Diet", description: "Test map access in constraint")
 
-          variables("qty", [food <- food_names], :continuous, "Amount of food")
+          variables("qty", DSL.generators([food <- food_names]), :continuous, "Amount of food")
 
           constraints(
             [],
@@ -122,7 +122,7 @@ defmodule Dantzig.DSL.DietProblemProgressiveTest do
         Problem.define model_parameters: %{food_names: food_names, foods_dict: foods_dict} do
           new(name: "Simple Diet", description: "Test nested map access in constraint")
 
-          variables("qty", [food <- food_names], :continuous, "Amount of food")
+          variables("qty", DSL.generators([food <- food_names]), :continuous, "Amount of food")
 
           constraints(
             [],
@@ -178,7 +178,7 @@ defmodule Dantzig.DSL.DietProblemProgressiveTest do
           variables("qty", [food <- food_names], :continuous, "Amount of food")
 
           constraints(
-            [l_name <- limits_names],
+            DSL.generators([l_name <- limits_names]),
             sum(for food <- food_names, do: qty(food) * foods_dict[food][l_name]) >=
               limits_dict[l_name]["min"],
             "Min #{l_name}"
@@ -206,7 +206,7 @@ defmodule Dantzig.DSL.DietProblemProgressiveTest do
             description: "Minimize cost of food while meeting nutritional requirements"
           )
 
-          variables("qty", [food <- food_names], :continuous,
+          variables("qty", DSL.generators([food <- food_names]), :continuous,
             min: 0.0,
             max: :infinity,
             description: "Amount of food to buy"
@@ -217,14 +217,14 @@ defmodule Dantzig.DSL.DietProblemProgressiveTest do
           )
 
           constraints(
-            [l_name <- limits_names],
+            DSL.generators([l_name <- limits_names]),
             sum(for food <- food_names, do: qty(food) * foods_dict[food][l_name]) >=
               limits_dict[l_name]["min"],
             "Min #{l_name}"
           )
 
           constraints(
-            [l_name <- limits_names],
+            DSL.generators([l_name <- limits_names]),
             sum(for food <- food_names, do: qty(food) * foods_dict[food][l_name]) <=
               limits_dict[l_name]["max"],
             "Max #{l_name}"
@@ -265,7 +265,7 @@ defmodule Dantzig.DSL.DietProblemProgressiveTest do
             description: "Minimize cost of food while meeting nutritional requirements"
           )
 
-          variables("qty", [food <- food_names], :continuous,
+          variables("qty", DSL.generators([food <- food_names]), :continuous,
             min: 0.0,
             max: :infinity,
             description: "Amount of food to buy"
@@ -276,14 +276,14 @@ defmodule Dantzig.DSL.DietProblemProgressiveTest do
           )
 
           constraints(
-            [l_name <- limits_names],
+            DSL.generators([l_name <- limits_names]),
             sum(for food <- food_names, do: qty(food) * foods_dict[food][l_name]) >=
               limits_dict[l_name]["min"],
             "Min #{l_name}"
           )
 
           constraints(
-            [l_name <- limits_names],
+            DSL.generators([l_name <- limits_names]),
             sum(for food <- food_names, do: qty(food) * foods_dict[food][l_name]) <=
               limits_dict[l_name]["max"],
             "Max #{l_name}"
@@ -313,7 +313,7 @@ defmodule Dantzig.DSL.DietProblemProgressiveTest do
         Problem.define model_parameters: %{foods_dict: foods_dict} do
           new(name: "Empty Diet", description: "Test with empty food list")
 
-          variables("qty", [food <- []], :continuous, "Amount of food")
+          variables("qty", DSL.generators([food <- []]), :continuous, "Amount of food")
 
           objective(sum(for food <- [], do: qty(food) * foods_dict[food]["cost"]),
             direction: :minimize
@@ -328,7 +328,7 @@ defmodule Dantzig.DSL.DietProblemProgressiveTest do
         Problem.define model_parameters: %{} do
           new(name: "Single Food Diet", description: "Test with single food")
 
-          variables("qty", [food <- ["bread"]], :continuous, "Amount of food")
+          variables("qty", DSL.generators([food <- ["bread"]]), :continuous, "Amount of food")
 
           objective(sum(for food <- ["bread"], do: qty(food) * foods_dict[food]["cost"]),
             direction: :minimize
@@ -358,7 +358,7 @@ defmodule Dantzig.DSL.DietProblemProgressiveTest do
         Problem.define model_parameters: %{food_names: food_names, foods_dict: foods_dict} do
           new(name: "Incomplete Diet", description: "Test with incomplete food data")
 
-          variables("qty", [food <- ["bread", "milk"]], :continuous, "Amount of food")
+          variables("qty", DSL.generators([food <- ["bread", "milk"]]), :continuous, "Amount of food")
 
           objective(
             sum(for food <- ["bread", "milk"], do: qty(food) * incomplete_foods[food]["cost"]),
@@ -379,7 +379,7 @@ defmodule Dantzig.DSL.DietProblemProgressiveTest do
         Problem.define do
           new(name: "Zero Diet", description: "Test with zero coefficients")
 
-          variables("qty", [food <- ["bread", "milk"]], :continuous, "Amount of food")
+          variables("qty", DSL.generators([food <- ["bread", "milk"]]), :continuous, "Amount of food")
 
           objective(sum(for food <- ["bread", "milk"], do: qty(food) * zero_foods[food]["cost"]),
             direction: :minimize
@@ -403,7 +403,7 @@ defmodule Dantzig.DSL.DietProblemProgressiveTest do
         Problem.define do
           new(name: "Alternative Sum", description: "Test alternative sum syntax")
 
-          variables("qty", [food <- food_names], :continuous, "Amount of food")
+          variables("qty", DSL.generators([food <- food_names]), :continuous, "Amount of food")
 
           objective(sum((qty(food) * foods_dict[food]["cost"]) in food <- food_names),
             direction: :minimize
@@ -419,7 +419,7 @@ defmodule Dantzig.DSL.DietProblemProgressiveTest do
         Problem.define do
           new(name: "Mixed Sum", description: "Test mixed sum syntaxes")
 
-          variables("qty", [food <- food_names], :continuous, "Amount of food")
+          variables("qty", DSL.generators([food <- food_names]), :continuous, "Amount of food")
 
           objective(sum(for food <- food_names, do: qty(food) * foods_dict[food]["cost"]),
             direction: :minimize
