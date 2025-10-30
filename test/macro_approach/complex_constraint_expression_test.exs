@@ -74,7 +74,11 @@ defmodule MacroApproach.ComplexConstraintExpressionTest do
         variables("z", [i <- 1..2, j <- 1..2], :continuous, "Variable z")
 
         # Test constraint generation with complex expression: z(i,j) + z(i,j) == 2*z(i,j)
-        constraints([i <- 1..2, j <- 1..2], z(i, j) + z(i, j) == 2 * z(i, j), "complex_constraint_#{i}_#{j}")
+        constraints(
+          [i <- 1..2, j <- 1..2],
+          z(i, j) + z(i, j) == 2 * z(i, j),
+          "complex_constraint_#{i}_#{j}"
+        )
       end
 
     # Check that constraints were added (2x2 = 4 combinations)
