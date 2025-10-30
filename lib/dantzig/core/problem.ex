@@ -285,6 +285,29 @@ defmodule Dantzig.Problem do
   so they expand correctly without requiring explicit imports in user code.
   """
   defmacro define(do: block) do
+    define_impl(block, [])
+  end
+
+  @doc """
+  Macro entrypoint to define a problem with model parameters.
+
+  Accepts `model_parameters:` keyword option to provide runtime values
+  accessible within the DSL block.
+
+  Example:
+    Problem.define model_parameters: %{food_names: ["bread", "milk"]} do
+      variables("qty", [food <- food_names], :continuous, "Amount")
+    end
+  """
+  defmacro define(opts, do: block) when is_list(opts) do
+    define_impl(block, opts)
+  end
+
+  # Internal implementation shared by define/1 and define/2
+  defp define_impl(block, opts) do
+    # Extract model_parameters AST from options if provided (will be evaluated at runtime)
+    model_params_ast = Keyword.get(opts, :model_parameters, nil)
+    
     # Rewrite nested calls that must be qualified (e.g., sum(...))
     # and transform generator syntax [var <- list] into quoted expressions
     rewritten_block =
@@ -294,14 +317,12 @@ defmodule Dantzig.Problem do
 
         # Transform generator syntax [var <- list] into quoted expressions
         list when is_list(list) ->
-          case list do
-            [{:<-, _, [var, list_expr]}] ->
-              # Handle variables from outer scope by properly quoting them
-              [{:<-, [], [quote(do: unquote(var)), list_expr]}]
-
-            _ ->
-              list
-          end
+          Enum.map(list, fn
+            {:<-, meta2, [var2, range2]} ->
+              {:<-, meta2, [quote(do: unquote(var2)), range2]}
+            other ->
+              other
+          end)
 
         other ->
           other
@@ -318,8 +339,25 @@ defmodule Dantzig.Problem do
       # Ensure modules/macros are available in the generated context
       require Dantzig.Problem.DSL, as: DSL
 
+      # Evaluate model parameters at runtime and merge with caller bindings
+      model_params = unquote(model_params_ast || quote(do: %{}))
+      caller_binding = binding()
+      
+      # Merge model parameters into binding for variable resolution
+      # Model parameters take precedence over caller bindings if there's a conflict
+      extended_binding = 
+        case model_params do
+          %{} = params_map when map_size(params_map) > 0 ->
+            # Convert map to keyword list format for Code.eval_quoted
+            Enum.reduce(params_map, caller_binding, fn {key, value}, acc ->
+              Keyword.put(acc, key, value)
+            end)
+          _ ->
+            caller_binding
+        end
+
       # Process the block expressions left-to-right, threading the problem
-      unquote(__MODULE__).__define_with_env__(unquote(Macro.escape(exprs)), binding())
+      unquote(__MODULE__).__define_with_env__(unquote(Macro.escape(exprs)), extended_binding)
     end
   end
 
