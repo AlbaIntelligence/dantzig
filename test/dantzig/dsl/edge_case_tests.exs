@@ -7,8 +7,9 @@ defmodule Dantzig.DSL.EdgeCaseTests do
     test "empty generators should raise error" do
       assert_raise ArgumentError, fn ->
         Problem.define do
-          new(direction: :maximize)
-          variables("x", [], :continuous)  # Empty generator list
+          new(name: "Test")
+          # Empty generator list - should work
+          variables("x", [], :continuous, "Variable x")
         end
       end
     end
@@ -16,8 +17,8 @@ defmodule Dantzig.DSL.EdgeCaseTests do
     test "invalid variable type should raise error" do
       assert_raise ArgumentError, fn ->
         Problem.define do
-          new(direction: :maximize)
-          variables("x", [i <- 1..3], :invalid_type)
+          new(name: "Test")
+          variables("x", [i <- 1..3], :invalid_type, "Variable x")
         end
       end
     end
@@ -25,9 +26,10 @@ defmodule Dantzig.DSL.EdgeCaseTests do
     test "invalid constraint operator should raise error" do
       assert_raise ArgumentError, fn ->
         Problem.define do
-          new(direction: :maximize)
-          variables("x", :continuous)
-          constraints(x < 5)  # Invalid operator
+          new(name: "Test")
+          variables("x", [], :continuous, "Variable x")
+          # Invalid operator
+          constraints(x < 5, "Constraint")
         end
       end
     end
@@ -35,9 +37,10 @@ defmodule Dantzig.DSL.EdgeCaseTests do
     test "undefined variable in constraint should raise error" do
       assert_raise ArgumentError, fn ->
         Problem.define do
-          new(direction: :maximize)
-          variables("x", :continuous)
-          constraints(y <= 5)  # y is not defined
+          new(name: "Test")
+          variables("x", [], :continuous, "Variable x")
+          # y is not defined
+          constraints(y <= 5, "Constraint")
         end
       end
     end
@@ -45,9 +48,9 @@ defmodule Dantzig.DSL.EdgeCaseTests do
     test "invalid objective direction should raise error" do
       assert_raise ArgumentError, fn ->
         Problem.define do
-          new(direction: :invalid)
-          variables("x", :continuous)
-          objective(x)
+          new(name: "Test")
+          variables("x", [], :continuous, "Variable x")
+          objective(x, :invalid)
         end
       end
     end
@@ -56,10 +59,10 @@ defmodule Dantzig.DSL.EdgeCaseTests do
       # Test with larger but reasonable problem size
       problem =
         Problem.define do
-          new(direction: :maximize)
-          variables("x", [i <- 1..20], :binary)
-          constraints([i <- 1..20], x(i) <= 1)
-          objective(sum(for i <- 1..20, do: x(i)))
+          new(name: "Large Problem")
+          variables("x", [i <- 1..20], :binary, "Binary variable")
+          constraints([i <- 1..20], x(i) <= 1, "Constraint #{i}")
+          objective(sum(for i <- 1..20, do: x(i)), :maximize)
         end
 
       # Should not crash during problem creation
@@ -70,10 +73,11 @@ defmodule Dantzig.DSL.EdgeCaseTests do
     test "constraint with no variables should handle gracefully" do
       problem =
         Problem.define do
-          new(direction: :maximize)
-          variables("x", :continuous)
-          constraints(5 <= 10)  # Constant constraint
-          objective(x)
+          new(name: "Test")
+          variables("x", [], :continuous, "Variable x")
+          # Constant constraint
+          constraints(5 <= 10, "Constant constraint")
+          objective(x, :maximize)
         end
 
       assert problem != nil
@@ -82,9 +86,9 @@ defmodule Dantzig.DSL.EdgeCaseTests do
     test "problem with no constraints should work" do
       problem =
         Problem.define do
-          new(direction: :maximize)
-          variables("x", :continuous)
-          objective(x)
+          new(name: "Test")
+          variables("x", [], :continuous, "Variable x")
+          objective(x, :maximize)
         end
 
       assert problem != nil
@@ -96,10 +100,10 @@ defmodule Dantzig.DSL.EdgeCaseTests do
     test "single variable problem" do
       problem =
         Problem.define do
-          new(direction: :maximize)
-          variables("x", :continuous, min: 0, max: 10)
-          constraints(x <= 5)
-          objective(x)
+          new(name: "Test")
+          variables("x", [], :continuous, "Variable x")
+          constraints(x <= 5, "Constraint")
+          objective(x, :maximize)
         end
 
       assert problem != nil
@@ -109,10 +113,10 @@ defmodule Dantzig.DSL.EdgeCaseTests do
     test "zero bounds" do
       problem =
         Problem.define do
-          new(direction: :maximize)
-          variables("x", :continuous, min: 0, max: 0)
-          constraints(x == 0)
-          objective(x)
+          new(name: "Test")
+          variables("x", [], :continuous, "Variable x")
+          constraints(x == 0, "Constraint")
+          objective(x, :maximize)
         end
 
       assert problem != nil
@@ -121,11 +125,11 @@ defmodule Dantzig.DSL.EdgeCaseTests do
     test "very small coefficients" do
       problem =
         Problem.define do
-          new(direction: :maximize)
-          variables("x", :continuous)
-          variables("y", :continuous)
-          constraints(0.0001*x + 0.0001*y <= 1)
-          objective(x + y)
+          new(name: "Test")
+          variables("x", [], :continuous, "Variable x")
+          variables("y", [], :continuous, "Variable y")
+          constraints(0.0001 * x + 0.0001 * y <= 1, "Constraint")
+          objective(x + y, :maximize)
         end
 
       assert problem != nil
@@ -136,14 +140,14 @@ defmodule Dantzig.DSL.EdgeCaseTests do
     test "nested expressions" do
       problem =
         Problem.define do
-          new(direction: :maximize)
-          variables("x", :continuous)
-          variables("y", :continuous)
-          variables("z", :continuous)
+          new(name: "Test")
+          variables("x", [], :continuous, "Variable x")
+          variables("y", [], :continuous, "Variable y")
+          variables("z", [], :continuous, "Variable z")
 
           # Complex nested constraint
-          constraints(2*(x + y) - 3*z <= 10)
-          objective(x + 2*y + 3*z)
+          constraints(2 * (x + y) - 3 * z <= 10, "Complex constraint")
+          objective(x + 2 * y + 3 * z, :maximize)
         end
 
       assert problem != nil
@@ -152,21 +156,19 @@ defmodule Dantzig.DSL.EdgeCaseTests do
     test "expression with many terms" do
       problem =
         Problem.define do
-          new(direction: :maximize)
-          variables("x1", :continuous)
-          variables("x2", :continuous)
-          variables("x3", :continuous)
-          variables("x4", :continuous)
-          variables("x5", :continuous)
+          new(name: "Test")
+          variables("x1", [], :continuous, "Variable x1")
+          variables("x2", [], :continuous, "Variable x2")
+          variables("x3", [], :continuous, "Variable x3")
+          variables("x4", [], :continuous, "Variable x4")
+          variables("x5", [], :continuous, "Variable x5")
 
           # Constraint with many variables
-          constraints(x1 + x2 + x3 + x4 + x5 <= 100)
-          objective(x1 + x2 + x3 + x4 + x5)
+          constraints(x1 + x2 + x3 + x4 + x5 <= 100, "Constraint")
+          objective(x1 + x2 + x3 + x4 + x5, :maximize)
         end
 
       assert problem != nil
     end
-  end
-end    end
   end
 end

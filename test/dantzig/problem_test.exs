@@ -13,11 +13,13 @@ defmodule Dantzig.ProblemTest do
   end
 
   test "can create a linear maximization problem" do
-    _problem = Problem.new(direction: :maximize)
+    problem = Problem.new(name: "Test")
+    _problem = Problem.set_objective(problem, Polynomial.const(0.0), :maximize)
   end
 
   test "can create a linear minimization problem" do
-    _problem = Problem.new(direction: :minimize)
+    problem = Problem.new(name: "Test")
+    _problem = Problem.set_objective(problem, Polynomial.const(0.0), :minimize)
   end
 
   property "can create a variable with the given suffix" do
@@ -25,7 +27,8 @@ defmodule Dantzig.ProblemTest do
             suffix <- StreamData.string([?a..?z, ?A..?Z, ?0..?9, ?_], min_length: 1),
             direction <- StreamData.one_of([:minimize, :maximize])
           ) do
-      problem = Problem.new(direction: direction)
+      problem = Problem.new(name: "Test")
+      problem = Problem.set_objective(problem, Polynomial.const(0.0), direction)
       {problem, variable} = Problem.new_variable(problem, suffix)
 
       assert Enum.any?(problem.variables, fn {variable_name, _variable} ->
@@ -45,7 +48,8 @@ defmodule Dantzig.ProblemTest do
             suffix <- StreamData.string([?a..?z, ?A..?Z, ?0..?9, ?_], min_length: 1),
             direction <- StreamData.one_of([:minimize, :maximize])
           ) do
-      problem = Problem.new(direction: direction)
+      problem = Problem.new(name: "Test")
+      problem = Problem.set_objective(problem, Polynomial.const(0.0), direction)
       {_problem, variable} = Problem.new_variable(problem, suffix)
 
       assert Polynomial.degree(variable) == 1
@@ -80,7 +84,8 @@ defmodule Dantzig.ProblemTest do
       variable_suffixes_left = Enum.map(terms1, fn {_coeff, var} -> var end)
       variable_suffixes_right = Enum.map(terms2, fn {_coeff, var} -> var end)
 
-      problem = Problem.new(direction: direction)
+      problem = Problem.new(name: "Test")
+      problem = Problem.set_objective(problem, Polynomial.const(0.0), direction)
       # Add variables top the problem based on the suffixes we've generated
       {problem, variables_left} = Problem.new_variables(problem, variable_suffixes_left)
       {problem, variables_right} = Problem.new_variables(problem, variable_suffixes_right)

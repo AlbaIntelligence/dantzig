@@ -5,7 +5,7 @@ defmodule Dantzig.Solver.HiGHSTest do
 
   describe "to_lp_iodata/1" do
     test "generates LP format for simple minimization problem" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x} = Problem.new_variable(problem, "x", type: :continuous)
       {problem, y} = Problem.new_variable(problem, "y", type: :continuous)
 
@@ -38,7 +38,7 @@ defmodule Dantzig.Solver.HiGHSTest do
     end
 
     test "generates LP format for maximization problem" do
-      problem = Problem.new(direction: :maximize)
+      problem = Problem.new(name: Test)
       {problem, x} = Problem.new_variable(problem, "x", type: :continuous)
       {problem, y} = Problem.new_variable(problem, "y", type: :continuous)
 
@@ -62,7 +62,7 @@ defmodule Dantzig.Solver.HiGHSTest do
     end
 
     test "generates LP format with binary variables" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x} = Problem.new_variable(problem, "x", type: :binary)
       {problem, y} = Problem.new_variable(problem, "y", type: :binary)
 
@@ -80,7 +80,7 @@ defmodule Dantzig.Solver.HiGHSTest do
     end
 
     test "generates LP format with integer variables" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x} = Problem.new_variable(problem, "x", type: :integer)
       {problem, y} = Problem.new_variable(problem, "y", type: :integer)
 
@@ -98,7 +98,7 @@ defmodule Dantzig.Solver.HiGHSTest do
     end
 
     test "generates LP format with variable bounds" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x} = Problem.new_variable(problem, "x", type: :continuous, min: 0.0, max: 10.0)
       {problem, y} = Problem.new_variable(problem, "y", type: :continuous, min: -5.0, max: 5.0)
 
@@ -115,7 +115,7 @@ defmodule Dantzig.Solver.HiGHSTest do
     end
 
     test "generates LP format with unnamed constraints" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x} = Problem.new_variable(problem, "x", type: :continuous)
       {problem, y} = Problem.new_variable(problem, "y", type: :continuous)
 
@@ -136,7 +136,7 @@ defmodule Dantzig.Solver.HiGHSTest do
     end
 
     test "generates LP format with empty constraint names" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x} = Problem.new_variable(problem, "x", type: :continuous)
       {problem, y} = Problem.new_variable(problem, "y", type: :continuous)
 
@@ -157,7 +157,7 @@ defmodule Dantzig.Solver.HiGHSTest do
     end
 
     test "generates LP format with complex constraints" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x} = Problem.new_variable(problem, "x", type: :continuous)
       {problem, y} = Problem.new_variable(problem, "y", type: :continuous)
       {problem, z} = Problem.new_variable(problem, "z", type: :continuous)
@@ -188,7 +188,7 @@ defmodule Dantzig.Solver.HiGHSTest do
     end
 
     test "generates LP format with equality constraints" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x} = Problem.new_variable(problem, "x", type: :continuous)
       {problem, y} = Problem.new_variable(problem, "y", type: :continuous)
 
@@ -208,7 +208,7 @@ defmodule Dantzig.Solver.HiGHSTest do
     end
 
     test "generates LP format with negative coefficients" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x} = Problem.new_variable(problem, "x", type: :continuous)
       {problem, y} = Problem.new_variable(problem, "y", type: :continuous)
 
@@ -235,7 +235,7 @@ defmodule Dantzig.Solver.HiGHSTest do
     end
 
     test "generates LP format with zero objective" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x} = Problem.new_variable(problem, "x", type: :continuous)
       {problem, y} = Problem.new_variable(problem, "y", type: :continuous)
 
@@ -254,7 +254,7 @@ defmodule Dantzig.Solver.HiGHSTest do
     end
 
     test "generates LP format with constant objective" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x} = Problem.new_variable(problem, "x", type: :continuous)
 
       # Objective: minimize 5 (constant)
@@ -269,7 +269,7 @@ defmodule Dantzig.Solver.HiGHSTest do
     end
 
     test "generates LP format with mixed variable types" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x} = Problem.new_variable(problem, "x", type: :continuous)
       {problem, y} = Problem.new_variable(problem, "y", type: :binary)
       {problem, z} = Problem.new_variable(problem, "z", type: :integer)
@@ -291,7 +291,7 @@ defmodule Dantzig.Solver.HiGHSTest do
     end
 
     test "generates LP format with long variable names" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x} = Problem.new_variable(problem, "very_long_variable_name", type: :continuous)
 
       {problem, y} =
@@ -310,7 +310,7 @@ defmodule Dantzig.Solver.HiGHSTest do
     end
 
     test "generates LP format with special characters in variable names" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x} = Problem.new_variable(problem, "x_1", type: :continuous)
       {problem, y} = Problem.new_variable(problem, "y_2", type: :continuous)
 
@@ -327,7 +327,7 @@ defmodule Dantzig.Solver.HiGHSTest do
     end
 
     test "generates LP format with multiple constraints" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x} = Problem.new_variable(problem, "x", type: :continuous)
       {problem, y} = Problem.new_variable(problem, "y", type: :continuous)
 
@@ -354,7 +354,7 @@ defmodule Dantzig.Solver.HiGHSTest do
     end
 
     test "generates LP format with no constraints" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x} = Problem.new_variable(problem, "x", type: :continuous)
 
       # Objective: minimize x
@@ -370,7 +370,7 @@ defmodule Dantzig.Solver.HiGHSTest do
     end
 
     test "generates LP format with no variables" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
 
       # No variables, no objective, no constraints
 

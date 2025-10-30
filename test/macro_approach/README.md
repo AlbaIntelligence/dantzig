@@ -11,7 +11,7 @@ All tests in this directory now use the **production DSL** (`Problem.define` syn
 All remaining tests verify real DSL functionality:
 
 - `nqueens_integration_test.exs` - N-Queens problem with real Problem.define (3 tests)
-- `nqueens_integration_test_rewrite.exs` - N-Queens with model parameters (3 tests)  
+- `nqueens_integration_test_rewrite.exs` - N-Queens with model parameters (3 tests)
 - `multiple_generator_constraint_test.exs` - Multiple generator constraints (3 tests)
 - `complex_constraint_expression_test.exs` - Complex expressions and inequalities (4 tests)
 - `dsl_constraint_test.exs` - DSL constraint generation with Problem.define

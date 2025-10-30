@@ -6,7 +6,8 @@ defmodule Dantzig.Core.ProblemTest do
 
   describe "new/1" do
     test "creates minimization problem" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: "Test")
+      problem = Problem.set_objective(problem, Polynomial.const(0.0), :minimize)
 
       assert problem.direction == :minimize
       assert problem.variable_counter == 0
@@ -18,7 +19,8 @@ defmodule Dantzig.Core.ProblemTest do
     end
 
     test "creates maximization problem" do
-      problem = Problem.new(direction: :maximize)
+      problem = Problem.new(name: "Test")
+      problem = Problem.set_objective(problem, Polynomial.const(0.0), :maximize)
 
       assert problem.direction == :maximize
       assert problem.variable_counter == 0
@@ -29,22 +31,24 @@ defmodule Dantzig.Core.ProblemTest do
       assert problem.constraints == %{}
     end
 
-    test "raises error for missing direction" do
-      assert_raise RuntimeError, fn ->
-        Problem.new([])
-      end
+    test "creates problem without direction (direction set via objective)" do
+      problem = Problem.new(name: "Test")
+      assert problem.direction == nil
+      problem = Problem.set_objective(problem, Polynomial.const(0.0), :maximize)
+      assert problem.direction == :maximize
     end
 
-    test "raises error for invalid direction" do
-      assert_raise RuntimeError, fn ->
-        Problem.new(direction: :invalid)
+    test "raises error for invalid direction in set_objective" do
+      problem = Problem.new(name: "Test")
+      assert_raise ArgumentError, fn ->
+        Problem.set_objective(problem, Polynomial.const(0.0), :invalid)
       end
     end
   end
 
   describe "new_variable/3" do
     test "creates continuous variable with default options" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {new_problem, variable} = Problem.new_variable(problem, "x")
 
       # Check variable definition
@@ -70,7 +74,7 @@ defmodule Dantzig.Core.ProblemTest do
     end
 
     test "creates binary variable" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {new_problem, variable} = Problem.new_variable(problem, "x", type: :binary)
 
       var_def = Problem.get_variable(new_problem, "x")
@@ -83,7 +87,7 @@ defmodule Dantzig.Core.ProblemTest do
     end
 
     test "creates integer variable" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {new_problem, variable} = Problem.new_variable(problem, "x", type: :integer)
 
       var_def = Problem.get_variable(new_problem, "x")
@@ -96,7 +100,7 @@ defmodule Dantzig.Core.ProblemTest do
     end
 
     test "creates variable with bounds" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
 
       {new_problem, variable} =
         Problem.new_variable(problem, "x", type: :continuous, min: 0.0, max: 10.0)
@@ -112,7 +116,7 @@ defmodule Dantzig.Core.ProblemTest do
     end
 
     test "creates variable with only lower bound" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {new_problem, variable} = Problem.new_variable(problem, "x", type: :continuous, min: 0.0)
 
       var_def = Problem.get_variable(new_problem, "x")
@@ -126,7 +130,7 @@ defmodule Dantzig.Core.ProblemTest do
     end
 
     test "creates variable with only upper bound" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {new_problem, variable} = Problem.new_variable(problem, "x", type: :continuous, max: 10.0)
 
       var_def = Problem.get_variable(new_problem, "x")
@@ -140,7 +144,7 @@ defmodule Dantzig.Core.ProblemTest do
     end
 
     test "creates variable with negative bounds" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
 
       {new_problem, variable} =
         Problem.new_variable(problem, "x", type: :continuous, min: -5.0, max: 5.0)
@@ -156,7 +160,7 @@ defmodule Dantzig.Core.ProblemTest do
     end
 
     test "increments variable counter" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {new_problem1, _} = Problem.new_variable(problem, "x")
       {new_problem2, _} = Problem.new_variable(new_problem1, "y")
       {new_problem3, _} = Problem.new_variable(new_problem2, "z")
@@ -167,7 +171,7 @@ defmodule Dantzig.Core.ProblemTest do
     end
 
     test "creates multiple variables with same name" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {new_problem1, x1} = Problem.new_variable(problem, "x")
       {new_problem2, x2} = Problem.new_variable(new_problem1, "x")
 
@@ -185,7 +189,7 @@ defmodule Dantzig.Core.ProblemTest do
 
   describe "get_variable/2" do
     test "returns variable definition for existing variable" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, _} = Problem.new_variable(problem, "x", type: :binary, min: 0.0, max: 1.0)
 
       var_def = Problem.get_variable(problem, "x")
@@ -197,7 +201,7 @@ defmodule Dantzig.Core.ProblemTest do
     end
 
     test "returns nil for non-existing variable" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
 
       var_def = Problem.get_variable(problem, "nonexistent")
       assert var_def == nil
@@ -206,7 +210,7 @@ defmodule Dantzig.Core.ProblemTest do
 
   describe "get_variables_nd/2" do
     test "returns N-D variable map for existing variable set" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x} = Problem.new_variable(problem, "x")
 
       x_vars = Problem.get_variables_nd(problem, "x")
@@ -216,7 +220,7 @@ defmodule Dantzig.Core.ProblemTest do
     end
 
     test "returns nil for non-existing variable set" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
 
       x_vars = Problem.get_variables_nd(problem, "nonexistent")
       assert x_vars == nil
@@ -225,7 +229,7 @@ defmodule Dantzig.Core.ProblemTest do
 
   describe "put_variables_nd/3" do
     test "puts N-D variable map" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
 
       x_vars = %{
         {1, 1} => Polynomial.variable("x1_1"),
@@ -241,7 +245,7 @@ defmodule Dantzig.Core.ProblemTest do
     end
 
     test "overwrites existing N-D variable map" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, _} = Problem.new_variable(problem, "x")
 
       x_vars = %{
@@ -260,7 +264,7 @@ defmodule Dantzig.Core.ProblemTest do
 
   describe "add_constraint/3" do
     test "adds constraint with name" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x} = Problem.new_variable(problem, "x")
       {problem, y} = Problem.new_variable(problem, "y")
 
@@ -273,7 +277,7 @@ defmodule Dantzig.Core.ProblemTest do
     end
 
     test "adds constraint without name" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x} = Problem.new_variable(problem, "x")
       {problem, y} = Problem.new_variable(problem, "y")
 
@@ -290,7 +294,7 @@ defmodule Dantzig.Core.ProblemTest do
     end
 
     test "adds multiple constraints" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x} = Problem.new_variable(problem, "x")
       {problem, y} = Problem.new_variable(problem, "y")
 
@@ -307,7 +311,7 @@ defmodule Dantzig.Core.ProblemTest do
     end
 
     test "increments constraint counter" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x} = Problem.new_variable(problem, "x")
 
       constraint1 = Constraint.new(x, :>=, 0.0)
@@ -320,7 +324,7 @@ defmodule Dantzig.Core.ProblemTest do
     end
 
     test "overwrites constraint with same name" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x} = Problem.new_variable(problem, "x")
 
       constraint1 = Constraint.new(x, :>=, 0.0)
@@ -336,7 +340,7 @@ defmodule Dantzig.Core.ProblemTest do
 
   describe "increment_objective/2" do
     test "adds variable to objective" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x} = Problem.new_variable(problem, "x")
 
       new_problem = Problem.increment_objective(problem, x)
@@ -345,7 +349,7 @@ defmodule Dantzig.Core.ProblemTest do
     end
 
     test "adds multiple variables to objective" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x} = Problem.new_variable(problem, "x")
       {problem, y} = Problem.new_variable(problem, "y")
 
@@ -357,7 +361,7 @@ defmodule Dantzig.Core.ProblemTest do
     end
 
     test "adds constant to objective" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x} = Problem.new_variable(problem, "x")
 
       problem = Problem.increment_objective(problem, x)
@@ -368,7 +372,7 @@ defmodule Dantzig.Core.ProblemTest do
     end
 
     test "adds polynomial to objective" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x} = Problem.new_variable(problem, "x")
       {problem, y} = Problem.new_variable(problem, "y")
 
@@ -382,7 +386,7 @@ defmodule Dantzig.Core.ProblemTest do
 
   describe "deprecated functions" do
     test "get_var_map/2 still works" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x} = Problem.new_variable(problem, "x")
 
       x_vars = Problem.get_var_map(problem, "x")
@@ -392,7 +396,7 @@ defmodule Dantzig.Core.ProblemTest do
     end
 
     test "put_var_map/3 still works" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
 
       x_vars = %{
         {1, 1} => Polynomial.variable("x1_1"),
@@ -408,7 +412,7 @@ defmodule Dantzig.Core.ProblemTest do
 
   describe "integration tests" do
     test "creates complete problem with variables, constraints, and objective" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
 
       # Create variables
       {problem, x} = Problem.new_variable(problem, "x", type: :continuous, min: 0.0, max: 10.0)
@@ -468,7 +472,7 @@ defmodule Dantzig.Core.ProblemTest do
     end
 
     test "handles large number of variables" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
 
       # Create 100 variables
       for i <- 1..100 do
@@ -492,7 +496,7 @@ defmodule Dantzig.Core.ProblemTest do
     end
 
     test "handles large number of constraints" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x} = Problem.new_variable(problem, "x")
 
       # Create 100 constraints
@@ -513,7 +517,7 @@ defmodule Dantzig.Core.ProblemTest do
 
   describe "error handling" do
     test "raises error for invalid variable type" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
 
       assert_raise ArgumentError, fn ->
         Problem.new_variable(problem, "x", type: :invalid)
@@ -521,7 +525,7 @@ defmodule Dantzig.Core.ProblemTest do
     end
 
     test "raises error for invalid bounds" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
 
       assert_raise ArgumentError, fn ->
         Problem.new_variable(problem, "x", type: :continuous, min: 10.0, max: 5.0)
@@ -529,7 +533,7 @@ defmodule Dantzig.Core.ProblemTest do
     end
 
     test "raises error for invalid constraint operator" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x} = Problem.new_variable(problem, "x")
 
       constraint = Constraint.new(x, :!=, 0.0)

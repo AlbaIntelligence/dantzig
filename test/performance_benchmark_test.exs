@@ -74,9 +74,9 @@ defmodule PerformanceBenchmarkTest do
 
     problem =
       Problem.define do
-        new(name: "Knapsack", direction: :maximize)
-        variables("select", [item <- items], :binary)
-        constraints([item <- items], select(item) <= 1)
+        new(name: "Knapsack")
+        variables("select", [item <- items], :binary, "Item selection")
+        constraints([item <- items], select(item) <= 1, "Item selection constraint")
         objective(sum(select(:_)), :maximize)
       end
 
@@ -89,10 +89,10 @@ defmodule PerformanceBenchmarkTest do
 
     problem =
       Problem.define do
-        new(name: "Assignment", direction: :minimize)
-        variables("assign", [w <- workers, t <- tasks], :binary)
-        constraints([w <- workers], sum(assign(w, :_)) == 1)
-        constraints([t <- tasks], sum(assign(:_, t)) == 1)
+        new(name: "Assignment")
+        variables("assign", [w <- workers, t <- tasks], :binary, "Task assignment")
+        constraints([w <- workers], sum(assign(w, :_)) == 1, "One task per worker")
+        constraints([t <- tasks], sum(assign(:_, t)) == 1, "One worker per task")
         objective(sum(assign(:_)), :minimize)
       end
 
@@ -106,12 +106,17 @@ defmodule PerformanceBenchmarkTest do
 
     problem =
       Problem.define do
-        new(name: "Production Planning", direction: :minimize)
-        variables("produce", [t <- time_periods], :continuous)
-        variables("inventory", [t <- time_periods], :continuous)
+        new(name: "Production Planning")
+        variables("produce", [t <- time_periods], :continuous, "Production amount")
+        variables("inventory", [t <- time_periods], :continuous, "Inventory level")
 
-        constraints([t <- [1]], produce(t) >= demand[1])
-        constraints([t <- 2..periods], inventory(t - 1) + produce(t) >= demand[t])
+        constraints([t <- [1]], produce(t) >= demand[1], "Initial demand")
+
+        constraints(
+          [t <- 2..periods],
+          inventory(t - 1) + produce(t) >= demand[t],
+          "Demand constraint period #{t}"
+        )
 
         objective(sum(produce(:_)), :minimize)
       end
@@ -126,9 +131,9 @@ defmodule PerformanceBenchmarkTest do
     capacity = num_items * 2
 
     Problem.define do
-      new(name: "Large Knapsack", direction: :maximize)
-      variables("select", [item <- items], :binary)
-      constraints([item <- items], select(item) <= 1)
+      new(name: "Large Knapsack")
+      variables("select", [item <- items], :binary, "Item selection")
+      constraints([item <- items], select(item) <= 1, "Item selection constraint")
       objective(sum(select(:_)), :maximize)
     end
   end
