@@ -1,6 +1,15 @@
 defmodule MacroApproach.SimpleConstraintTest do
   use ExUnit.Case
 
+  @moduledoc """
+  LEGACY: Prototype tests for macro generation internals.
+  These tests verify AST manipulation and macro generation patterns that are now obsolete.
+  The actual DSL functionality is tested in test/dantzig/dsl/experimental/
+  
+  Marked as @tag :legacy - can be skipped in test runs.
+  """
+
+  @tag :legacy
   # Test the simplest possible constraint generation
   defp generate_simple_constraint(var, range, constraint_expr, constraint_name) do
     # Build the interpolation for the variable - same pattern as variable generation
@@ -30,6 +39,7 @@ defmodule MacroApproach.SimpleConstraintTest do
     end
   end
 
+  @tag :legacy
   test "simplest single generator constraint" do
     var = quote(do: i)
     range = quote(do: 1..3)
@@ -52,6 +62,7 @@ defmodule MacroApproach.SimpleConstraintTest do
     assert name3 == "Simple constraint"
   end
 
+  @tag :legacy
   test "constraint with variable in name - this should fail initially" do
     var = quote(do: i)
     range = quote(do: 1..3)

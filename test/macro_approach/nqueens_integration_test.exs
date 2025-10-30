@@ -58,10 +58,13 @@ defmodule MacroApproach.NQueensIntegrationTest do
 
     # Check that we have constraints for each type
     row_constraints = Enum.filter(constraint_names, &String.contains?(&1, "One queen per row"))
+
     column_constraints =
       Enum.filter(constraint_names, &String.contains?(&1, "One queen per column"))
+
     main_diag_constraints =
       Enum.filter(constraint_names, &String.contains?(&1, "One queen per diagonal"))
+
     anti_diag_constraints =
       Enum.filter(constraint_names, &String.contains?(&1, "One queen per anti-diagonal"))
 
@@ -110,6 +113,7 @@ defmodule MacroApproach.NQueensIntegrationTest do
 
     # Check that we have the right number of each type
     row_constraints = Enum.filter(constraint_names, &String.contains?(&1, "row_constraint"))
+
     column_constraints =
       Enum.filter(constraint_names, &String.contains?(&1, "column_constraint"))
 
