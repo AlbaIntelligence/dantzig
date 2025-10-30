@@ -20,9 +20,9 @@ Additionally: add model parameters support to `Problem.define` and introduce a `
 **Testing**: ExUnit with coverage analysis via ExCoveralls
 **Target Platform**: Cross-platform (Linux, macOS, Windows) via HiGHS binary management
 **Project Type**: Library package (Hex.pm distribution)
-**Performance Goals**: Handle problems up to 1000 variables within 30 seconds, memory usage <100MB for typical problems
+**Performance Goals**: Handle problems up to 1000 variables within 30 seconds, memory usage <100MB for typical problems (gated in CI via `scripts/perf_gate.exs`)
 **Constraints**: Maintain backward compatibility with existing DSL API, zero breaking changes
-Model parameters and `Problem.modify` must not break existing DSL syntax; provide migration-free usage.
+Model parameters and `Problem.modify` must not break existing DSL syntax; migration-free usage enforced with explicit backward-compatibility tests.
 **Scale/Scope**: Support 5+ optimization problem types, comprehensive test coverage, production-ready reliability
 
 ## Constitution Check
