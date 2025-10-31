@@ -205,6 +205,8 @@ defmodule Dantzig.Problem do
 
     quote do
       # Ensure modules/macros are available in the generated context
+      # Require both fully-qualified and aliased names so macros expand either way
+      require Dantzig.Problem.DSL
       require Dantzig.Problem.DSL, as: DSL
 
       # Process the generators with the current environment
@@ -324,6 +326,22 @@ defmodule Dantzig.Problem do
               other
           end)
 
+        # Rewrite fully-qualified DSL.generators([...]) even if caller didn't require the macro
+        {{:., m, [alias_ast, :generators]}, meta, [gen_arg]} ->
+          case {alias_ast, gen_arg} do
+            {{:__aliases__, _, [:Dantzig, :Problem, :DSL]}, list} when is_list(list) ->
+              transformed =
+                Enum.map(list, fn
+                  {:<-, gmeta, [var, range]} -> {:<-, gmeta, [quote(do: unquote(var)), range]}
+                  other -> other
+                end)
+
+              transformed
+
+            _ ->
+              {{:., m, [alias_ast, :generators]}, meta, [gen_arg]}
+          end
+
         other ->
           other
       end)
@@ -398,6 +416,8 @@ defmodule Dantzig.Problem do
       end
 
     quote do
+      # Ensure macros expand for both fully-qualified and aliased usage
+      require Dantzig.Problem.DSL
       require Dantzig.Problem.DSL, as: DSL
 
       unquote(__MODULE__).__modify_with_env__(
