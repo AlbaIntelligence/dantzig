@@ -64,7 +64,24 @@ defmodule Dantzig.Problem.AST do
   #   sum(qty(:_))
   # This keeps implementation simple while tests can use generator syntax.
   def transform_objective_expression_to_ast(expr) do
-    case expr do
+    normalized =
+      Macro.prewalk(expr, fn
+        # Normalize variable reference arguments in function-style variable access
+        {var_name, meta, args} = call when is_atom(var_name) and is_list(args) ->
+          normalized_args =
+            Enum.map(args, fn
+              {atom, _, ctx} = arg when is_atom(atom) and (is_atom(ctx) or is_nil(ctx)) -> arg
+              :_ -> :_
+              other -> other
+            end)
+
+          {var_name, meta, normalized_args}
+
+        other ->
+          other
+      end)
+
+    case normalized do
       # Handle unqualified sum macro passed through Problem.define prewalk
       {:sum, {:for, inner_expr, generators}} ->
         rewrite_generator_sum(inner_expr, generators)
