@@ -30,5 +30,3 @@ defmodule Dantzig.DSL.DescriptionInterpolationTest do
     assert c.description == "Upper bound"
   end
 end
-\"EOF\"
-mix test test/dantzig/dsl/experimental/description_interpolation_test.exs

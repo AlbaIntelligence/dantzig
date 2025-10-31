@@ -155,6 +155,25 @@ defmodule Dantzig.Problem.AST do
   # Parse simple expressions to polynomials (no bindings)
   def parse_simple_expression_to_polynomial(expr) do
     case expr do
+      # Support Polynomial.variable("x") (with or without full alias) within simple constraints
+      {{:., _, [{:__aliases__, _, [:Dantzig, :Polynomial]}, :variable]}, _, [name]} ->
+        var_name =
+          case name do
+            n when is_binary(n) -> n
+            n when is_atom(n) -> to_string(n)
+            _ -> raise ArgumentError, "Invalid variable name: #{inspect(name)}"
+          end
+        Polynomial.variable(var_name)
+
+      {{:., _, [{:__aliases__, _, [:Polynomial]}, :variable]}, _, [name]} ->
+        var_name =
+          case name do
+            n when is_binary(n) -> n
+            n when is_atom(n) -> to_string(n)
+            _ -> raise ArgumentError, "Invalid variable name: #{inspect(name)}"
+          end
+        Polynomial.variable(var_name)
+
       {var_name, _, nil} when is_atom(var_name) or is_binary(var_name) ->
         var_name_str =
           case var_name do

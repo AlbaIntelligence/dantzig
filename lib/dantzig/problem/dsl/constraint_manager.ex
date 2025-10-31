@@ -28,15 +28,34 @@ defmodule Dantzig.Problem.DSL.ConstraintManager do
       # Propagate both name and human description
       constraint =
         cond do
-          constraint_name && is_binary(description) ->
-            interp_desc =
-              interpolate_variables_in_description(to_string(description), bindings, index_vals)
-              |> String.trim()
-
-            %{constraint | name: constraint_name, description: interp_desc}
-
           constraint_name ->
-            %{constraint | name: constraint_name}
+            # When we have a generated name, also attempt to populate description
+            updated = %{constraint | name: constraint_name}
+
+            cond do
+              is_tuple(description) ->
+                var_bindings = Map.to_list(bindings)
+
+                evaluated =
+                  try do
+                    {val, _} = Code.eval_quoted(description, var_bindings)
+                    to_string(val)
+                  rescue
+                    _ -> nil
+                  end
+
+                if evaluated, do: %{updated | description: String.trim(evaluated)}, else: updated
+
+              is_binary(description) ->
+                interp_desc =
+                  interpolate_variables_in_description(to_string(description), bindings, index_vals)
+                  |> String.trim()
+
+                %{updated | description: interp_desc}
+
+              true ->
+                updated
+            end
 
           is_tuple(description) ->
             # Evaluate AST description like {:<<>>, ...} using current bindings
@@ -177,6 +196,7 @@ defmodule Dantzig.Problem.DSL.ConstraintManager do
         String.replace(acc_desc, pattern, to_string(value))
       end)
 
+    # TODO: REMOVE USE OF GENERIC i, j, k, ... THE NAME OF THE INDEX VARIABLE CAN BE ANYTHING
     # Then, for conventional i/j/k ... placeholders (when numeric), append index values like i_1
     variable_names = ["i", "j", "k", "l", "m", "n"]
 

@@ -491,10 +491,31 @@ defmodule Dantzig.Problem do
                       end
 
                     if head_atom && gen_atom && head_atom == gen_atom do
-                      new_name = name <> "_" <> to_string(value)
+                    new_name = name <> "_" <> to_string(value)
 
-                      {new_p, _} =
-                        new_variable(acc_problem, new_name, type: type, description: desc)
+                    # Interpolate variable description with current index when possible
+                    interp_desc =
+                      case desc do
+                        # Interpolated binary AST, evaluate with current binding
+                        {:<<>>, _m, _parts} = ast ->
+                          try do
+                            {val, _} = Code.eval_quoted(ast, [{head_atom, value}])
+                            to_string(val)
+                          rescue
+                            _ -> desc
+                          end
+
+                        # Plain string: replace occurrences of the generator var name with value
+                        bin when is_binary(bin) ->
+                          pattern = ~r/\b#{Regex.escape(to_string(head_atom))}\b/
+                          String.replace(bin, pattern, to_string(value))
+
+                        _ ->
+                          desc
+                      end
+
+                    {new_p, _} =
+                      new_variable(acc_problem, new_name, type: type, description: interp_desc)
 
                       new_p
                     else
@@ -807,7 +828,8 @@ defmodule Dantzig.Problem do
             _ -> parse_simple_expression_to_polynomial(right_value)
           end
 
-        Constraint.new_linear(left_poly, :==, right_poly, name: description)
+        c = Constraint.new_linear(left_poly, :==, right_poly, name: description)
+        if is_binary(description), do: %{c | description: description}, else: c
 
       {:<=, _, [left_expr, right_value]} ->
         left_poly = parse_simple_expression_to_polynomial(left_expr)
@@ -818,7 +840,8 @@ defmodule Dantzig.Problem do
             _ -> parse_simple_expression_to_polynomial(right_value)
           end
 
-        Constraint.new_linear(left_poly, :<=, right_poly, name: description)
+        c = Constraint.new_linear(left_poly, :<=, right_poly, name: description)
+        if is_binary(description), do: %{c | description: description}, else: c
 
       {:>=, _, [left_expr, right_value]} ->
         left_poly = parse_simple_expression_to_polynomial(left_expr)
@@ -829,7 +852,8 @@ defmodule Dantzig.Problem do
             _ -> parse_simple_expression_to_polynomial(right_value)
           end
 
-        Constraint.new_linear(left_poly, :>=, right_poly, name: description)
+        c = Constraint.new_linear(left_poly, :>=, right_poly, name: description)
+        if is_binary(description), do: %{c | description: description}, else: c
 
       _ ->
         raise ArgumentError,
