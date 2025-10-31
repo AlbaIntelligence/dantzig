@@ -24,7 +24,38 @@ defmodule Dantzig.Problem.AST do
   end
 
   # Expression transformers (objective/constraint normalization)
-  def transform_constraint_expression_to_ast(expr), do: expr
+  # Transform constraint expressions to ensure variable references are properly formatted
+  # Handles patterns like queen2d(i, :_) or qty(food) where variables come from generators
+  def transform_constraint_expression_to_ast(expr) do
+    # Walk the AST and normalize variable references in function call patterns
+    # e.g., queen2d(i, :_) or qty(food) where i/food are generator variables
+    Macro.prewalk(expr, fn
+      # Variable reference pattern: var_name(var1, var2, ...)
+      {var_name, meta, args} = call when is_atom(var_name) and is_list(args) ->
+        # Check if this looks like a variable reference (function call syntax for variables)
+        # Transform variable references in args to ensure they're in the right format
+        normalized_args =
+          Enum.map(args, fn
+            # Atom variable references (from generators) - keep as-is
+            {atom, _, ctx} = arg when is_atom(atom) and (is_atom(ctx) or is_nil(ctx)) ->
+              arg
+            
+            # Pattern matching for :_ wildcard - keep as-is
+            :_ ->
+              :_
+            
+            # Already normalized - keep as-is
+            other ->
+              other
+          end)
+        
+        {var_name, meta, normalized_args}
+      
+      # Other AST nodes - keep as-is
+      other ->
+        other
+    end)
+  end
 
   # Prepare objective expressions for the DSL parser by rewriting
   # simple generator sums like:
