@@ -39,7 +39,7 @@ defmodule Dantzig.DSL.ComprehensiveDSLTest do
       problem =
         Problem.define model_parameters: %{food_names: food_names} do
           new(name: "Simple Diet", description: "Test basic variable creation")
-          variables("qty", Dantzig.Problem.DSL.generators([food <- food_names]), :continuous, "Amount of food")
+          variables("qty", [food <- food_names], :continuous, "Amount of food")
         end
 
       assert map_size(problem.variable_defs) == 6
@@ -55,7 +55,7 @@ defmodule Dantzig.DSL.ComprehensiveDSLTest do
       problem =
         Problem.define do
           new(name: "N-Queens", description: "Test N-Queens variables")
-          variables("queen2d", Dantzig.Problem.DSL.generators([i <- 1..2, j <- 1..2]), :binary, "Queen position")
+          variables("queen2d", [i <- 1..2, j <- 1..2], :binary, "Queen position")
         end
 
       assert map_size(problem.variable_defs) == 4
@@ -71,7 +71,7 @@ defmodule Dantzig.DSL.ComprehensiveDSLTest do
       problem =
         Problem.define model_parameters: %{food_names: food_names} do
           new(name: "Simple Variable Access", description: "Test basic variable access")
-          variables("qty", Dantzig.Problem.DSL.generators([food <- food_names]), :continuous, "Amount of food")
+          variables("qty", [food <- food_names], :continuous, "Amount of food")
           objective(sum(for food <- food_names, do: qty(food)), direction: :minimize)
         end
 
@@ -97,7 +97,7 @@ defmodule Dantzig.DSL.ComprehensiveDSLTest do
       problem =
         Problem.define model_parameters: %{food_names: food_names} do
           new(name: "Variable with Constant", description: "Test variable * constant")
-          variables("qty", Dantzig.Problem.DSL.generators([food <- food_names]), :continuous, "Amount of food")
+          variables("qty", [food <- food_names], :continuous, "Amount of food")
           objective(sum(for food <- food_names, do: qty(food) * 1.0), direction: :minimize)
         end
 
@@ -109,7 +109,7 @@ defmodule Dantzig.DSL.ComprehensiveDSLTest do
       problem =
         Problem.define model_parameters: %{food_names: food_names} do
           new(name: "Variable with Addition", description: "Test variable + constant")
-          variables("qty", Dantzig.Problem.DSL.generators([food <- food_names]), :continuous, "Amount of food")
+          variables("qty", [food <- food_names], :continuous, "Amount of food")
           objective(sum(for food <- food_names, do: qty(food) + 1.0), direction: :minimize)
         end
 
@@ -121,7 +121,7 @@ defmodule Dantzig.DSL.ComprehensiveDSLTest do
       problem =
         Problem.define do
           new(name: "Variable with Subtraction", description: "Test variable - constant")
-          variables("qty", Dantzig.Problem.DSL.generators([food <- food_names]), :continuous, "Amount of food")
+          variables("qty", [food <- food_names], :continuous, "Amount of food")
           objective(sum(for food <- food_names, do: qty(food) - 1.0), direction: :minimize)
         end
 
@@ -133,7 +133,7 @@ defmodule Dantzig.DSL.ComprehensiveDSLTest do
       problem =
         Problem.define model_parameters: %{food_names: food_names} do
           new(name: "Variable with Division", description: "Test variable / constant")
-          variables("qty", Dantzig.Problem.DSL.generators([food <- food_names]), :continuous, "Amount of food")
+          variables("qty", [food <- food_names], :continuous, "Amount of food")
           objective(sum(for food <- food_names, do: qty(food) / 2.0), direction: :minimize)
         end
 
@@ -159,7 +159,7 @@ defmodule Dantzig.DSL.ComprehensiveDSLTest do
       problem =
         Problem.define do
           new(name: "N-Queens Complex", description: "Test N-Queens complex expressions")
-          variables("queen2d", Dantzig.Problem.DSL.generators([i <- 1..2, j <- 1..2]), :binary, "Queen position")
+          variables("queen2d", [i <- 1..2, j <- 1..2], :binary, "Queen position")
           constraints([i <- 1..2], sum(queen2d(i, :_)) == 1, "One queen per row")
           objective(sum(queen2d(:_, :_)), direction: :maximize)
         end

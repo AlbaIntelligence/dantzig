@@ -67,9 +67,17 @@ defmodule Dantzig.DSL.ConstraintParser do
   """
   def parse_expression_to_polynomial(expr, bindings, problem) do
     case expr do
-      # Handle sum expressions
+      # Handle sum expressions (unexpanded macro call forms)
+      {:sum, _meta, [sum_arg]} ->
+        parse_sum_expression(sum_arg, bindings, problem)
+
+      # Handle already-normalized tuple form {:sum, inner}
       {:sum, sum_expr} ->
         parse_sum_expression(sum_expr, bindings, problem)
+
+      # Handle qualified calls like Dantzig.Problem.DSL.sum(...)
+      {{:., _m, [_mod, :sum]}, _meta, [sum_arg]} ->
+        parse_sum_expression(sum_arg, bindings, problem)
       
       # Handle variable access: {"var_name", [], indices}
       {var_name, [], indices} when is_list(indices) ->
@@ -180,26 +188,29 @@ defmodule Dantzig.DSL.ConstraintParser do
   This handles expressions like sum(qty(food) for food <- food_names).
   """
   def parse_generator_sum(expr, generators, bindings, problem) do
-    # Parse generators to get variable names and their ranges
     parsed_generators = parse_generators(generators)
-    
-    # Generate all combinations of generator values
-    combinations = generate_combinations(parsed_generators)
-    
-    # For each combination, evaluate the expression and sum the results
-    sum_poly =
-      Enum.reduce(combinations, Polynomial.const(0), fn combination, acc ->
-        # Create bindings for this combination
-        combination_bindings = create_combination_bindings(parsed_generators, combination, bindings)
-        
-        # Evaluate the expression with the new bindings
-        expr_poly = parse_expression_to_polynomial(expr, combination_bindings, problem)
-        
-        # Add to the running sum
-        Polynomial.add(acc, expr_poly)
+
+    # Separate variable generators and filters
+    {var_gens, filters} =
+      Enum.split_with(parsed_generators, fn
+        {var, vals} when is_atom(var) and is_list(vals) -> true
+        _ -> false
       end)
-    
-    sum_poly
+
+    # Generate combinations only for variable generators
+    combinations = generate_combinations(var_gens)
+
+    Enum.reduce(combinations, Polynomial.const(0), fn combination, acc ->
+      combination_bindings = create_combination_bindings(var_gens, combination, bindings)
+
+      # Apply filters; skip combination if any filter fails
+      if Enum.all?(filters, &evaluate_filter(&1, combination_bindings)) do
+        expr_poly = parse_expression_to_polynomial(expr, combination_bindings, problem)
+        Polynomial.add(acc, expr_poly)
+      else
+        acc
+      end
+    end)
   end
   
   @doc """
@@ -235,6 +246,7 @@ defmodule Dantzig.DSL.ConstraintParser do
     Enum.map(indices, fn
       :_ -> :_
       var when is_atom(var) -> Map.get(bindings, var, var)
+      {name, _, _} when is_atom(name) -> Map.get(bindings, name, name)
       literal -> literal
     end)
   end
@@ -257,6 +269,7 @@ defmodule Dantzig.DSL.ConstraintParser do
     values =
       Enum.map(indices, fn
         var when is_atom(var) -> Map.get(bindings, var, var)
+        {name, _, _} when is_atom(name) -> Map.get(bindings, name, name)
         literal -> literal
       end)
     
@@ -267,16 +280,16 @@ defmodule Dantzig.DSL.ConstraintParser do
     Enum.map(generators, fn
       {:<-, _, [var, range]} when is_struct(range, Range) ->
         {var, Enum.to_list(range)}
-      
+
       {:<-, _, [var, list]} when is_list(list) ->
         {var, list}
-      
+
       {:<-, _, [var, expr]} ->
-        # Handle computed expressions
         {var, evaluate_expression(expr)}
-      
-      _ ->
-        raise ArgumentError, "Invalid generator: #{inspect(generators)}"
+
+      # Treat any non-generator term as a filter condition
+      other ->
+        {:filter, other}
     end)
   end
   
@@ -308,6 +321,68 @@ defmodule Dantzig.DSL.ConstraintParser do
       
       _ ->
         raise ArgumentError, "Cannot evaluate expression: #{inspect(expr)}"
+    end
+  end
+
+  defp evaluate_filter({:filter, filter_ast}, bindings) do
+    evaluate_condition(filter_ast, bindings)
+  end
+
+  defp evaluate_filter(_, _bindings), do: true
+
+  # Minimal condition evaluator for guards/filters in generators
+  defp evaluate_condition(ast, bindings) do
+    case ast do
+      true -> true
+      false -> false
+
+      # Comparison ops
+      {op, _, [l, r]} when op in [:==, :!=, :<, :>, :<=, :>=] ->
+        lv = eval_term(l, bindings)
+        rv = eval_term(r, bindings)
+        apply(Kernel, op, [lv, rv])
+
+      # Boolean ops
+      {:and, _, [l, r]} -> evaluate_condition(l, bindings) and evaluate_condition(r, bindings)
+      {:or, _, [l, r]} -> evaluate_condition(l, bindings) or evaluate_condition(r, bindings)
+      {:not, _, [x]} -> not evaluate_condition(x, bindings)
+
+      # Membership: elem in list/range
+      {:in, _, [elem_ast, coll_ast]} ->
+        elem_val = eval_term(elem_ast, bindings)
+        coll_val =
+          case eval_term(coll_ast, bindings) do
+            range when is_struct(range, Range) -> Enum.to_list(range)
+            list when is_list(list) -> list
+            other -> other
+          end
+
+        Enum.member?(coll_val, elem_val)
+
+      # Fallback: treat as truthy if evals to non-false/nil
+      other ->
+        case eval_term(other, bindings) do
+          v when v in [false, nil] -> false
+          _ -> true
+        end
+    end
+  end
+
+  defp eval_term(term, bindings) do
+    case term do
+      v when is_number(v) or is_binary(v) or is_atom(v) ->
+        Map.get(bindings, v, v)
+
+      {name, _, _} when is_atom(name) ->
+        Map.get(bindings, name, name)
+
+      {op, _, [l, r]} when op in [:+, :-, :*, :/] ->
+        lv = eval_term(l, bindings)
+        rv = eval_term(r, bindings)
+        apply(Kernel, op, [lv, rv])
+
+      other ->
+        other
     end
   end
   

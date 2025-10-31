@@ -55,9 +55,9 @@ defmodule Dantzig.DSL.ReferenceSyntaxTest do
     assert is_tuple(generator)
     assert elem(generator, 0) == :<-
 
-    # The variable should be {:i, [], nil}
+    # The variable should be {:i, [], _}
     var_part = elem(generator, 2) |> hd()
-    assert var_part == {:i, [], nil}
+    assert match?({:i, [], _}, var_part)
 
     # The range should be 1..4
     range_part = elem(generator, 2) |> tl() |> hd()

@@ -12,6 +12,8 @@ defmodule Examples.RegressionTest do
   use ExUnit.Case, async: true
   require Dantzig.Problem, as: Problem
 
+  @QUEEN_COUNT = 4
+
   describe "Knapsack Problem Regression" do
     test "knapsack problem still works correctly" do
       # Test data from existing knapsack example
@@ -59,19 +61,27 @@ defmodule Examples.RegressionTest do
   end
 
   describe "N-Queens Problem Regression" do
-    test "N-Queens 4x4 problem still works correctly" do
+    test "N-Queens #{@QUEEN_COUNT}x#{@QUEEN_COUNT} problem still works correctly" do
       # Create 4x4 N-Queens problem
       problem =
         Problem.define do
-          new(name: "N-Queens 4x4", description: "4x4 N-Queens problem")
+          new(
+            name: "N-Queens #{@QUEEN_COUNT}x#{@QUEEN_COUNT}",
+            description: "#{@QUEEN_COUNT}x#{@QUEEN_COUNT} N-Queens problem"
+          )
 
-          variables("queen", [i <- 1..4, j <- 1..4], :binary, "Queen position")
+          variables(
+            "queen",
+            [i <- 1..@QUEEN_COUNT, j <- 1..@QUEEN_COUNT],
+            :binary,
+            "Queen position"
+          )
 
           # One queen per row
-          constraints([i <- 1..4], sum(queen(i, :_)) == 1, "One queen per row")
+          constraints([i <- 1..@QUEEN_COUNT], sum(queen(i, :_)) == 1, "One queen per row")
 
           # One queen per column
-          constraints([j <- 1..4], sum(queen(:_, j)) == 1, "One queen per column")
+          constraints([j <- 1..@QUEEN_COUNT], sum(queen(:_, j)) == 1, "One queen per column")
 
           # Set objective (maximize queens placed)
           objective(sum(queen(:_, :_)), direction: :maximize)
@@ -85,7 +95,7 @@ defmodule Examples.RegressionTest do
 
       # N-Queens specific validation
       assert objective_value >= 0, "Should place at least 0 queens"
-      assert objective_value <= 4, "Cannot place more than 4 queens on 4x4 board"
+      assert objective_value <= @QUEEN_COUNT, "Cannot place more than 4 queens on 4x4 board"
 
       # Check that no two queens attack each other (simplified check)
       queens_placed = count_queens_placed(solution)
@@ -188,10 +198,10 @@ defmodule Examples.RegressionTest do
     Problem.define do
       new(name: "N-Queens", description: "Place N queens on N×N board")
 
-      variables("queen", [i <- 1..4, j <- 1..4], :binary, "Queen position")
+      variables("queen", [i <- 1..@QUEEN_COUNT, j <- 1..@QUEEN_COUNT], :binary, "Queen position")
 
-      constraints([i <- 1..4], sum(queen(i, :_)) == 1, "One queen per row")
-      constraints([j <- 1..4], sum(queen(:_, j)) == 1, "One queen per column")
+      constraints([i <- 1..@QUEEN_COUNT], sum(queen(i, :_)) == 1, "One queen per row")
+      constraints([j <- 1..@QUEEN_COUNT], sum(queen(:_, j)) == 1, "One queen per column")
 
       objective(sum(queen(:_, :_)), direction: :maximize)
     end
@@ -231,7 +241,7 @@ defmodule Examples.RegressionTest do
   defp count_queens_placed(solution) do
     # Count how many queens are actually placed (simplified)
     # Placeholder - would need to count actual placements
-    4
+    @QUEEN_COUNT
   end
 
   defp calculate_total_nutrition(solution, foods, nutrition_type) do

@@ -101,6 +101,7 @@ examples/                      # Example files
 ├── nqueens_dsl_working.exs
 ├── production_planning.exs
 ├── transportation_problem.exs
+├── network_flow.exs           # Network flow optimization example (referenced in tasks)
 └── [additional examples to be added]
 
 docs/                          # Documentation

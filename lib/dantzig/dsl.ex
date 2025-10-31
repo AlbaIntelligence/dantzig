@@ -11,6 +11,8 @@ defmodule Dantzig.DSL do
 
   @doc """
   Parse an expression using the DSL.
+
+  TODO: REMOVE PLACEHOLDER IF UNUSED
   """
   def parse_expression(expr) do
     # Placeholder implementation

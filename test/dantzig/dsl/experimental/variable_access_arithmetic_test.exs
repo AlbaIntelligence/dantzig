@@ -10,7 +10,7 @@ defmodule Dantzig.DSL.VariableAccessArithmeticTest do
       problem =
         Problem.define model_parameters: %{food_names: food_names} do
           new(name: "Simple Variable Access", description: "Test basic variable access")
-          variables("qty", DSL.generators([food <- food_names]), :continuous, "Amount of food")
+          variables("qty", [food <- food_names], :continuous, "Amount of food")
           objective(sum(qty(:_)), direction: :minimize)
         end
 
@@ -24,7 +24,7 @@ defmodule Dantzig.DSL.VariableAccessArithmeticTest do
       problem =
         Problem.define model_parameters: %{food_names: food_names} do
           new(name: "Variable Access with Constant", description: "Test variable * constant")
-          variables("qty", DSL.generators([food <- food_names]), :continuous, "Amount of food")
+          variables("qty", [food <- food_names], :continuous, "Amount of food")
           objective(sum(qty(:_)), direction: :minimize)
         end
 
@@ -38,7 +38,7 @@ defmodule Dantzig.DSL.VariableAccessArithmeticTest do
       problem =
         Problem.define model_parameters: %{food_names: food_names} do
           new(name: "Variable Access with Addition", description: "Test variable + constant")
-          variables("qty", DSL.generators([food <- food_names]), :continuous, "Amount of food")
+          variables("qty", [food <- food_names], :continuous, "Amount of food")
           objective(sum(qty(:_)), direction: :minimize)
         end
 
@@ -52,7 +52,7 @@ defmodule Dantzig.DSL.VariableAccessArithmeticTest do
       problem =
         Problem.define model_parameters: %{food_names: food_names} do
           new(name: "Variable Access with Subtraction", description: "Test variable - constant")
-          variables("qty", DSL.generators([food <- food_names]), :continuous, "Amount of food")
+          variables("qty", [food <- food_names], :continuous, "Amount of food")
           objective(sum(qty(:_)), direction: :minimize)
         end
 
@@ -66,7 +66,7 @@ defmodule Dantzig.DSL.VariableAccessArithmeticTest do
       problem =
         Problem.define do
           new(name: "Variable Access with Division", description: "Test variable / constant")
-          variables("qty", DSL.generators([food <- food_names]), :continuous, "Amount of food")
+          variables("qty", [food <- food_names], :continuous, "Amount of food")
           objective(sum(qty(:_)), direction: :minimize)
         end
 
@@ -80,7 +80,7 @@ defmodule Dantzig.DSL.VariableAccessArithmeticTest do
       problem =
         Problem.define model_parameters: %{food_names: food_names} do
           new(name: "Multiple Variables with Arithmetic", description: "Test multiple variables")
-          variables("qty", DSL.generators([food <- food_names]), :continuous, "Amount of food")
+          variables("qty", [food <- food_names], :continuous, "Amount of food")
           objective(sum(qty(:_)), direction: :minimize)
         end
 
@@ -94,7 +94,7 @@ defmodule Dantzig.DSL.VariableAccessArithmeticTest do
       problem =
         Problem.define model_parameters: %{food_names: food_names} do
           new(name: "Complex Arithmetic", description: "Test complex arithmetic")
-          variables("qty", DSL.generators([food <- food_names]), :continuous, "Amount of food")
+          variables("qty", [food <- food_names], :continuous, "Amount of food")
           objective(sum(qty(:_)), direction: :minimize)
         end
 
@@ -142,7 +142,7 @@ defmodule Dantzig.DSL.VariableAccessArithmeticTest do
       problem =
         Problem.define do
           new(name: "Empty List", description: "Test empty list")
-          variables("qty", DSL.generators([food <- []]), :continuous, "Amount of food")
+          variables("qty", [food <- []], :continuous, "Amount of food")
           objective(sum(for food <- [], do: qty(food) * 1.0), direction: :minimize)
         end
 
@@ -156,7 +156,7 @@ defmodule Dantzig.DSL.VariableAccessArithmeticTest do
       problem =
         Problem.define model_parameters: %{food_names: food_names} do
           new(name: "Zero Coefficient", description: "Test zero coefficient")
-          variables("qty", DSL.generators([food <- food_names]), :continuous, "Amount of food")
+          variables("qty", [food <- food_names], :continuous, "Amount of food")
           objective(sum(qty(:_)), direction: :minimize)
         end
 

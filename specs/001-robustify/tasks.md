@@ -61,14 +61,21 @@
 
 - [ ] T141a [P] [US1] Add failing tests for description interpolation and single‑constraint syntax in `test/dantzig/dsl/experimental/integration_test.exs`
 - [ ] T141b [P] [US1] Add failing tests for variable refs in constraints/objectives in `test/dantzig/dsl/experimental/simple_generator_test.exs`
+- [ ] T141c [P] [US1] Add failing test for `transform_constraint_expression_to_ast/1` variable refs in `test/dantzig/core/problem_test.exs`
 - [ ] T142 [P] [US1] Implement `transform_constraint_expression_to_ast/1` for variable refs (e.g., `queen2d(i, :_)`) in `lib/dantzig/core/problem.ex`
+- [ ] T141d [P] [US1] Add failing test for `transform_objective_expression_to_ast/1` variable refs in `test/dantzig/core/problem_test.exs`
 - [ ] T143 [P] [US1] Implement `transform_objective_expression_to_ast/1` for variable refs inside objectives in `lib/dantzig/core/problem.ex`
+- [ ] T141e [P] [US1] Add failing test for `transform_description_to_ast/1` interpolation in `test/dantzig/core/problem_test.exs`
 - [ ] T144 [P] [US1] Implement `transform_description_to_ast/1` for `"name_#{i}_#{j}"` interpolation in `lib/dantzig/core/problem.ex`
+- [ ] T141f [P] [US1] Add failing test for `Problem.constraint/3` no-generator single constraints in `test/dantzig/core/problem_test.exs`
 - [ ] T145 [P] [US1] Implement `Problem.constraint/3` parsing for no‑generator single constraints in `lib/dantzig/core/problem.ex`
+- [ ] T141g [P] [US1] Add failing test for `interpolate_variables_in_description/2` in `test/dantzig/problem/dsl/constraint_manager_test.exs`
 - [ ] T146 [P] [US1] Finalize `interpolate_variables_in_description/2` in `lib/dantzig/problem/dsl/constraint_manager.ex`
 - [x] T147 [P] [BC] Align or remove placeholder `process_define_block/1` in `lib/dantzig/problem/dsl.ex` to avoid drift with `Problem.define`
+- [ ] T141h [P] [US1] Add failing test for model parameters in `Problem.define` in `test/dantzig/dsl/model_parameters_test.exs` (precursor to T155)
 - [ ] T148 [P] [US1] Add model parameters support to `Problem.define` in `lib/dantzig/core/problem.ex` or `lib/dantzig/problem/dsl.ex`
-- [ ] T149 [P] [BC] Implement or deprecate `Problem.modify` macro; update related tests in `test/macro_approach/*`
+- [ ] T141i [P] [BC] Add failing test for `Problem.modify` macro in `test/dantzig/dsl/problem_modify_test.exs` (precursor to T156)
+- [ ] T149 [P] [BC] Implement or improve `Problem.modify` macro; update related tests in `test/macro_approach/*`
 - [ ] T150 [P] [US2] Fix macro availability and unskip imperative chained‑constraints tests in `test/dantzig/dsl/experimental/integration_test.exs`
 - [ ] T151 [P] [US2] Fix variable access macro generation and unskip tests in `test/dantzig/dsl/experimental/simple_integration_test.exs`
 - [ ] T152 [P] [US2] Deprecate `test/macro_approach/*`; migrate relevant cases into `test/dantzig/dsl/experimental/*` and remove obsolete tests
@@ -147,7 +154,6 @@
 
 ---
 
-
 ## Phase 5: User Story 3 - Well-Documented Examples (Priority: P2)
 
 **Goal**: Enhance all existing examples with comprehensive documentation explaining syntax, reasoning, and gotchas
@@ -167,7 +173,7 @@
 - [ ] T057 [US3] Enhance documentation for examples/assignment_problem.exs
 - [ ] T058 [US3] Enhance documentation for examples/blending_problem.exs
 - [ ] T059 [US3] Enhance documentation for examples/knapsack_problem.exs
-- [ ] T060 [US3] Enhance documentation for examples/network_flow.exs
+- [ ] T060 [US3] Enhance documentation for examples/network_flow.exs (create if missing, or document why excluded)
 - [ ] T061 [US3] Enhance documentation for examples/nqueens_dsl_working.exs
 - [ ] T062 [US3] Enhance documentation for examples/production_planning.exs
 - [ ] T063 [US3] Enhance documentation for examples/transportation_problem.exs
@@ -231,14 +237,14 @@
 ### Implementation for User Story 5
 
 - [ ] T087 [US5] Implement performance benchmarking framework in test/performance/benchmark_framework.exs
-- [ ] T088 [US5] Create benchmarks for problems up to 1000 variables in test/performance/large_problem_benchmarks.exs
+- [ ] T088 [US5] Create benchmarks for problems up to 1000 variables in test/performance/large_problem_benchmarks.exs (benchmark set: assignment_problem at 100/500/1000 vars, knapsack at 50/200/500 vars, nqueens at 8/10/12, transportation at 10x10/20x20/30x30; all must complete within SC-006 thresholds)
 - [ ] T089 [US5] Implement memory usage monitoring in test/performance/memory_monitoring.exs
 - [ ] T090 [US5] Create concurrent usage tests in test/performance/concurrent_usage_test.exs
 - [ ] T091 [P] [US5] Validate execution time < 30 seconds for 1000 variables
 - [ ] T092 [P] [US5] Validate memory usage < 100MB for typical problems
 - [ ] T093 [P] [US5] Validate reasonable scaling with problem size
 - [ ] T094 [US5] Create performance regression detection in test/performance/regression_detection.exs
- - [ ] T094a [P] [US5] Add CI gate script `scripts/perf_gate.exs` to fail pipeline if SC‑006 thresholds are not met; wire into CI
+- [ ] T094a [P] [US5] Add CI gate script `scripts/perf_gate.exs` to fail pipeline if SC‑006 thresholds are not met (execution time <30s for 1000 vars, memory <100MB); run benchmark set from T088; wire into CI
 
 **Checkpoint**: All user stories should now be independently functional
 
@@ -252,6 +258,18 @@
 
 **Requirements Coverage**: FR-006, FR-008
 
+**Success Criteria**: SC-007 (error messages clear and actionable for ≥90% of common mistakes)
+
+**Edge Case Mapping** (from spec.md): 
+- No feasible solution → T045
+- Unbounded objectives → T046
+- Invalid constraint syntax → T047, T097
+- Numerical precision → T048
+- HiGHS solver unavailable/fails → T049
+- Very large variable sets → T050, T052
+- Undefined variables in constraints → T051, T099
+- Mixed-integer programming incomplete → Note in docs (not a blocking edge case)
+
 ### Tests for Error Handling
 
 - [ ] T095 [P] [EH] Create error message quality validation test in test/error_handling/error_message_quality_test.exs
@@ -263,8 +281,8 @@
 - [ ] T098 [EH] Surface infeasible/unbounded indications with clear guidance at solver call sites in `lib/dantzig/solver/highs_solver.ex`
 - [ ] T099 [EH] Validate and message invalid/undefined variables at constraint build time in `lib/dantzig/problem/dsl/constraint_manager.ex`
 - [ ] T100 [EH] Add regression tests for each improved message under `test/error_handling/*`
-- [ ] T105 [P] [EH] Validate error messages are clear and actionable for 90% of common mistakes
-- [ ] T106 [P] [EH] Validate all edge cases have appropriate error handling
+- [ ] T105 [P] [EH] Validate error messages are clear and actionable for ≥90% of common mistakes (SC-007 requirement; test must enumerate mistake categories and assert coverage)
+- [ ] T106 [P] [EH] Validate all edge cases have appropriate error handling (aligns with FR-008)
 
 ---
 
@@ -291,14 +309,21 @@
 - [ ] T114 [DOC] Create troubleshooting guide in docs/TROUBLESHOOTING.md
 - [ ] T115 [DOC] Create API reference documentation in docs/API_REFERENCE.md
 - [ ] T116 [DOC] Create migration guide for existing users in docs/MIGRATION_GUIDE.md
-- [ ] T117 [P] [DOC] Validate documentation enables 30-minute onboarding
-- [ ] T118 [P] [DOC] Validate all documentation is comprehensive and user-friendly
+- [ ] T117 [P] [DOC] Validate documentation enables 30-minute onboarding (SC-005): Test checklist: (1) New user can install package, (2) Can run first example successfully, (3) Can understand DSL syntax from examples, (4) Can modify example to solve different problem, (5) Can find error message guidance; all within 30 minutes; rubric in test/documentation/onboarding_validation_test.exs
+- [ ] T118 [P] [DOC] Validate all documentation is comprehensive and user-friendly: Check that all docs have (1) Clear purpose statement, (2) Code examples, (3) Gotchas/troubleshooting sections, (4) Links to related docs; rubric in test/documentation/documentation_quality_test.exs
 
 ---
 
 ## Observability Alignment (Cross-Cutting)
 
-- [ ] T154 [P] [OBS] Add structured logs/diagnostic hooks to DSL parsing (Active Work) and solver integration (`lib/dantzig/solver/highs_solver.ex`), validated by tests capturing key events
+**Requirements Coverage**: Constitution Principle IV (Observability)
+
+**Goal**: Ensure structured logging and debuggability across critical paths
+
+- [ ] T154a [P] [OBS] Add structured logs/diagnostic hooks to DSL parsing (Active Work) and solver integration (`lib/dantzig/solver/highs_solver.ex`)
+- [ ] T154b [P] [OBS] Create tests in `test/dantzig/observability/dsl_parsing_logs_test.exs` that assert log events contain required fields (parse_start, parse_end, parse_errors) for constraint/objective parsing
+- [ ] T154c [P] [OBS] Create tests in `test/dantzig/observability/solver_integration_logs_test.exs` that assert log events contain required fields (solver_call, solver_status, solve_time, memory_usage) for HiGHS solver calls
+- [ ] T154d [P] [OBS] Create tests in `test/dantzig/observability/problem_build_logs_test.exs` that assert log events during Problem.define execution (build_start, variable_count, constraint_count, build_complete)
 
 ---
 
@@ -334,17 +359,19 @@
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T131 [P] Update main documentation in docs/GETTING_STARTED.md
-- [ ] T132 [P] Update comprehensive tutorial in docs/COMPREHENSIVE_TUTORIAL.md
-- [ ] T133 [P] Update architecture documentation in docs/ARCHITECTURE.md
+**Note**: Documentation tasks T109-T116 in Phase 9 create initial docs. These tasks update them based on implementation learnings.
+
+- [ ] T131 [P] Update main documentation in docs/GETTING_STARTED.md (refine based on Phase 9 learnings; cross-reference T109)
+- [ ] T132 [P] Update comprehensive tutorial in docs/COMPREHENSIVE_TUTORIAL.md (refine based on Phase 9 learnings; cross-reference T110)
+- [ ] T133 [P] Update architecture documentation in docs/ARCHITECTURE.md (refine based on Phase 9 learnings; cross-reference T111)
 - [ ] T134 [P] Code cleanup and refactoring across all modules
 - [ ] T135 [P] Performance optimization across all components
 - [ ] T136 [P] Additional unit tests for edge cases in test/unit/
-- [ ] T137 [P] Security hardening for solver integration
+- [ ] T137 [P] Security hardening for solver integration (no spec requirement; remove if not needed or add NFR to spec)
 - [ ] T138 [P] Run quickstart.md validation
 - [ ] T139 [P] Update README.md with robustification improvements
-- [ ] T140 [P] Create migration guide for existing users
-- [ ] T141 [P] Final integration testing across all user stories
+- [ ] T140 [P] Create migration guide for existing users (may duplicate T116; ensure T116 creates initial guide, T140 refines it)
+- [ ] T141 [P] Final integration testing across all user stories (scope: run full test suite, verify all user stories independently testable, validate no regressions in backward compatibility)
 
 ---
 
@@ -356,18 +383,20 @@
 
 **Requirements Coverage**: FR-013, FR-014, FR-009
 
+**User Story**: Capability addition (not US1). Supports FR-013/FR-014 with backward compatibility (FR-009).
+
 ### Tests
 
-- [ ] T155 [P] [US1] Create model parameters tests in `test/dantzig/dsl/model_parameters_test.exs`
-- [ ] T156 [P] [US1] Create Problem.modify tests in `test/dantzig/dsl/problem_modify_test.exs`
+- [ ] T155 [P] [PARAM] Create model parameters tests in `test/dantzig/dsl/model_parameters_test.exs` (expands on T141h from Active Work)
+- [ ] T156 [P] [MODIFY] Create Problem.modify tests in `test/dantzig/dsl/problem_modify_test.exs` (expands on T141i from Active Work)
 
 ### Implementation
 
-- [ ] T157 [US1] Implement model parameters in `Problem.define` (thread env/bindings) in `lib/dantzig/core/problem.ex` and/or `lib/dantzig/problem/dsl.ex`
-- [ ] T158 [US1] Ensure parameters can be used in generators, expressions, descriptions
-- [ ] T159 [BC] Implement `Problem.modify` macro in `lib/dantzig/core/problem.ex` or `lib/dantzig/problem/dsl.ex`
-- [ ] T160 [BC] Support adding variables/constraints/objective updates without rebuild
-- [ ] T161 [BC] Add/port tests under `test/dantzig/dsl/experimental/problem_modify_test.exs` to reflect `Problem.modify` behavior; remove `test/macro_approach/*`
+- [ ] T157 [PARAM] Implement model parameters in `Problem.define` (thread env/bindings) in `lib/dantzig/core/problem.ex` and/or `lib/dantzig/problem/dsl.ex`
+- [ ] T158 [PARAM] Ensure parameters can be used in generators, expressions, descriptions
+- [ ] T159 [BC] [MODIFY] Implement `Problem.modify` macro in `lib/dantzig/core/problem.ex` or `lib/dantzig/problem/dsl.ex`
+- [ ] T160 [BC] [MODIFY] Support adding variables/constraints/objective updates without rebuild
+- [ ] T161 [BC] [MODIFY] Add/port tests under `test/dantzig/dsl/experimental/problem_modify_test.exs` to reflect `Problem.modify` behavior; remove `test/macro_approach/*`
 - [ ] T162 [DOC] Document parameters and modify in `docs/DSL_SYNTAX_REFERENCE.md`
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
@@ -462,18 +491,18 @@ With multiple developers:
 
 ## Requirements Coverage Summary
 
-| Requirement | Phase | Task Count | Status |
-|-------------|-------|------------|--------|
-| FR-001: Compile all test files | Phase 3 (US1) | 15 tasks | ✅ Covered |
-| FR-002: 80% overall coverage | Phase 4 (US2) | 18 tasks | ✅ Covered |
-| FR-003: 85% core coverage | Phase 4 (US2) | 18 tasks | ✅ Covered |
-| FR-004: Comprehensive example docs | Phase 5 (US3) | 16 tasks | ✅ Covered |
-| FR-005: 5+ problem types | Phase 6 (US4) | 15 tasks | ✅ Covered |
-| FR-006: Clear error messages | Phase 8 (EH) | 12 tasks | ✅ Covered |
-| FR-007: Performance benchmarks | Phase 7 (US5) | 10 tasks | ✅ Covered |
-| FR-008: Handle edge cases | Phase 8 (EH) | 12 tasks | ✅ Covered |
-| FR-009: Backward compatibility | Phase 10 (BC) | 12 tasks | ✅ Covered |
-| FR-011: 30min onboarding | Phase 9 (DOC) | 12 tasks | ✅ Covered |
-| FR-012: Performance targets | Phase 7 (US5) | 10 tasks | ✅ Covered |
+| Requirement                        | Phase         | Task Count | Status     |
+| ---------------------------------- | ------------- | ---------- | ---------- |
+| FR-001: Compile all test files     | Phase 3 (US1) | 15 tasks   | ✅ Covered |
+| FR-002: 80% overall coverage       | Phase 4 (US2) | 18 tasks   | ✅ Covered |
+| FR-003: 85% core coverage          | Phase 4 (US2) | 18 tasks   | ✅ Covered |
+| FR-004: Comprehensive example docs | Phase 5 (US3) | 16 tasks   | ✅ Covered |
+| FR-005: 5+ problem types           | Phase 6 (US4) | 15 tasks   | ✅ Covered |
+| FR-006: Clear error messages       | Phase 8 (EH)  | 12 tasks   | ✅ Covered |
+| FR-007: Performance benchmarks     | Phase 7 (US5) | 10 tasks   | ✅ Covered |
+| FR-008: Handle edge cases          | Phase 8 (EH)  | 12 tasks   | ✅ Covered |
+| FR-009: Backward compatibility     | Phase 10 (BC) | 12 tasks   | ✅ Covered |
+| FR-011: 30min onboarding           | Phase 9 (DOC) | 12 tasks   | ✅ Covered |
+| FR-012: Performance targets        | Phase 7 (US5) | 10 tasks   | ✅ Covered |
 
 **Total Tasks**: 141 tasks covering all 12 functional requirements
