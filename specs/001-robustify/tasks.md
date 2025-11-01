@@ -59,7 +59,7 @@
 
 > Outstanding tasks aligned to current nested-loop DSL work. Uses standard task format.
 
-- [ ] T141a [P] [US1] Add failing tests for description interpolation and single‑constraint syntax in `test/dantzig/dsl/experimental/integration_test.exs`
+- [x] T141a [P] [US1] Add failing tests for description interpolation and single‑constraint syntax in `test/dantzig/dsl/experimental/integration_test.exs`
 - [ ] T141b [P] [US1] Add failing tests for variable refs in constraints/objectives in `test/dantzig/dsl/experimental/simple_generator_test.exs`
 - [ ] T141c [P] [US1] Add failing test for `transform_constraint_expression_to_ast/1` variable refs in `test/dantzig/core/problem_test.exs`
 - [ ] T142 [P] [US1] Implement `transform_constraint_expression_to_ast/1` for variable refs (e.g., `queen2d(i, :_)`) in `lib/dantzig/core/problem.ex`

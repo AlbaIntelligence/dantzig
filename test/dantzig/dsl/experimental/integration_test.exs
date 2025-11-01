@@ -212,4 +212,122 @@ defmodule Dantzig.DSL.IntegrationTest do
         constraints([i <- 1..3, j <- 1..3], x(i, j) <= 1, "pos_#{i}_#{j}")
       end
   end
+
+  # T141a: Tests for description interpolation and single-constraint syntax
+  # These tests are expected to FAIL until implementation is complete
+
+  test "single constraint without generators (constraints/2) creates one constraint" do
+    # This test verifies constraints/2 syntax: constraints(expression, description)
+    # Should create exactly one constraint, not multiple
+    problem =
+      Problem.define do
+        new(name: "Single Constraint Test")
+        variables("x", [i <- 1..3], :binary, "Test variable")
+        # Single constraint without generator - should create exactly one constraint
+        constraints(x(1) + x(2) + x(3) == 1, "Sum constraint")
+      end
+
+    # Should create exactly 1 constraint
+    assert map_size(problem.constraints) == 1
+
+    # Verify constraint has correct description
+    constraint = problem.constraints |> Map.values() |> List.first()
+    assert constraint.name == "Sum constraint"
+  end
+
+  test "single constraint with sum pattern (constraints/2) works correctly" do
+    # Test constraints/2 with sum pattern matching
+    problem =
+      Problem.define do
+        new(name: "Single Constraint Sum Test")
+        variables("queen2d", [i <- 1..4, j <- 1..4], :binary, "Queen position")
+        # Single constraint summing all variables - should create exactly one constraint
+        constraints(sum(queen2d(:_, :_)) == 4, "4 queens in total")
+      end
+
+    # Should create exactly 1 constraint
+    assert map_size(problem.constraints) == 1
+
+    # Verify constraint description
+    constraint = problem.constraints |> Map.values() |> List.first()
+    assert constraint.name == "4 queens in total"
+  end
+
+  test "description interpolation works with single variable in generator context" do
+    # Test description interpolation with single generator variable
+    problem =
+      Problem.define do
+        new(name: "Description Interpolation Test")
+        variables("x", [i <- 1..3], :binary, "Variable")
+        constraints([i <- 1..3], x(i) >= 0, "Non-negative constraint for variable #{i}")
+      end
+
+    # Should create 3 constraints
+    assert map_size(problem.constraints) == 3
+
+    # Verify interpolated descriptions
+    constraint_names = problem.constraints |> Map.values() |> Enum.map(& &1.name)
+    assert "Non-negative constraint for variable 1" in constraint_names
+    assert "Non-negative constraint for variable 2" in constraint_names
+    assert "Non-negative constraint for variable 3" in constraint_names
+  end
+
+  test "description interpolation works with multiple variables in generator context" do
+    # Test description interpolation with multiple generator variables
+    problem =
+      Problem.define do
+        new(name: "Multi-Variable Description Interpolation Test")
+        variables("x", [i <- 1..2, j <- 1..2], :binary, "Variable")
+        constraints([i <- 1..2, j <- 1..2], x(i, j) <= 1, "Constraint at position (#{i}, #{j})")
+      end
+
+    # Should create 4 constraints
+    assert map_size(problem.constraints) == 4
+
+    # Verify interpolated descriptions with both variables
+    constraint_names = problem.constraints |> Map.values() |> Enum.map(& &1.name)
+    assert "Constraint at position (1, 1)" in constraint_names
+    assert "Constraint at position (1, 2)" in constraint_names
+    assert "Constraint at position (2, 1)" in constraint_names
+    assert "Constraint at position (2, 2)" in constraint_names
+  end
+
+  test "description interpolation in single constraint (constraints/2) without generators" do
+    # Test description interpolation in constraints/2 (no generators)
+    # Note: Without generator context, interpolation should work with literals or external values
+    problem =
+      Problem.define do
+        new(name: "Single Constraint Description Test")
+        variables("x", [i <- 1..3], :binary, "Variable")
+        # Single constraint with interpolated description
+        # This tests that constraints/2 can handle string interpolation
+        constraint_id = "sum_constraint"
+        constraints(x(1) + x(2) + x(3) == 1, "Sum constraint: #{constraint_id}")
+      end
+
+    # Should create exactly 1 constraint
+    assert map_size(problem.constraints) == 1
+
+    # Verify interpolated description
+    constraint = problem.constraints |> Map.values() |> List.first()
+    assert constraint.name == "Sum constraint: sum_constraint"
+  end
+
+  test "description interpolation works with constraint descriptions containing special characters" do
+    # Test that description interpolation handles special characters correctly
+    problem =
+      Problem.define do
+        new(name: "Special Characters Test")
+        variables("x", [i <- 1..2], :binary, "Variable")
+        constraints([i <- 1..2], x(i) >= 0, "Constraint #{i}: x_#{i} >= 0")
+      end
+
+    # Should create 2 constraints
+    assert map_size(problem.constraints) == 2
+
+    # Verify descriptions with special characters
+    constraint_names = problem.constraints |> Map.values() |> Enum.map(& &1.name)
+    assert "Constraint 1: x_1 >= 0" in constraint_names
+    assert "Constraint 2: x_2 >= 0" in constraint_names
+  end
 end
