@@ -114,7 +114,23 @@
 - **FR-011**: System MUST enable new user onboarding within 30 minutes through comprehensive documentation
 - **FR-012**: System MUST complete problems up to 1000 variables within 30 seconds and use less than 100MB memory
 - **FR-013**: System MUST support model parameters in `Problem.define`, enabling external values to be bound into generators, expressions, and descriptions
+  - **API Contract**: See `contracts/model-parameters-api.md` for detailed specification
+  - **Acceptance Criteria**: 
+    1. Parameters accessible directly by name (e.g., `food_names`, `max_i`) in all DSL contexts, not via `params.key` syntax
+    2. Parameters usable in generators: `[food <- food_names]` where `food_names` is looked up in model_parameters
+    3. Parameters usable in constraint/objective expressions by direct name access
+    4. Parameters interpolate in descriptions using direct name access: `"Variable #{product_name}_#{i}"`
+    5. Backward compatible: `Problem.define(do: block)` works without parameters
+    6. Clear error messages when symbols are not found in model_parameters map
 - **FR-014**: System MUST provide a `Problem.modify` macro to declaratively apply additional variables/constraints/objective updates to an existing problem without rebuilding from scratch
+  - **API Contract**: See `contracts/problem-modify-api.md` for detailed specification
+  - **Acceptance Criteria**:
+    1. Can add new variables to existing problem
+    2. Can add new constraints to existing problem
+    3. Can update objective function (uses `objective(expression, :direction)` syntax)
+    4. Preserves existing problem state (variables, constraints)
+    5. Uses same DSL syntax as `Problem.define` for consistency
+    6. Clear error messages for conflicts/invalid usage
 
 ### Key Entities
 

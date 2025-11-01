@@ -311,6 +311,69 @@
 - [ ] T116 [DOC] Create migration guide for existing users in docs/MIGRATION_GUIDE.md
 - [ ] T117 [P] [DOC] Validate documentation enables 30-minute onboarding (SC-005): Test checklist: (1) New user can install package, (2) Can run first example successfully, (3) Can understand DSL syntax from examples, (4) Can modify example to solve different problem, (5) Can find error message guidance; all within 30 minutes; rubric in test/documentation/onboarding_validation_test.exs
 - [ ] T118 [P] [DOC] Validate all documentation is comprehensive and user-friendly: Check that all docs have (1) Clear purpose statement, (2) Code examples, (3) Gotchas/troubleshooting sections, (4) Links to related docs; rubric in test/documentation/documentation_quality_test.exs
+- [ ] T163 [DOC] Incorporate spec/001-robustify information into general documentation:
+  - **Model Parameters**: Add comprehensive model parameters documentation to `docs/DSL_SYNTAX_REFERENCE.md` based on `contracts/model-parameters-api.md`:
+    - Parameter access syntax (direct name access, not `params.key`)
+    - Usage in generators, expressions, descriptions, objectives
+    - Error handling for undefined parameters
+    - Complete examples from contract
+  - **Problem.modify**: Add comprehensive `Problem.modify` documentation to `docs/DSL_SYNTAX_REFERENCE.md` based on `contracts/problem-modify-api.md`:
+    - Incremental problem building patterns
+    - State preservation guarantees
+    - Syntax consistency with `Problem.define`
+    - Complete examples from contract
+  - **Test Coverage**: Add test coverage guidance to `docs/MODELING_GUIDE.md` based on `contracts/test-coverage-api.md`:
+    - Coverage targets (80% overall, 85% core modules)
+    - Testing best practices from research.md
+    - Coverage validation approach
+  - **Performance**: Add performance considerations to `docs/MODELING_GUIDE.md` based on spec.md requirements:
+    - Performance targets (FR-012: <30s for 1000 vars, <100MB memory)
+    - Scalability guidelines
+    - Benchmarking approach
+  - **Error Handling**: Add error handling patterns to `docs/TROUBLESHOOTING.md` based on spec.md edge cases:
+    - Infeasible problems
+    - Unbounded objectives
+    - Invalid constraint syntax
+    - Numerical precision issues
+    - Solver failures
+    - Undefined variables
+  - **Example Best Practices**: Add example documentation standards to `docs/MODELING_GUIDE.md` based on `contracts/example-validation-api.md`:
+    - Business context requirements
+    - Mathematical formulation documentation
+    - DSL syntax explanations
+    - Gotchas documentation
+  - **Backward Compatibility**: Document backward compatibility guarantees in `docs/MIGRATION_GUIDE.md`:
+    - FR-009 requirements
+    - API contract guarantees
+    - Migration paths
+  - **Quickstart Content**: Incorporate useful quickstart patterns from `quickstart.md` into `docs/GETTING_STARTED.md`:
+    - Common compilation issues and fixes
+    - Coverage setup steps
+    - Example validation approach
+  - **Research Insights**: Incorporate technical decisions from `research.md` into relevant docs:
+    - Test coverage best practices → `docs/MODELING_GUIDE.md`
+    - DSL documentation approach → `docs/DSL_SYNTAX_REFERENCE.md`
+    - Error handling patterns → `docs/TROUBLESHOOTING.md`
+    - Performance benchmarking → `docs/MODELING_GUIDE.md`
+  - **Data Model Insights**: Incorporate data model insights from `data-model.md` into architecture docs:
+    - Test suite entity structure → `docs/ARCHITECTURE.md`
+    - Example file entity requirements → `docs/MODELING_GUIDE.md`
+    - Performance benchmark entity → `docs/MODELING_GUIDE.md`
+  - **Plan Context**: Incorporate technical context from `plan.md` into relevant docs:
+    - Technical stack decisions → `docs/ARCHITECTURE.md`
+    - Performance goals → `docs/MODELING_GUIDE.md`
+    - Constraints and scope → `docs/ARCHITECTURE.md`
+  - **Cross-reference**: Ensure all documentation cross-references:
+    - Link model parameters docs to Problem.modify docs
+    - Link DSL syntax to examples
+    - Link troubleshooting to relevant syntax sections
+    - Create navigation structure between docs
+  - **Validation**: Verify all incorporated information:
+    - Matches spec/001-robustify contracts exactly
+    - Uses consistent terminology with DSL_SYNTAX_REFERENCE.md
+    - Includes working code examples
+    - Maintains backward compatibility documentation
+    - Updates API reference if needed
 
 ---
 
