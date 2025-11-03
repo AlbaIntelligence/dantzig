@@ -115,7 +115,79 @@ defmodule Dantzig.Problem.AST do
     end
   end
 
-  def transform_description_to_ast(description), do: description
+  def transform_description_to_ast(description) do
+    # If it's already a plain string, return as-is
+    case description do
+      str when is_binary(str) ->
+        description
+
+      # String interpolation AST: {:<<>>, [], [parts]}
+      {:<<>>, meta, parts} ->
+        # Walk the parts and normalize generator variables in interpolations
+        normalized_parts =
+          Enum.map(parts, fn
+            # String literal - keep as-is
+            str when is_binary(str) ->
+              str
+
+            # Type annotation for interpolation: {:"::", [], [to_string_call, type]}
+            {:"::", type_meta, [to_string_call, type]} ->
+              # Normalize the to_string call
+              normalized_call = normalize_interpolation_call(to_string_call)
+              {:"::", type_meta, [normalized_call, type]}
+
+            # Other parts - keep as-is
+            other ->
+              other
+          end)
+
+        {:<<>>, meta, normalized_parts}
+
+      # Other AST forms - keep as-is
+      other ->
+        other
+    end
+  end
+
+  # Normalize Kernel.to_string call that contains generator variable
+  defp normalize_interpolation_call(ast) do
+    case ast do
+      # Kernel.to_string call with generator variable: {{:., [], [Kernel, :to_string]}, _, [{:i, [], Elixir}]}
+      {{:., dot_meta, [Kernel, :to_string]}, call_meta, [var_ast]} ->
+        # Extract and normalize the generator variable
+        normalized_var = normalize_generator_variable(var_ast)
+        {{:., dot_meta, [Kernel, :to_string]}, call_meta, [normalized_var]}
+
+      # Other forms - keep as-is
+      other ->
+        other
+    end
+  end
+
+  # Normalize generator variable AST tuple to atom for bindings lookup
+  defp normalize_generator_variable(ast) do
+    case ast do
+      # AST tuple representing generator variable: {:i, [], Elixir} -> :i
+      {atom, _, ctx} when is_atom(atom) and (is_atom(ctx) or is_nil(ctx)) ->
+        # Normalize to just the atom for bindings lookup
+        atom
+
+      # Already normalized atom - keep as-is
+      atom when is_atom(atom) ->
+        atom
+
+      # Other forms - keep as-is (may be expressions like i + j)
+      other ->
+        # For expressions, recursively normalize any generator variables
+        Macro.prewalk(other, fn
+          {atom, _, ctx} when is_atom(atom) and (is_atom(ctx) or is_nil(ctx)) ->
+            atom
+
+          other ->
+            other
+        end)
+    end
+  end
 
   # Internal: rewrite a simple generator sum into a pattern sum
   defp rewrite_generator_sum(inner_expr, generators) do

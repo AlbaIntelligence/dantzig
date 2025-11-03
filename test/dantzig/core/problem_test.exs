@@ -657,16 +657,19 @@ defmodule Dantzig.ProblemTest do
     # Helper function to evaluate interpolated description AST with bindings
     # This simulates what the implementation should do
     defp evaluate_interpolated_description(ast, bindings) do
-      # For now, this will fail - implementation needed in T144
-      # This function should walk the AST and resolve generator variables
-      # For testing purposes, we'll use Code.eval_quoted with bindings
-      # But the real implementation should normalize the AST first
+      # The transformed AST should have normalized generator variables to atoms
+      # We need to evaluate it with bindings
+      # Code.eval_quoted expects variables to be unbound, but our normalized AST
+      # has atoms. We need to reconstruct the AST with variables that can be resolved
       
-      # Convert bindings to environment format for Code.eval_quoted
+      # Walk the AST and replace normalized atoms with variable references that Code.eval_quoted can resolve
+      evaluable_ast = reconstruct_evaluable_ast(ast, bindings)
+      
+      # Convert bindings to keyword list for Code.eval_quoted
       env = Enum.map(bindings, fn {k, v} -> {k, v} end)
       
       try do
-        {result, _} = Code.eval_quoted(ast, env)
+        {result, _} = Code.eval_quoted(evaluable_ast, env)
         result
       rescue
         _ ->
@@ -674,6 +677,23 @@ defmodule Dantzig.ProblemTest do
           # This is expected until T144 is implemented
           raise "Description AST not properly transformed for evaluation with bindings"
       end
+    end
+
+    # Reconstruct AST with variable references that Code.eval_quoted can resolve
+    defp reconstruct_evaluable_ast(ast, bindings) do
+      Macro.prewalk(ast, fn
+        # Normalized atom that's in bindings - convert back to variable reference
+        atom when is_atom(atom) ->
+          if Map.has_key?(bindings, atom) do
+            # Create a variable reference that Code.eval_quoted can resolve
+            {atom, [], nil}
+          else
+            atom
+          end
+
+        other ->
+          other
+      end)
     end
   end
 end
