@@ -187,27 +187,76 @@ defmodule Dantzig.Problem.DSL.ConstraintManager do
   end
 
   # Helper function to interpolate variables in constraint descriptions
-  defp interpolate_variables_in_description(description, bindings, index_vals) do
-    # First, replace any named bindings, e.g., l_name -> "calories"
-    by_binding =
+  defp interpolate_variables_in_description(description, bindings, index_vals) when is_binary(description) do
+    # Handle string interpolation syntax like "Variable #{i}"
+    # First, check if description contains interpolation syntax
+    if String.contains?(description, "#{") do
+      # This is string interpolation syntax - use string replacement for simple cases
       Enum.reduce(bindings, description, fn {var_atom, value}, acc_desc ->
         var_name = to_string(var_atom)
-        pattern = ~r/\b#{Regex.escape(var_name)}\b/
-        String.replace(acc_desc, pattern, to_string(value))
+        # Replace #{var_name} patterns - use simple string replacement
+        # Build pattern string by concatenating parts to avoid interpolation syntax issues  
+        pattern_str = [35, 123] |> List.to_string() |> Kernel.<>(var_name) |> Kernel.<>(125)
+        String.replace(acc_desc, pattern_str, to_string(value))
       end)
+    else
+      # Standard string replacement for non-interpolation strings
+      # First, replace any named bindings, e.g., l_name -> "calories"
+      by_binding =
+        Enum.reduce(bindings, description, fn {var_atom, value}, acc_desc ->
+          var_name = to_string(var_atom)
+          pattern = ~r/\b#{Regex.escape(var_name)}\b/
+          String.replace(acc_desc, pattern, to_string(value))
+        end)
 
-    # TODO: REMOVE USE OF GENERIC i, j, k, ... THE NAME OF THE INDEX VARIABLE CAN BE ANYTHING
-    # Then, for conventional i/j/k ... placeholders (when numeric), append index values like i_1
-    variable_names = ["i", "j", "k", "l", "m", "n"]
+      # Then, for conventional i/j/k ... placeholders (when numeric), append index values like i_1
+      variable_names = ["i", "j", "k", "l", "m", "n"]
 
-    Enum.reduce(Enum.with_index(variable_names), by_binding, fn {var_name, index}, acc_desc ->
-      if index < length(index_vals) do
-        value = Enum.at(index_vals, index)
-        pattern = ~r/\b#{Regex.escape(var_name)}\b/
-        String.replace(acc_desc, pattern, "#{var_name}_#{value}")
-      else
-        acc_desc
-      end
+      Enum.reduce(Enum.with_index(variable_names), by_binding, fn {var_name, index}, acc_desc ->
+        if index < length(index_vals) do
+          value = Enum.at(index_vals, index)
+          pattern = ~r/\b#{Regex.escape(var_name)}\b/
+          String.replace(acc_desc, pattern, "#{var_name}_#{value}")
+        else
+          acc_desc
+        end
+      end)
+    end
+  end
+
+  # Handle AST interpolation forms (from transform_description_to_ast)
+  defp interpolate_variables_in_description(description_ast, bindings, index_vals) when is_tuple(description_ast) do
+    # Handle AST forms like {:<<>>, ...} from string interpolation
+    # Convert bindings to keyword list for Code.eval_quoted
+    var_bindings = Map.to_list(bindings)
+    
+    try do
+      # Reconstruct evaluable AST (replace normalized atoms with variable references)
+      evaluable_ast = reconstruct_evaluable_ast(description_ast, bindings)
+      {evaluated, _} = Code.eval_quoted(evaluable_ast, var_bindings)
+      to_string(evaluated)
+    rescue
+      _ ->
+        # Fallback: try string replacement
+        desc_str = inspect(description_ast)
+        interpolate_variables_in_description(desc_str, bindings, index_vals)
+    end
+  end
+
+  # Reconstruct AST with variable references that Code.eval_quoted can resolve
+  defp reconstruct_evaluable_ast(ast, bindings) do
+    Macro.prewalk(ast, fn
+      # Normalized atom that's in bindings - convert back to variable reference
+      atom when is_atom(atom) ->
+        if Map.has_key?(bindings, atom) do
+          # Create a variable reference that Code.eval_quoted can resolve
+          {atom, [], nil}
+        else
+          atom
+        end
+
+      other ->
+        other
     end)
   end
 

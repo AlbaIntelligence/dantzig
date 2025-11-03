@@ -68,9 +68,9 @@
 - [x] T141e [P] [US1] Add failing test for `transform_description_to_ast/1` interpolation in `test/dantzig/core/problem_test.exs`
 - [x] T144 [P] [US1] Implement `transform_description_to_ast/1` for `"name_#{i}_#{j}"` interpolation in `lib/dantzig/core/problem.ex`
 - [x] T141f [P] [US1] Add failing test for `Problem.constraint/3` no-generator single constraints in `test/dantzig/core/problem_test.exs`
-- [ ] T145 [P] [US1] Implement `Problem.constraint/3` parsing for no‑generator single constraints in `lib/dantzig/core/problem.ex`
-- [ ] T141g [P] [US1] Add failing test for `interpolate_variables_in_description/2` in `test/dantzig/problem/dsl/constraint_manager_test.exs`
-- [ ] T146 [P] [US1] Finalize `interpolate_variables_in_description/2` in `lib/dantzig/problem/dsl/constraint_manager.ex`
+- [x] T145 [P] [US1] Implement `Problem.constraint/3` parsing for no‑generator single constraints in `lib/dantzig/core/problem.ex`
+- [x] T141g [P] [US1] Add failing test for `interpolate_variables_in_description/2` in `test/dantzig/problem/dsl/constraint_manager_test.exs`
+- [x] T146 [P] [US1] Finalize `interpolate_variables_in_description/2` in `lib/dantzig/problem/dsl/constraint_manager.ex`
 - [x] T147 [P] [BC] Align or remove placeholder `process_define_block/1` in `lib/dantzig/problem/dsl.ex` to avoid drift with `Problem.define`
 - [ ] T141h [P] [US1] Add failing test for model parameters in `Problem.define` in `test/dantzig/dsl/model_parameters_test.exs` (precursor to T155)
 - [ ] T148 [P] [US1] Add model parameters support to `Problem.define` in `lib/dantzig/core/problem.ex` or `lib/dantzig/problem/dsl.ex`
