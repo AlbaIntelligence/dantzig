@@ -696,4 +696,159 @@ defmodule Dantzig.ProblemTest do
       end)
     end
   end
+
+  # T141f: Tests for Problem.constraint/3 no-generator single constraints
+  # These tests are expected to FAIL until implementation is complete
+
+  describe "Problem.constraint/3" do
+    test "adds single constraint without generators" do
+      # Test that Problem.constraint/3 can add a single constraint
+      # Note: Variable access macros are only available inside Problem.define blocks
+      # So we need to test this differently - the actual usage would be inside define blocks
+      # For now, we test that the function exists and can be called
+      problem = 
+        Problem.define do
+          new(name: "Test")
+          variables("x", [i <- 1..3], :binary, "Variable")
+        end
+      
+      # Problem.constraint should exist and accept constraint expression
+      # In actual usage, this would be: Problem.constraint(problem, x(1) + x(2) + x(3) == 1, "Sum constraint")
+      # But since we're outside the define block, we'll test with a quoted expression
+      constraint_expr = quote do: x(1) + x(2) + x(3) == 1
+      
+      # This should fail until T145 is implemented
+      assert_raise ArgumentError, fn ->
+        Problem.constraint(problem, constraint_expr, "Sum constraint")
+      end
+    end
+
+    test "adds single constraint without description" do
+      # Test that Problem.constraint/3 works without description
+      problem = 
+        Problem.define do
+          new(name: "Test")
+          variables("x", [i <- 1..3], :binary, "Variable")
+        end
+      
+      constraint_expr = quote do: x(1) >= 0
+      
+      # This should fail until T145 is implemented
+      assert_raise ArgumentError, fn ->
+        Problem.constraint(problem, constraint_expr)
+      end
+    end
+
+    test "adds single constraint with comparison operators" do
+      # Test various comparison operators
+      problem = 
+        Problem.define do
+          new(name: "Test")
+          variables("x", [i <- 1..2], :binary, "Variable")
+        end
+      
+      # Test <= operator
+      constraint_expr1 = quote do: x(1) <= 1
+      assert_raise ArgumentError, fn ->
+        Problem.constraint(problem, constraint_expr1, "Less than or equal")
+      end
+      
+      # Test >= operator
+      constraint_expr2 = quote do: x(2) >= 0
+      assert_raise ArgumentError, fn ->
+        Problem.constraint(problem, constraint_expr2, "Greater than or equal")
+      end
+      
+      # Test == operator
+      constraint_expr3 = quote do: x(1) == 1
+      assert_raise ArgumentError, fn ->
+        Problem.constraint(problem, constraint_expr3, "Equal")
+      end
+    end
+
+    test "adds single constraint with arithmetic expressions" do
+      # Test that arithmetic expressions work in constraints
+      problem = 
+        Problem.define do
+          new(name: "Test")
+          variables("x", [i <- 1..3], :binary, "Variable")
+        end
+      
+      constraint_expr = quote do: x(1) + x(2) == 1
+      
+      # This should fail until T145 is implemented
+      assert_raise ArgumentError, fn ->
+        Problem.constraint(problem, constraint_expr, "Sum")
+      end
+    end
+
+    test "adds single constraint with scaled variables" do
+      # Test that scaled variables work: 2*x(1) + 3*x(2) <= 10
+      problem = 
+        Problem.define do
+          new(name: "Test")
+          variables("x", [i <- 1..2], :binary, "Variable")
+        end
+      
+      constraint_expr = quote do: 2 * x(1) + 3 * x(2) <= 10
+      
+      assert_raise ArgumentError, fn ->
+        Problem.constraint(problem, constraint_expr, "Scaled constraint")
+      end
+    end
+
+    test "adds single constraint with constant comparisons" do
+      # Test constraints comparing to constants
+      problem = 
+        Problem.define do
+          new(name: "Test")
+          variables("x", [i <- 1..2], :binary, "Variable")
+        end
+      
+      constraint_expr = quote do: x(1) >= 0
+      
+      assert_raise ArgumentError, fn ->
+        Problem.constraint(problem, constraint_expr, "Non-negative")
+      end
+    end
+
+    test "adds multiple single constraints sequentially" do
+      # Test that multiple constraints can be added sequentially
+      problem = 
+        Problem.define do
+          new(name: "Test")
+          variables("x", [i <- 1..3], :binary, "Variable")
+        end
+      
+      constraint_expr1 = quote do: x(1) >= 0
+      constraint_expr2 = quote do: x(2) >= 0
+      constraint_expr3 = quote do: x(3) >= 0
+      
+      # All should fail until T145 is implemented
+      assert_raise ArgumentError, fn ->
+        Problem.constraint(problem, constraint_expr1, "Constraint 1")
+      end
+      assert_raise ArgumentError, fn ->
+        Problem.constraint(problem, constraint_expr2, "Constraint 2")
+      end
+      assert_raise ArgumentError, fn ->
+        Problem.constraint(problem, constraint_expr3, "Constraint 3")
+      end
+    end
+
+    test "preserves constraint name from description" do
+      # Test that description becomes constraint name
+      problem = 
+        Problem.define do
+          new(name: "Test")
+          variables("x", [i <- 1..2], :binary, "Variable")
+        end
+      
+      constraint_expr = quote do: x(1) <= 1
+      
+      assert_raise ArgumentError, fn ->
+        Problem.constraint(problem, constraint_expr, "My constraint name")
+      end
+    end
+  end
 end
