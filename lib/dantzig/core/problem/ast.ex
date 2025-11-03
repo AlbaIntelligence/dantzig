@@ -31,20 +31,26 @@ defmodule Dantzig.Problem.AST do
     # e.g., queen2d(i, :_) or qty(food) where i/food are generator variables
     Macro.prewalk(expr, fn
       # Variable reference pattern: var_name(var1, var2, ...)
-      {var_name, meta, args} = call when is_atom(var_name) and is_list(args) ->
+      {var_name, meta, args} when is_atom(var_name) and is_list(args) ->
         # Check if this looks like a variable reference (function call syntax for variables)
         # Transform variable references in args to ensure they're in the right format
         normalized_args =
           Enum.map(args, fn
-            # Atom variable references (from generators) - keep as-is
+            # AST tuple representing a generator variable: {:i, [], Elixir} -> :i
+            # Extract the atom so ExpressionParser can look it up in bindings
             {atom, _, ctx} = arg when is_atom(atom) and (is_atom(ctx) or is_nil(ctx)) ->
-              arg
+              # Normalize to just the atom for bindings lookup
+              atom
             
             # Pattern matching for :_ wildcard - keep as-is
             :_ ->
               :_
             
-            # Already normalized - keep as-is
+            # Already normalized atom - keep as-is
+            atom when is_atom(atom) ->
+              atom
+            
+            # Numeric literals and other values - keep as-is
             other ->
               other
           end)
