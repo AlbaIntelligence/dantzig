@@ -775,22 +775,15 @@ defmodule Dantzig.Problem do
       problem = Problem.constraint(problem, x <= 10, "Variable bound")
   """
   @spec constraint(t(), any(), String.t() | nil) :: t()
-  def constraint(_problem, _constraint_expr, _description \\ nil) do
-    # For single constraints, we need to parse the expression
-    # This is a simplified version - full implementation would need expression parsing
-    # For now, raise a helpful error explaining this limitation
-    raise ArgumentError, """
-    Single constraint syntax is not yet fully implemented.
-
-    For now, please use:
-    - Problem.constraints/4 for pattern-based constraints
-    - Problem.add_constraint/2 for manually created constraints
-
-    Example:
-        # Instead of: Problem.constraint(problem, x <= 10)
-        # Use: Problem.constraints(problem, [], x <= 10)
-        # Or create constraint manually: Problem.add_constraint(problem, Constraint.new_linear(x <= 10))
-    """
+  def constraint(problem, constraint_expr, description \\ nil) do
+    # Transform the constraint expression AST
+    transformed = transform_constraint_expression_to_ast(constraint_expr)
+    
+    # Parse the simple constraint expression (no generators)
+    constraint = parse_simple_constraint_expression(transformed, description)
+    
+    # Add the constraint to the problem
+    add_constraint(problem, constraint)
   end
 
   @doc """

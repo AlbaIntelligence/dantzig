@@ -67,7 +67,7 @@
 - [x] T143 [P] [US1] Implement `transform_objective_expression_to_ast/1` for variable refs inside objectives in `lib/dantzig/core/problem.ex`
 - [x] T141e [P] [US1] Add failing test for `transform_description_to_ast/1` interpolation in `test/dantzig/core/problem_test.exs`
 - [x] T144 [P] [US1] Implement `transform_description_to_ast/1` for `"name_#{i}_#{j}"` interpolation in `lib/dantzig/core/problem.ex`
-- [ ] T141f [P] [US1] Add failing test for `Problem.constraint/3` no-generator single constraints in `test/dantzig/core/problem_test.exs`
+- [x] T141f [P] [US1] Add failing test for `Problem.constraint/3` no-generator single constraints in `test/dantzig/core/problem_test.exs`
 - [ ] T145 [P] [US1] Implement `Problem.constraint/3` parsing for no‑generator single constraints in `lib/dantzig/core/problem.ex`
 - [ ] T141g [P] [US1] Add failing test for `interpolate_variables_in_description/2` in `test/dantzig/problem/dsl/constraint_manager_test.exs`
 - [ ] T146 [P] [US1] Finalize `interpolate_variables_in_description/2` in `lib/dantzig/problem/dsl/constraint_manager.ex`
