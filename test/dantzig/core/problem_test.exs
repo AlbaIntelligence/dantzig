@@ -528,4 +528,152 @@ defmodule Dantzig.ProblemTest do
       refute Enum.member?(vars, "y_3")
     end
   end
+
+  # T141e: Tests for transform_description_to_ast/1 interpolation
+  # These tests are expected to FAIL until implementation is complete
+
+  describe "transform_description_to_ast/1" do
+    test "transforms description with single variable interpolation" do
+      # Test that "Variable #{i}" gets transformed correctly
+      desc = quote do: "Variable #{i}"
+      
+      transformed = AST.transform_description_to_ast(desc)
+      
+      # Should be a string interpolation AST
+      assert match?({:<<>>, _, _}, transformed)
+      
+      # The variable reference should be normalized for later resolution
+      # We'll verify this by checking the structure contains the variable reference
+      {_, _, parts} = transformed
+      # Should have at least 2 parts: string and interpolation
+      assert length(parts) >= 2
+    end
+
+    test "transforms description with multiple variable interpolation" do
+      # Test that "Variable #{i}_#{j}" gets transformed correctly
+      desc = quote do: "Variable #{i}_#{j}"
+      
+      transformed = AST.transform_description_to_ast(desc)
+      
+      # Should be a string interpolation AST
+      assert match?({:<<>>, _, _}, transformed)
+      
+      {_, _, parts} = transformed
+      # Should have multiple parts including interpolations
+      assert length(parts) >= 3
+    end
+
+    test "transforms description with no interpolation" do
+      # Test that plain string descriptions are preserved
+      desc = "Plain description"
+      
+      transformed = AST.transform_description_to_ast(desc)
+      
+      # Should remain unchanged
+      assert transformed == desc
+    end
+
+    test "transforms description with numeric interpolation" do
+      # Test that numeric interpolation works
+      desc = quote do: "Value #{42}"
+      
+      transformed = AST.transform_description_to_ast(desc)
+      
+      # Should be a string interpolation AST
+      assert match?({:<<>>, _, _}, transformed)
+    end
+
+    test "transforms description with expression interpolation" do
+      # Test that expression interpolation works
+      desc = quote do: "Sum #{i + j}"
+      
+      transformed = AST.transform_description_to_ast(desc)
+      
+      # Should be a string interpolation AST
+      assert match?({:<<>>, _, _}, transformed)
+    end
+
+    test "transformed description resolves correctly with bindings" do
+      # Integration test: Verify that transformed AST can be resolved with bindings
+      # This test should FAIL until variable reference resolution is fully implemented
+      desc = quote do: "Variable #{i}"
+      
+      transformed = AST.transform_description_to_ast(desc)
+      
+      # Create bindings for generator variable i=1
+      bindings = %{i: 1}
+      
+      # The transformed AST should be evaluable with bindings to produce the final string
+      # We need to evaluate the AST with bindings
+      # This will require implementing the resolution logic
+      result = evaluate_interpolated_description(transformed, bindings)
+      
+      # Should resolve to "Variable 1"
+      assert result == "Variable 1"
+    end
+
+    test "transformed description with multiple variables resolves correctly with bindings" do
+      # Integration test: Verify that multi-variable interpolation resolves correctly
+      desc = quote do: "Position (#{i}, #{j})"
+      
+      transformed = AST.transform_description_to_ast(desc)
+      
+      # Create bindings for generator variables
+      bindings = %{i: 2, j: 3}
+      
+      # Evaluate the transformed AST with bindings
+      result = evaluate_interpolated_description(transformed, bindings)
+      
+      # Should resolve to "Position (2, 3)"
+      assert result == "Position (2, 3)"
+    end
+
+    test "transformed description preserves string parts correctly" do
+      # Test that string parts are preserved during transformation
+      desc = quote do: "Prefix #{i} suffix"
+      
+      transformed = AST.transform_description_to_ast(desc)
+      
+      # Should be a string interpolation AST
+      assert match?({:<<>>, _, _parts}, transformed)
+      
+      {_, _, parts} = transformed
+      # First part should be "Prefix "
+      assert List.first(parts) == "Prefix "
+      # Last part should be " suffix"
+      assert List.last(parts) == " suffix"
+    end
+
+    test "transformed description handles empty string parts" do
+      # Test that empty string parts are handled correctly
+      desc = quote do: "#{i}#{j}"
+      
+      transformed = AST.transform_description_to_ast(desc)
+      
+      # Should be a string interpolation AST
+      assert match?({:<<>>, _, _}, transformed)
+    end
+
+    # Helper function to evaluate interpolated description AST with bindings
+    # This simulates what the implementation should do
+    defp evaluate_interpolated_description(ast, bindings) do
+      # For now, this will fail - implementation needed in T144
+      # This function should walk the AST and resolve generator variables
+      # For testing purposes, we'll use Code.eval_quoted with bindings
+      # But the real implementation should normalize the AST first
+      
+      # Convert bindings to environment format for Code.eval_quoted
+      env = Enum.map(bindings, fn {k, v} -> {k, v} end)
+      
+      try do
+        {result, _} = Code.eval_quoted(ast, env)
+        result
+      rescue
+        _ ->
+          # If evaluation fails, it means the AST wasn't properly transformed
+          # This is expected until T144 is implemented
+          raise "Description AST not properly transformed for evaluation with bindings"
+      end
+    end
+  end
 end

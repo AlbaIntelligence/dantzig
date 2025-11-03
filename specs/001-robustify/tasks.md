@@ -64,7 +64,7 @@
 - [x] T141c [P] [US1] Add failing test for `transform_constraint_expression_to_ast/1` variable refs in `test/dantzig/core/problem_test.exs`
 - [x] T142 [P] [US1] Implement `transform_constraint_expression_to_ast/1` for variable refs (e.g., `queen2d(i, :_)`) in `lib/dantzig/core/problem.ex`
 - [x] T141d [P] [US1] Add failing test for `transform_objective_expression_to_ast/1` variable refs in `test/dantzig/core/problem_test.exs`
-- [ ] T143 [P] [US1] Implement `transform_objective_expression_to_ast/1` for variable refs inside objectives in `lib/dantzig/core/problem.ex`
+- [x] T143 [P] [US1] Implement `transform_objective_expression_to_ast/1` for variable refs inside objectives in `lib/dantzig/core/problem.ex`
 - [ ] T141e [P] [US1] Add failing test for `transform_description_to_ast/1` interpolation in `test/dantzig/core/problem_test.exs`
 - [ ] T144 [P] [US1] Implement `transform_description_to_ast/1` for `"name_#{i}_#{j}"` interpolation in `lib/dantzig/core/problem.ex`
 - [ ] T141f [P] [US1] Add failing test for `Problem.constraint/3` no-generator single constraints in `test/dantzig/core/problem_test.exs`
