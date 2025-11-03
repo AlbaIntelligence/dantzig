@@ -73,12 +73,26 @@ defmodule Dantzig.Problem.AST do
     normalized =
       Macro.prewalk(expr, fn
         # Normalize variable reference arguments in function-style variable access
-        {var_name, meta, args} = call when is_atom(var_name) and is_list(args) ->
+        {var_name, meta, args} when is_atom(var_name) and is_list(args) ->
           normalized_args =
             Enum.map(args, fn
-              {atom, _, ctx} = arg when is_atom(atom) and (is_atom(ctx) or is_nil(ctx)) -> arg
-              :_ -> :_
-              other -> other
+              # AST tuple representing a generator variable: {:i, [], Elixir} -> :i
+              # Extract the atom so ExpressionParser can look it up in bindings
+              {atom, _, ctx} = arg when is_atom(atom) and (is_atom(ctx) or is_nil(ctx)) ->
+                # Normalize to just the atom for bindings lookup
+                atom
+              
+              # Pattern matching for :_ wildcard - keep as-is
+              :_ ->
+                :_
+              
+              # Already normalized atom - keep as-is
+              atom when is_atom(atom) ->
+                atom
+              
+              # Numeric literals and other values - keep as-is
+              other ->
+                other
             end)
 
           {var_name, meta, normalized_args}
