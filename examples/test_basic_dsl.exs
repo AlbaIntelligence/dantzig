@@ -15,7 +15,7 @@ problem =
 problem =
   Problem.modify problem do
     # Use the modern clean DSL syntax
-    variables("x", [i <- 1..2, j <- 1..2], :binary, description: "Test variables")
+    variables("x", [i <- 1..2, j <- 1..2], :binary, "Test variables")
   end
 
 IO.puts("Created problem: #{problem.name}")
