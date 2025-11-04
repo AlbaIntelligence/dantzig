@@ -302,6 +302,25 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
           Polynomial.variable(var_name_str)
         end
 
+      # Handle struct field access after map/list access (e.g., items_dict[item].weight)
+      # Pattern: {{:., meta}, [Access.get_result, field_atom], []}
+      {{:., _, [container_ast, field_atom]}, _, []} when is_atom(field_atom) ->
+        # Evaluate the container (which might be an Access.get result)
+        expr_with_field = {{:., [], [container_ast, field_atom]}, [], []}
+        case try_evaluate_constant(expr_with_field, bindings) do
+          {:ok, val} when is_number(val) ->
+            Polynomial.const(val)
+          
+          {:ok, non_numeric_val} ->
+            raise ArgumentError,
+              "Constant access expression evaluated to non-numeric value: #{inspect(expr_with_field)} => #{inspect(non_numeric_val)}"
+          
+          :error ->
+            raise ArgumentError,
+              "Cannot evaluate constant access expression: #{inspect(expr_with_field)}. " <>
+              "Ensure the constant exists in model_parameters and indices are valid."
+        end
+
       # Handle Access.get AST nodes (e.g., multiplier[i], cost[worker][task])
       # Single level: {{:., _, [Access, :get]}, _, [container_ast, key_ast]}
       # Nested: {{:., _, [Access, :get]}, _, [{{:., _, [Access, :get]}, _, [container, key1]}, key2]}
@@ -406,6 +425,20 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
           :- -> l - r
           :* -> l * r
           :/ -> l / r
+        end
+
+      # Struct field access (e.g., items_dict[item].weight)
+      # Pattern: {{:., meta}, [container_result, field_atom]} where container_result might be Access.get result
+      {{:., _, [container_ast, field_atom]}, _, []} when is_atom(field_atom) ->
+        container = evaluate_expression_with_bindings(container_ast, bindings)
+        
+        cond do
+          is_map(container) ->
+            # Try atom key first, then string key
+            Map.get(container, field_atom) || Map.get(container, to_string(field_atom))
+          
+          true ->
+            nil
         end
 
       # Access.get handling with recursion

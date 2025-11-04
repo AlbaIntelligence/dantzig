@@ -35,7 +35,7 @@ limits_dict = for limit_entry <- limits, into: %{}, do: {limit_entry.nutrient, l
 
 # Create the problem
 problem_diet =
-  Problem.define do
+  Problem.define(model_parameters: %{foods_dict: foods_dict, limits_dict: limits_dict, food_names: food_names, limits_names: limits_names}) do
     new(
       name: "Diet Problem",
       description: "Minimize cost of food while meeting nutritional requirements"
