@@ -1,5 +1,4 @@
 #!/usr/bin/env elixir
-that(are)
 
 # Production Planning Problem Example
 #

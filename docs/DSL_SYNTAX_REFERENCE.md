@@ -747,6 +747,158 @@ Note: `max()` and `min()` functions require linearization techniques for linear 
   - `"One queen on axis 1 and 2"` for i=1, k=2
   - etc.
 
+### 6. Access to Constants and to Enumerated Constants
+
+Constraint definitionas and objectives can access named constants and named enumerated constants. The constants are passed via the `model_parameters` dictionary argument of the `Problem.define()` or `Problem.modify()` macros.
+
+#### Named Constant
+
+A _Named constants_ is a single value (no index) passed as a single key in the `model_parameters` dictionary. Here are a list of valid examples.
+
+##### Named Constant _not_ used in the formulas
+
+```elixir
+problem = Problem.define(model_parameters: %{max_queens: 8}) do
+  new(name: "Problem Name", description: "Problem description")
+  variables("queen2d", [i <- 1..max_queens, j <- 1..max_queens], :binary, "Queen position")
+end
+
+```
+
+##### Named Constant(s) used in the formulas
+
+```elixir
+# Example 1
+problem = Problem.define(model_parameters: %{multiplier: 7.0}) do
+  new(name: "Problem Name", description: "Problem description")
+  variables("x1", :continuous, "X1")
+  variables("x2", :continuous, "X2")
+
+  # The DSL identifies variables (here `x1` and `x2`) as variables, and constants (here `multiplier`)
+  constraints( x2 + multiplier * x1 <= 10, "Max constraint" )
+end
+```
+
+```elixir
+# Example 2
+problem = Problem.define(model_parameters: %{multiplier_1: 7.0, multiplier_2: -5.0}) do
+  new(name: "Problem Name", description: "Problem description")
+  variables("x1", :continuous, "X1")
+  variables("x2", :continuous, "X2")
+
+  # The DSL identifies variables (here `x1` and `x2`) as variables, and constants (here `multiplier`)
+  constraints( multiplier_1 * x1 - x2 * multiplier_2 <= 10, "Max constraint" )
+end
+```
+
+#### Enumerated (Indexed) Constants
+
+A _Named enumerated constants_ is an indexed set of values passed in the `model_parameters` dictionary. The index is either integer-like (like in the case of an array), or more general (as in a dictionary). The index can be multidimensional. Here are a list of valid examples.
+
+```elixir
+# Example 1: indexed list of constants - 1 dimension
+problem = Problem.define(model_parameters: %{multiplier: [4.0, 5.0, 6.0, 7.0]}) do
+  new(name: "Problem Name", description: "Problem description")
+  variables( "x", [i <- 1..4], :continuous, "Xs")
+
+  constraints( sum( for i <-  1..4, do: x(i) * multiplier[i]) <= 10, "Max constraint" )
+end
+```
+
+```elixir
+# Example 1: indexed list of constants - 1 dimension
+problem = Problem.define(model_parameters: %{matrix: [[4.0, 5.0, 6.0], [7.0, 8.0, 9.0]]}) do
+  new(name: "Problem Name", description: "Problem description")
+  variables( "x", [i <- 1..2, j <- 1..3], :continuous, "Xs")
+
+  constraints( sum( for i <-  1..2, j <- 1..3, do: x(i, j) * matrix[i][j]) <= 10, "Max constraint" )
+end
+```
+
+```elixir
+# Multidimensional indexed named constants
+# Cost matrix: cost[worker][task] = cost of assigning worker to task
+cost_matrix = %{
+  "Alice" => %{"Task1" => 2, "Task2" => 3, "Task3" => 1},
+  "Bob" => %{"Task1" => 4, "Task2" => 2, "Task3" => 3},
+  "Charlie" => %{"Task1" => 3, "Task2" => 1, "Task3" => 4}
+}
+
+workers = Enum.keys(cost_matrix)
+# Tasks is the set of all possible tasks across all workers
+tasks = Enum.flat_map(cost_matrix, fn {_, v} -> Map.keys(v) end) |> MapSet.new()
+
+problem = Problem.define(model_parameters: %{cost: cost_matrix, workers: workers, tasks: tasks}) do
+  new(name: "Assignment Problem", description: "Assign workers to tasks at minimum cost")
+  variables("assign", [worker <- workers, task <- tasks], :binary, "Assignment variable")
+  constraints(
+    [task <- tasks],
+    sum(for worker <- workers, do: assign(worker, task)) == 1,
+    "Each task assigned to exactly one worker #{task}"
+  )
+  constraints(
+    [worker <- workers],
+    sum(for task <- tasks, do: assign(worker, task)) <= 1,
+    "Each worker assigned to at most one task #{worker}"
+  )
+
+  # Objective: minimize total cost
+  objective(
+    sum(
+      for worker <- workers,
+          task <- tasks,
+          do: assign(worker, task) * cost[worker][task] # Note the use of normal brackets and square brackets!
+    ),
+    :minimize
+  )
+end
+```
+
+```elixir
+# Multidimensional indexed named constants in both constraints and objective
+# Cost matrix: cost[worker][task] = cost of assigning worker to task
+cost_matrix = %{
+  "Alice" => %{"Task1" => 2, "Task2" => 3, "Task3" => 1},
+  "Bob" => %{"Task1" => 4, "Task2" => 2, "Task3" => 3},
+  "Charlie" => %{"Task1" => 3, "Task2" => 1, "Task3" => 4}
+}
+
+workers = Enum.keys(cost_matrix)
+# Tasks is the set of all possible tasks across all workers
+tasks = Enum.flat_map(cost_matrix, fn {_, v} -> Map.keys(v) end) |> MapSet.new()
+
+problem = Problem.define(model_parameters: %{cost: cost_matrix, workers: workers, tasks: tasks}) do
+  new(name: "Assignment Problem", description: "Assign workers to tasks at minimum cost")
+  variables("assign", [worker <- workers, task <- tasks], :binary, "Assignment variable")
+  constraints(
+    [task <- tasks],
+    sum(for worker <- workers, do: assign(worker, task)) == 1,
+    "Each task assigned to exactly one worker #{task}"
+  )
+  constraints(
+    [worker <- workers],
+    sum(for task <- tasks, do: assign(worker, task)) <= 1,
+    "Each worker assigned to at most one task #{worker}"
+  )
+
+  constraints(
+    sum(
+      for worker <- workers, task <- tasks, do: assign(worker, task) * cost[worker][task]) >= 0,
+      "The overall cost is positive"
+  )
+
+  # Objective: minimize total cost
+  objective(
+    sum(
+      for worker <- workers,
+          task <- tasks,
+          do: assign(worker, task) * cost[worker][task] # Note the use of normal brackets and square brackets!
+    ),
+    :minimize
+  )
+end
+```
+
 ## Implementation Requirements
 
 The DSL implementation MUST support:

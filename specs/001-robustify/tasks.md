@@ -475,6 +475,8 @@
 - **User Stories (Phase 3+)**: All depend on Foundational phase completion
   - User stories can then proceed in parallel (if staffed)
   - Or sequentially in priority order (P1 → P2 → P3)
+- **Model Parameters & Problem.modify (Phase 12)**: Depends on Foundational phase completion
+- **Constant Access (Phase 13)**: Can be implemented independently, but benefits from Phase 12 completion
 - **Polish (Final Phase)**: Depends on all desired user stories being complete
 
 ### User Story Dependencies
@@ -567,5 +569,8 @@ With multiple developers:
 | FR-009: Backward compatibility     | Phase 10 (BC) | 12 tasks   | ✅ Covered |
 | FR-011: 30min onboarding           | Phase 9 (DOC) | 12 tasks   | ✅ Covered |
 | FR-012: Performance targets        | Phase 7 (US5) | 10 tasks   | ✅ Covered |
+| FR-013: Model parameters           | Phase 12       | 8 tasks    | ✅ Covered |
+| FR-014: Problem.modify             | Phase 12       | 8 tasks    | ✅ Covered |
+| FR-015: Constant access           | Phase 13       | 12 tasks   | ✅ Covered |
 
-**Total Tasks**: 141 tasks covering all 12 functional requirements
+**Total Tasks**: 153 tasks covering all 15 functional requirements

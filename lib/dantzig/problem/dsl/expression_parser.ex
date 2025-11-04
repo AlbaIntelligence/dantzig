@@ -242,10 +242,83 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
       val when is_number(val) ->
         Polynomial.const(val)
 
-      # Resolve bracket access etc. to a numeric constant if possible
-      {{:., _, [Access, :get]}, _, _} ->
-        value = evaluate_expression_with_bindings(expr, bindings)
-        Polynomial.const(value)
+      # Handle bare atoms that might be variable names (when variable not in scope)
+      atom when is_atom(atom) and not is_nil(problem) ->
+        var_name_str = to_string(atom)
+        # Check if this atom corresponds to a variable name in the problem
+        var_def = Problem.get_variable(problem, var_name_str)
+        
+        if var_def do
+          Polynomial.variable(var_name_str)
+        else
+          # Not a variable - try to evaluate as a constant from model_parameters/environment
+          case try_evaluate_constant(expr, bindings) do
+            {:ok, val} when is_number(val) ->
+              Polynomial.const(val)
+            
+            {:ok, _other} ->
+              raise ArgumentError, 
+                "Unsupported expression: #{inspect(expr)}. " <>
+                "If #{inspect(atom)} is meant to be a variable, ensure it was created with variables() first."
+            
+            :error ->
+              raise ArgumentError, 
+                "Unsupported expression: #{inspect(expr)}. " <>
+                "If #{inspect(atom)} is meant to be a variable, ensure it was created with variables() first."
+          end
+        end
+
+      # Handle variable reference AST nodes like {:queen2d_1_1, [], Elixir} (when variable not in scope)
+      {var_name, _meta, context} when is_atom(var_name) and 
+                                      tuple_size(expr) == 3 and
+                                      var_name not in [:+, :-, :*, :/, :==, :<=, :>=, :!=, :<, :>, :., :|>, :..] ->
+        var_name_str = to_string(var_name)
+        
+        # If problem is provided, check if this corresponds to a variable name
+        if not is_nil(problem) do
+          var_def = Problem.get_variable(problem, var_name_str)
+          
+          if var_def do
+            Polynomial.variable(var_name_str)
+          else
+            # Not a variable - try to evaluate as a constant from model_parameters/environment
+            case try_evaluate_constant(expr, bindings) do
+              {:ok, val} when is_number(val) ->
+                Polynomial.const(val)
+              
+              {:ok, _other} ->
+                raise ArgumentError, 
+                  "Unsupported expression: #{inspect(expr)}. " <>
+                  "If #{inspect(var_name)} is meant to be a variable, ensure it was created with variables() first."
+              
+              :error ->
+                raise ArgumentError, 
+                  "Unsupported expression: #{inspect(expr)}. " <>
+                  "If #{inspect(var_name)} is meant to be a variable, ensure it was created with variables() first."
+            end
+          end
+        else
+          # No problem context - treat as variable name (for backward compatibility)
+          Polynomial.variable(var_name_str)
+        end
+
+      # Handle Access.get AST nodes (e.g., multiplier[i], cost[worker][task])
+      # Single level: {{:., _, [Access, :get]}, _, [container_ast, key_ast]}
+      # Nested: {{:., _, [Access, :get]}, _, [{{:., _, [Access, :get]}, _, [container, key1]}, key2]}
+      {{:., _, [Access, :get]}, _, _} = access_expr ->
+        case try_evaluate_constant(access_expr, bindings) do
+          {:ok, val} when is_number(val) ->
+            Polynomial.const(val)
+          
+          {:ok, non_numeric_val} ->
+            raise ArgumentError,
+              "Constant access expression evaluated to non-numeric value: #{inspect(access_expr)} => #{inspect(non_numeric_val)}"
+          
+          :error ->
+            raise ArgumentError,
+              "Cannot evaluate constant access expression: #{inspect(access_expr)}. " <>
+              "Ensure the constant exists in model_parameters and indices are valid."
+        end
 
       _ ->
         raise ArgumentError, "Unsupported expression: #{inspect(expr)}"
@@ -334,6 +407,7 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
 
           is_list(container) ->
             case container do
+              # List of maps (struct-like objects)
               [%{} | _] ->
                 Enum.find_value(container, fn
                   %{} = m ->
@@ -348,12 +422,37 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
                     nil
                 end)
 
-              _ ->
-                nil
+              # Regular list with integer indexing
+              _ when is_list(container) ->
+                case key do
+                  idx when is_integer(idx) ->
+                    # Convert to 1-based indexing if needed (Elixir uses 0-based)
+                    # Check if we're accessing with 1-based index (common in DSL)
+                    cond do
+                      idx >= 1 and idx <= length(container) ->
+                        Enum.at(container, idx - 1)
+                      idx >= 0 and idx < length(container) ->
+                        Enum.at(container, idx)
+                      true ->
+                        nil
+                    end
+                  
+                  _ ->
+                    nil
+                end
             end
 
           true ->
             nil
+        end
+
+      # Handle bare atoms that might be constants from environment
+      # This must come before the AST node case to match bare atoms first
+      atom when is_atom(atom) ->
+        # First check bindings (for generator variables)
+        case Map.fetch(bindings, atom) do
+          {:ok, v} -> v
+          :error -> eval_with_env(atom)
         end
 
       # Variables: prefer loop bindings, then env
@@ -445,7 +544,8 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
   defp enumerate_for_bindings([], bindings), do: [bindings]
 
   defp enumerate_for_bindings([{:<-, _, [var, domain_ast]} | rest], bindings) do
-    domain_values = evaluate_expression(domain_ast)
+    # Use evaluate_expression_with_bindings to check environment for constants
+    domain_values = evaluate_expression_with_bindings(domain_ast, bindings)
 
     Enum.flat_map(domain_values, fn v ->
       enumerate_for_bindings(rest, Map.put(bindings, var, v))
@@ -473,8 +573,28 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
   defp eval_with_env(quoted) do
     case Process.get(:dantzig_eval_env) do
       env when is_list(env) ->
-        {value, _} = Code.eval_quoted(quoted, env)
-        value
+        # Handle bare atoms by looking them up directly
+        # Handle AST nodes like {:workers, [], nil} by extracting the atom
+        atom_to_lookup =
+          case quoted do
+            atom when is_atom(atom) ->
+              atom
+            
+            {atom, _, _} when is_atom(atom) ->
+              atom
+            
+            # For other expressions, evaluate as quoted expression
+            _ ->
+              nil
+          end
+        
+        if atom_to_lookup do
+          Keyword.get(env, atom_to_lookup) || 
+            raise ArgumentError, "Cannot evaluate atom '#{atom_to_lookup}' - not found in model_parameters/environment"
+        else
+          {value, _} = Code.eval_quoted(quoted, env)
+          value
+        end
 
       _ ->
         raise ArgumentError, "Cannot evaluate expression without environment: #{inspect(quoted)}"
@@ -487,6 +607,18 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
       String.to_existing_atom(bin)
     rescue
       ArgumentError -> nil
+    end
+  end
+
+  # Try to evaluate an expression as a constant from model_parameters/environment
+  # Returns {:ok, value} if successful, :error if not
+  defp try_evaluate_constant(expr, bindings) do
+    try do
+      val = evaluate_expression_with_bindings(expr, bindings)
+      {:ok, val}
+    rescue
+      ArgumentError -> :error
+      Protocol.UndefinedError -> :error
     end
   end
 end

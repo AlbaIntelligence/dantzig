@@ -131,6 +131,17 @@
     4. Preserves existing problem state (variables, constraints)
     5. Uses same DSL syntax as `Problem.define` for consistency
     6. Clear error messages for conflicts/invalid usage
+- **FR-015**: System MUST support accessing constants and enumerated constants from model_parameters in constraint/objective expressions via map/list access syntax (e.g., `cost[worker][task]`, `multiplier[i]`, `matrix[i][j]`)
+  - **API Contract**: See `docs/DSL_SYNTAX_REFERENCE.md` section 6 for syntax reference
+  - **Acceptance Criteria**:
+    1. Scalar constants accessible by direct name: `multiplier` (not `params.multiplier`)
+    2. List constants accessible by index: `multiplier[i]` where `i` is from generator bindings
+    3. Nested list constants accessible: `matrix[i][j]` where `i` and `j` are from generator bindings
+    4. Map constants accessible: `cost[worker][task]` where `worker` and `task` are from generators
+    5. Constants evaluated at parse time using generator bindings and converted to polynomial coefficients
+    6. Clear error messages for undefined constants, invalid indices, type mismatches
+    7. Backward compatible: existing expressions without constant access continue to work
+    8. Supports all enumerable types: lists, maps, mapsets, ranges, etc.
 
 ### Key Entities
 

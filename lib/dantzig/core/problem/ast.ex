@@ -244,8 +244,8 @@ defmodule Dantzig.Problem.AST do
     end
   end
 
-  # Parse simple expressions to polynomials (no bindings)
-  def parse_simple_expression_to_polynomial(expr) do
+  # Parse simple expressions to polynomials (with optional problem context for variable lookup)
+  def parse_simple_expression_to_polynomial(expr, problem \\ nil) do
     case expr do
       # Support Polynomial.variable("x") (with or without full alias) within simple constraints
       {{:., _, [{:__aliases__, _, [:Dantzig, :Polynomial]}, :variable]}, _, [name]} ->
@@ -276,15 +276,51 @@ defmodule Dantzig.Problem.AST do
 
         Polynomial.variable(var_name_str)
 
+      # Handle variable reference AST nodes like {:queen2d_1_1, [], Elixir} (when variable not in scope)
+      # These occur when a variable name is used but not defined in the current scope
+      # Exclude operators and other special forms
+      {var_name, _meta, _context} when is_atom(var_name) and 
+                                      tuple_size(expr) == 3 and
+                                      var_name not in [:+, :-, :*, :/, :==, :<=, :>=, :!=, :<, :>, :., :|>, :..] ->
+        var_name_str = to_string(var_name)
+        
+        # If problem is provided, check if this corresponds to a variable name
+        if not is_nil(problem) do
+          var_def = Dantzig.Problem.get_variable(problem, var_name_str)
+          
+          if var_def do
+            Polynomial.variable(var_name_str)
+          else
+            # Not a variable - try to evaluate as a constant from model_parameters/environment
+            case try_evaluate_constant_from_env(expr) do
+              {:ok, val} when is_number(val) ->
+                Polynomial.const(val)
+              
+              {:ok, _other} ->
+                raise ArgumentError, 
+                  "Unsupported simple expression: #{inspect(expr)}. " <>
+                  "If #{inspect(var_name)} is meant to be a variable, ensure it was created with variables() first."
+              
+              :error ->
+                raise ArgumentError, 
+                  "Unsupported simple expression: #{inspect(expr)}. " <>
+                  "If #{inspect(var_name)} is meant to be a variable, ensure it was created with variables() first."
+            end
+          end
+        else
+          # No problem context - treat as variable name (for backward compatibility)
+          Polynomial.variable(var_name_str)
+        end
+
       {:-, _meta, [v]} ->
-        case parse_simple_expression_to_polynomial(v) do
+        case parse_simple_expression_to_polynomial(v, problem) do
           %Polynomial{} = p -> Polynomial.scale(p, -1)
           other -> raise ArgumentError, "Unsupported unary minus: #{inspect(other)}"
         end
 
       {op, _, [left, right]} when op in [:+, :-, :*, :/] ->
-        left_poly = parse_simple_expression_to_polynomial(left)
-        right_poly = parse_simple_expression_to_polynomial(right)
+        left_poly = parse_simple_expression_to_polynomial(left, problem)
+        right_poly = parse_simple_expression_to_polynomial(right, problem)
 
         case {op, left_poly, right_poly} do
           {:+, %Polynomial{} = p1, %Polynomial{} = p2} ->
@@ -346,11 +382,104 @@ defmodule Dantzig.Problem.AST do
             end
         end
 
-      val when is_number(val) ->
-        Polynomial.const(val)
+      # Handle variable reference AST nodes like {:queen2d_1_1, [], Elixir} (when variable not in scope)
+      # These occur when a variable name is used but not defined in the current scope
+      # Exclude operators and other special forms
+      {var_name, _meta, _context} when is_atom(var_name) and 
+                                      tuple_size(expr) == 3 and
+                                      var_name not in [:+, :-, :*, :/, :==, :<=, :>=, :!=, :<, :>, :., :|>, :..] ->
+        var_name_str = to_string(var_name)
+        
+        # If problem is provided, check if this corresponds to a variable name
+        if not is_nil(problem) do
+          var_def = Dantzig.Problem.get_variable(problem, var_name_str)
+          
+          if var_def do
+            Polynomial.variable(var_name_str)
+          else
+            # Not a variable - try to evaluate as a constant from model_parameters/environment
+            case try_evaluate_constant_from_env(expr) do
+              {:ok, val} when is_number(val) ->
+                Polynomial.const(val)
+              
+              {:ok, _other} ->
+                raise ArgumentError, 
+                  "Unsupported simple expression: #{inspect(expr)}. " <>
+                  "If #{inspect(var_name)} is meant to be a variable, ensure it was created with variables() first."
+              
+              :error ->
+                raise ArgumentError, 
+                  "Unsupported simple expression: #{inspect(expr)}. " <>
+                  "If #{inspect(var_name)} is meant to be a variable, ensure it was created with variables() first."
+            end
+          end
+        else
+          # No problem context - treat as variable name (for backward compatibility)
+          Polynomial.variable(var_name_str)
+        end
+
+      # Handle bare atoms that might be variable names (fallback for cases where AST was simplified)
+      atom when is_atom(atom) and not is_nil(problem) ->
+        var_name_str = to_string(atom)
+        # Check if this atom corresponds to a variable name in the problem
+        var_def = Dantzig.Problem.get_variable(problem, var_name_str)
+        
+        if var_def do
+          Polynomial.variable(var_name_str)
+        else
+          # Try to evaluate as a constant from model_parameters/environment
+          case try_evaluate_constant_from_env(expr) do
+            {:ok, val} when is_number(val) ->
+              Polynomial.const(val)
+            
+            {:ok, _other} ->
+              raise ArgumentError, 
+                "Unsupported simple expression: #{inspect(expr)}. " <>
+                "If #{inspect(atom)} is meant to be a variable, ensure it was created with variables() first."
+            
+            :error ->
+              raise ArgumentError, 
+                "Unsupported simple expression: #{inspect(expr)}. " <>
+                "If #{inspect(atom)} is meant to be a variable, ensure it was created with variables() first."
+          end
+        end
+    end
+  end
+
+  # Try to evaluate an expression as a constant from model_parameters/environment
+  # Returns {:ok, value} if successful, :error if not
+  defp try_evaluate_constant_from_env(expr) do
+    case Process.get(:dantzig_eval_env) do
+      env when is_list(env) ->
+        try do
+          # Handle bare atoms by looking them up directly in the environment
+          value =
+            case expr do
+              atom when is_atom(atom) ->
+                # Look up the atom in the environment (keyword list)
+                Keyword.get(env, atom)
+              
+              # For AST nodes like {:multiplier, [], Elixir}, extract the atom
+              {atom, _, _} when is_atom(atom) ->
+                Keyword.get(env, atom)
+              
+              # For other expressions, try to evaluate them
+              other ->
+                {val, _} = Code.eval_quoted(other, env)
+                val
+            end
+          
+          if is_nil(value) do
+            :error
+          else
+            {:ok, value}
+          end
+        rescue
+          _ -> :error
+        end
 
       _ ->
-        raise ArgumentError, "Unsupported simple expression: #{inspect(expr)}"
+        :error
     end
   end
 end

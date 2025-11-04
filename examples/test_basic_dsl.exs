@@ -6,25 +6,36 @@ require Dantzig.Problem, as: Problem
 
 IO.puts("=== Testing Basic DSL Functions ===")
 
-# Test 1: Simple variable creation using modern DSL syntax
-problem1 = Problem.new(name: "Test 1")
+problem =
+  Problem.define do
+    # Test 1: Simple variable creation using modern DSL syntax
+    new(name: "Test Problem")
+  end
 
-# Use the modern clean DSL syntax
-problem1 =
-  Problem.variables(problem1, "x", [i <- 1..2, j <- 1..2], :binary, description: "Test variables")
+problem =
+  Problem.modify problem do
+    # Use the modern clean DSL syntax
+    variables("x", [i <- 1..2, j <- 1..2], :binary, description: "Test variables")
+  end
 
-IO.puts("Created problem: #{problem1.name}")
-IO.puts("Variables: #{map_size(problem1.variables)}")
+IO.puts("Created problem: #{problem.name}")
+IO.puts("Variables: #{map_size(problem.variables)}")
 
 # Test 2: Simple constraints using modern DSL syntax
-problem1 = Problem.constraints(problem1, [i <- 1..2], x(i, :_) == 1, "Test constraint")
+problem =
+  Problem.modify problem do
+    constraints([i <- 1..2], x(i, :_) == 1, "Test constraint")
+  end
 
-IO.puts("Constraints: #{map_size(problem1.constraints)}")
+IO.puts("Constraints: #{map_size(problem.constraints)}")
 
 # Test 3: Simple objective using modern DSL syntax
-problem1 = Problem.objective(problem1, sum(x(:_, :_)), direction: :minimize)
+problem =
+  Problem.modify problem do
+    objective(sum(x(:_, :_)), direction: :minimize)
+  end
 
 IO.puts("Objective set successfully")
-IO.puts("Direction: #{problem1.direction}")
+IO.puts("Direction: #{problem.direction}")
 
 IO.puts("\n=== Basic DSL Test Completed Successfully! ===")

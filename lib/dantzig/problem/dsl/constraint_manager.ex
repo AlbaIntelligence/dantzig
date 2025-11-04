@@ -190,13 +190,15 @@ defmodule Dantzig.Problem.DSL.ConstraintManager do
   defp interpolate_variables_in_description(description, bindings, index_vals) when is_binary(description) do
     # Handle string interpolation syntax like "Variable #{i}"
     # First, check if description contains interpolation syntax
-    if String.contains?(description, "#{") do
+    # Build "#{" using character codes to avoid string interpolation syntax issues
+    interpolation_pattern = [35, 123] |> List.to_string()
+    result = if String.contains?(description, interpolation_pattern) do
       # This is string interpolation syntax - use string replacement for simple cases
       Enum.reduce(bindings, description, fn {var_atom, value}, acc_desc ->
         var_name = to_string(var_atom)
         # Replace #{var_name} patterns - use simple string replacement
         # Build pattern string by concatenating parts to avoid interpolation syntax issues  
-        pattern_str = [35, 123] |> List.to_string() |> Kernel.<>(var_name) |> Kernel.<>(125)
+        pattern_str = [35, 123] |> List.to_string() |> Kernel.<>(var_name) |> Kernel.<>(List.to_string([125]))
         String.replace(acc_desc, pattern_str, to_string(value))
       end)
     else
@@ -222,6 +224,8 @@ defmodule Dantzig.Problem.DSL.ConstraintManager do
         end
       end)
     end
+    
+    result
   end
 
   # Handle AST interpolation forms (from transform_description_to_ast)

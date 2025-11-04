@@ -157,12 +157,13 @@ end
 
 ```elixir
 Problem.define(model_parameters: %{n: 10}) do
-  variables("x", [i <- 1..params.m], :continuous)  # Error: params.m not defined
+  variables("x", [i <- 1..m], :continuous)  # Error: m not found in model_parameters
 end
 ```
 
 **Error Response**: Compile-time error or runtime error with clear message:
 - `{:error, :undefined_parameter, key: :m, available_keys: [:n]}`
+- Error message should indicate that `m` was not found in model_parameters map
 
 ### Invalid Parameter Type in Generator
 
@@ -170,7 +171,7 @@ end
 
 ```elixir
 Problem.define(model_parameters: %{n: "invalid"}) do
-  variables("x", [i <- 1..params.n], :continuous)  # Error: params.n must be integer
+  variables("x", [i <- 1..n], :continuous)  # Error: n must be integer for range
 end
 ```
 
@@ -196,12 +197,12 @@ end
 ### Basic Parameter Usage
 
 ```elixir
-# Define problem with size parameter
+# Define problem with size parameter - accessed directly by name
 problem = Problem.define(model_parameters: %{n: 10}) do
   new(name: "Parameterized Problem")
-  variables("x", [i <- 1..params.n], :continuous)
-  constraints([i <- 1..params.n], x(i) >= 0, "Non-negativity")
-  objective(sum(x(i) for i <- 1..params.n), direction: :maximize)
+  variables("x", [i <- 1..n], :continuous)
+  constraints([i <- 1..n], x(i) >= 0, "Non-negativity")
+  objective(sum(x(i) for i <- 1..n), :maximize)
 end
 ```
 
@@ -316,7 +317,7 @@ end
 ### Macro Expansion
 
 - Model parameters must be available during macro expansion
-- Parameter access (`params.key`) must resolve to actual values
+- Parameter access (direct name access, e.g., `n`, `costs[i]`) must resolve to actual values
 - Generator ranges using parameters must expand correctly
 - Expression evaluation must have access to parameter values
 
@@ -389,26 +390,26 @@ end
 ### With Problem.modify
 
 ```elixir
-# Parameters can be used in Problem.modify blocks
+# Parameters can be used in Problem.modify blocks - accessed directly by name
 problem = Problem.define(model_parameters: %{n: 10}) do
-  variables("x", [i <- 1..params.n], :continuous)
+  variables("x", [i <- 1..n], :continuous)
 end
 
 # Modify with same parameters
 modified = Problem.modify(problem, model_parameters: %{n: 10}) do
-  variables("y", [i <- 1..params.n], :continuous)
+  variables("y", [i <- 1..n], :continuous)
 end
 ```
 
 ### With Existing DSL
 
 ```elixir
-# Parameters work with all existing DSL features
+# Parameters work with all existing DSL features - accessed directly by name
 problem = Problem.define(model_parameters: %{n: 10, max_val: 100}) do
   new(name: "Parameterized")
-  variables("x", [i <- 1..params.n], :continuous)
-  constraints([i <- 1..params.n], x(i) <= params.max_val)
-  objective(sum(x(i) for i <- 1..params.n), direction: :maximize)
+  variables("x", [i <- 1..n], :continuous)
+  constraints([i <- 1..n], x(i) <= max_val)
+  objective(sum(x(i) for i <- 1..n), :maximize)
 end
 ```
 
