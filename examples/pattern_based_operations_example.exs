@@ -19,7 +19,7 @@ IO.puts("")
 # Create variables
 problem =
   Problem.define do
-    new(name: "Pattern-based Max", direction: :minimize)
+    new(name: "Pattern-based Max")
     variables("x", [i <- 1..5], :continuous, "Continuous variables")
   end
 
@@ -50,12 +50,13 @@ IO.puts("You can write: min(y[_])")
 IO.puts("")
 
 # Create more variables
-problem =
-  Problem.variables(problem, "y", [i <- 1..3], :continuous,
-    description: "More continuous variables"
-  )
+problem2 =
+  Problem.define do
+    new(name: "Pattern-based Min", direction: :minimize)
+    variables("y", [i <- 1..3], :continuous, "More continuous variables")
+  end
 
-var_map2 = Problem.get_variables_nd(problem, "y")
+var_map2 = Problem.get_variables_nd(problem2, "y")
 IO.puts("✓ Created #{map_size(var_map2)} continuous variables:")
 
 Enum.each(var_map2, fn {key, _monomial} ->
@@ -81,12 +82,13 @@ IO.puts("  - max(x[_, _]) - maximum over all variables")
 IO.puts("")
 
 # Create 2D variables
-problem =
-  Problem.variables(problem, "z", [i <- 1..3, j <- 1..2], :continuous,
-    description: "2D continuous variables"
-  )
+problem3 =
+  Problem.define do
+    new(name: "Pattern-based 2D", direction: :minimize)
+    variables("z", [i <- 1..3, j <- 1..2], :continuous, "2D continuous variables")
+  end
 
-var_map3 = Problem.get_variables_nd(problem, "z")
+var_map3 = Problem.get_variables_nd(problem3, "z")
 IO.puts("✓ Created #{map_size(var_map3)} 2D continuous variables:")
 
 Enum.each(var_map3, fn {key, _monomial} ->
@@ -111,9 +113,13 @@ IO.puts("  - b[1] OR b[2] OR b[3] → b[_] OR b[_] OR b[_]")
 IO.puts("")
 
 # Create binary variables
-problem = Problem.variables(problem, "a", [i <- 1..4], :binary, description: "Binary variables")
+problem4 =
+  Problem.define do
+    new(name: "Pattern-based Binary", direction: :minimize)
+    variables("a", [i <- 1..4], :binary, "Binary variables")
+  end
 
-var_map4 = Problem.get_variables_nd(problem, "a")
+var_map4 = Problem.get_variables_nd(problem4, "a")
 IO.puts("✓ Created #{map_size(var_map4)} binary variables:")
 
 Enum.each(var_map4, fn {key, _monomial} ->
@@ -262,9 +268,13 @@ IO.puts("  - max(busy[_, _, _, _])   # max across all 4D entries")
 IO.puts("")
 
 # Create 4D variables busy[i, j, k, l]
-problem = Problem.variables(problem, "busy", [i <- 1..2, j <- 1..2, k <- 1..2, l <- 1..2], :continuous, description: "4D busy variables")
+problem5 =
+  Problem.define do
+    new(name: "Pattern-based 4D", direction: :minimize)
+    variables("busy", [i <- 1..2, j <- 1..2, k <- 1..2, l <- 1..2], :continuous, "4D busy variables")
+  end
 
-var_map5 = Problem.get_variables_nd(problem, "busy")
+var_map5 = Problem.get_variables_nd(problem5, "busy")
 IO.puts("✓ Created #{map_size(var_map5)} 4D continuous variables:")
 
 Enum.each(var_map5, fn {key, _monomial} ->
