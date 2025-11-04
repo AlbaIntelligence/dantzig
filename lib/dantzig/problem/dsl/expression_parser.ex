@@ -379,7 +379,22 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
       list when is_list(list) ->
         list
 
-      literal when is_number(literal) or is_atom(literal) ->
+      # Handle bare atoms that might be constants from environment
+      # This MUST come before the literal case to allow constant lookup
+      atom when is_atom(atom) ->
+        # First check bindings (for generator variables)
+        case Map.fetch(bindings, atom) do
+          {:ok, v} -> v
+          :error -> 
+            case eval_with_env(atom) do
+              nil -> 
+                raise ArgumentError, "Cannot evaluate atom '#{atom}' - not found in model_parameters/environment"
+              value -> value
+            end
+        end
+
+      # Literal numbers (atoms handled above)
+      literal when is_number(literal) ->
         literal
 
       {op, _, [left, right]} when op in [:+, :-, :*, :/] ->
@@ -446,24 +461,22 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
             nil
         end
 
-      # Handle bare atoms that might be constants from environment
-      # This must come before the AST node case to match bare atoms first
-      atom when is_atom(atom) ->
-        # First check bindings (for generator variables)
-        case Map.fetch(bindings, atom) do
-          {:ok, v} -> v
-          :error -> eval_with_env(atom)
-        end
-
       # Variables: prefer loop bindings, then env
       {name, _, _ctx} = var when is_atom(name) ->
         case Map.fetch(bindings, name) do
           {:ok, v} -> v
-          :error -> eval_with_env(var)
+          :error -> 
+            case eval_with_env(var) do
+              nil -> raise ArgumentError, "Cannot evaluate variable '#{name}' - not found in model_parameters/environment"
+              value -> value
+            end
         end
 
       {:__aliases__, _, _} = quoted ->
-        eval_with_env(quoted)
+        case eval_with_env(quoted) do
+          nil -> raise ArgumentError, "Cannot evaluate expression: #{inspect(quoted)}"
+          value -> value
+        end
 
       _ ->
         raise ArgumentError, "Cannot evaluate expression: #{inspect(expr)}"
@@ -571,8 +584,10 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
 
   # Environment evaluation helper
   defp eval_with_env(quoted) do
-    case Process.get(:dantzig_eval_env) do
-      env when is_list(env) ->
+    env = Process.get(:dantzig_eval_env)
+    
+    case env do
+      env_list when is_list(env_list) ->
         # Handle bare atoms by looking them up directly
         # Handle AST nodes like {:workers, [], nil} by extracting the atom
         atom_to_lookup =
@@ -589,15 +604,26 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
           end
         
         if atom_to_lookup do
-          Keyword.get(env, atom_to_lookup) || 
-            raise ArgumentError, "Cannot evaluate atom '#{atom_to_lookup}' - not found in model_parameters/environment"
+          # Try Keyword.fetch first (for keyword list format)
+          case Keyword.fetch(env_list, atom_to_lookup) do
+            {:ok, value} -> 
+              value
+            :error -> 
+              # Try Keyword.get as fallback (handles duplicate keys)
+              Keyword.get(env_list, atom_to_lookup)
+          end
         else
-          {value, _} = Code.eval_quoted(quoted, env)
-          value
+          # For non-atom expressions, use Code.eval_quoted
+          try do
+            {value, _} = Code.eval_quoted(quoted, env_list)
+            value
+          rescue
+            _ -> nil
+          end
         end
 
       _ ->
-        raise ArgumentError, "Cannot evaluate expression without environment: #{inspect(quoted)}"
+        nil
     end
   end
 
