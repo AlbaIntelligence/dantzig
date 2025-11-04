@@ -16,10 +16,11 @@ IO.puts("max(x, y, z, w) creates constraints: result >= x, result >= y, result >
 IO.puts("")
 
 # Create variables
-problem = Problem.new(direction: :minimize)
-
 problem =
-  Problem.variables(problem, "x", [i <- 1..3], :continuous, description: "Continuous variables")
+  Problem.define do
+    new(name: "Variadic Max", direction: :minimize)
+    variables("x", [i <- 1..3], :continuous, "Continuous variables")
+  end
 
 # Get the variable map to demonstrate the concept
 var_map = Problem.get_variables_nd(problem, "x")
@@ -57,8 +58,11 @@ IO.puts("  - result >= sum(x, y, z, w) - (n-1) where n is number of arguments")
 IO.puts("")
 
 # Create binary variables for AND demonstration
-problem2 = Problem.new(direction: :minimize)
-problem2 = Problem.variables(problem2, "b", [i <- 1..4], :binary, description: "Binary variables")
+problem2 =
+  Problem.define do
+    new(name: "Variadic AND", direction: :minimize)
+    variables("b", [i <- 1..4], :binary, "Binary variables")
+  end
 
 var_map2 = Problem.get_variables_nd(problem2, "b")
 IO.puts("✓ Created #{map_size(var_map2)} binary variables")
@@ -184,3 +188,4 @@ IO.puts("• Automatic linearization")
 IO.puts("• Scalable to any number of arguments")
 IO.puts("• Composable with other operations")
 IO.puts("• No manual constraint creation needed")
+

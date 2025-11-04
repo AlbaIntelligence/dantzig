@@ -17,10 +17,11 @@ IO.puts("You can write: max(x[_])")
 IO.puts("")
 
 # Create variables
-problem = Problem.new(direction: :minimize)
-
 problem =
-  Problem.variables(problem, "x", [i <- 1..5], :continuous, description: "Continuous variables")
+  Problem.define do
+    new(name: "Pattern-based Max", direction: :minimize)
+    variables("x", [i <- 1..5], :continuous, "Continuous variables")
+  end
 
 # Get the variable map to show what variables were created
 var_map = Problem.get_variables_nd(problem, "x")
