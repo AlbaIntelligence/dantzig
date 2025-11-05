@@ -272,16 +272,16 @@
 
 ### Tests for Error Handling
 
-- [ ] T095 [P] [EH] Create error message quality validation test in test/error_handling/error_message_quality_test.exs
+- [ ] T095 [P] [EH] Create edge case error handling validation test in test/error_handling/edge_case_handling_test.exs (NOTE: Error message quality test already created in T022; comprehensive error message tests will be added in T035)
 - [ ] T096 [P] [EH] Create edge case handling validation test in test/error_handling/edge_case_handling_test.exs
 
 ### Implementation for Error Handling
 
-- [ ] T097 [EH] Improve DSL parse errors at constraint/objective parsing sites with actionable messages in `lib/dantzig/problem/dsl/*`
+- [ ] T097 [EH] Improve DSL parse errors at constraint/objective parsing sites with actionable messages in `lib/dantzig/problem/dsl/*` (NOTE: T034 enhanced error messages in expression_parser.ex; this task focuses on constraint_manager.ex and other DSL parsing sites)
 - [ ] T098 [EH] Surface infeasible/unbounded indications with clear guidance at solver call sites in `lib/dantzig/solver/highs_solver.ex`
-- [ ] T099 [EH] Validate and message invalid/undefined variables at constraint build time in `lib/dantzig/problem/dsl/constraint_manager.ex`
+- [ ] T099 [EH] Validate and message invalid/undefined variables at constraint build time in `lib/dantzig/problem/dsl/constraint_manager.ex` (NOTE: T034 enhanced undefined variable errors in expression_parser.ex; this task focuses on constraint_manager.ex validation)
 - [ ] T100 [EH] Add regression tests for each improved message under `test/error_handling/*`
-- [ ] T105 [P] [EH] Validate error messages are clear and actionable for ≥90% of common mistakes (SC-007 requirement; test must enumerate mistake categories and assert coverage)
+- [ ] T105 [P] [EH] Validate error messages are clear and actionable for ≥90% of common mistakes (SC-007 requirement; NOTE: T035 adds comprehensive error message tests; this task validates coverage across all error handling improvements including T034, T097, T099)
 - [ ] T106 [P] [EH] Validate all edge cases have appropriate error handling (aligns with FR-008)
 
 ---
