@@ -327,13 +327,51 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
 
             {:ok, _other} ->
               raise ArgumentError,
-                    "Unsupported expression: #{inspect(expr)}. " <>
-                      "If #{inspect(atom)} is meant to be a variable, ensure it was created with variables() first."
+                    """
+                    Unsupported expression in constraint/objective: #{inspect(expr)}
+
+                    The expression #{inspect(atom)} was evaluated as a constant from model_parameters,
+                    but it cannot be used directly in a constraint or objective expression.
+
+                    If #{inspect(atom)} is meant to be a variable:
+                      1. Define it using `variables("#{atom}", ...)` in your Problem.define block
+                      2. Use it with proper indexing: #{atom}(i) or #{atom}(i, j)
+
+                    If #{inspect(atom)} is meant to be a constant:
+                      1. Access it directly by name in expressions: #{atom}
+                      2. Use it in arithmetic: cost[i] * x(i) where cost is from model_parameters
+
+                    Example:
+                      Problem.define model_parameters: %{max_val: 10} do
+                        variables("x", [i <- 1..n], :continuous)
+                        constraints([i <- 1..n], x(i) <= max_val)  # max_val from model_parameters
+                      end
+                    """
 
             :error ->
               raise ArgumentError,
-                    "Unsupported expression: #{inspect(expr)}. " <>
-                      "If #{inspect(atom)} is meant to be a variable, ensure it was created with variables() first."
+                    """
+                    Cannot evaluate expression: #{inspect(expr)}
+
+                    The expression #{inspect(atom)} could not be evaluated as:
+                    - A variable (not found in problem variables)
+                    - A constant from model_parameters (not found in model_parameters map)
+
+                    To fix this:
+                    1. If #{inspect(atom)} should be a variable:
+                       - Define it using `variables("#{atom}", ...)` before using it
+                       - Check for typos in the variable name
+
+                    2. If #{inspect(atom)} should be a constant:
+                       - Add it to model_parameters: `Problem.define model_parameters: %{#{atom}: value} do`
+                       - Or use a literal value instead
+
+                    Example:
+                      Problem.define model_parameters: %{n: 10} do
+                        variables("x", [i <- 1..n], :continuous)
+                        constraints([i <- 1..n], x(i) <= 10)
+                      end
+                    """
           end
         end
 
