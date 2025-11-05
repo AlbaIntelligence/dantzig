@@ -72,7 +72,22 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
 
                 other ->
                   raise ArgumentError,
-                        "Cannot use non-numeric value in arithmetic: #{inspect(other)}"
+                        """
+                        Cannot use non-numeric value in arithmetic expression: #{inspect(other)}
+
+                        Arithmetic operations (+, -, *, /) require numeric values or polynomials.
+                        Got: #{inspect(other)}
+
+                        Common causes:
+                        1. Using a string or atom where a number is expected
+                        2. Accessing an undefined variable or constant
+                        3. Using a generator variable outside its scope
+
+                        Example of correct usage:
+                          x(i) + y(j)        # Adding variables
+                          x(i) * 2.5         # Multiplying by a number
+                          cost[i] * x(i)     # Using constants from model_parameters
+                        """
               end
           end
 
@@ -415,7 +430,7 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
                   Constant access expression evaluated to non-numeric value: #{inspect(expr_with_field)} => #{inspect(non_numeric_val)}
 
                   In constraint/objective expressions, constants from model_parameters must evaluate to numbers.
-                  Got: #{inspect(non_numeric_val)} (#{inspect(__MODULE__).typeof(non_numeric_val)})
+                  Got: #{inspect(non_numeric_val)}
 
                   Common causes:
                   1. Accessing a non-numeric field from a map/struct (e.g., items_dict[item].name instead of items_dict[item].weight)
