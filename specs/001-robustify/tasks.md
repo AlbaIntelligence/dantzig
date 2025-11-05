@@ -136,13 +136,13 @@
 
 ### Implementation for User Story 2
 
-- [ ] T039 [US2] Add unit tests for Dantzig.Problem module in test/dantzig/core/problem_test.exs
-- [ ] T040 [US2] Add unit tests for Dantzig.DSL module in test/dantzig/dsl/dsl_test.exs
-- [ ] T041 [US2] Add unit tests for Dantzig.AST module in test/dantzig/ast/ast_test.exs
-- [ ] T042 [US2] Add unit tests for Dantzig.Solver module in test/dantzig/solver/solver_test.exs
-- [ ] T043 [P] [US2] Add integration tests for DSL functionality in test/dantzig/dsl/integration_test.exs
-- [ ] T044 [P] [US2] Add integration tests for HiGHS solver in test/dantzig/solver/highs_integration_test.exs
-- [ ] T045 [P] [US2] Add edge case tests for infeasible problems in test/edge_cases/infeasible_problems_test.exs
+- [x] T039 [US2] Add unit tests for Dantzig.Problem module in test/dantzig/core/problem_test.exs
+- [x] T040 [US2] Add unit tests for Dantzig.DSL module in test/dantzig/dsl/dsl_test.exs
+- [x] T041 [US2] Add unit tests for Dantzig.AST module in test/dantzig/ast/ast_test.exs
+- [x] T042 [US2] Add unit tests for Dantzig.Solver module in test/dantzig/solver/solver_test.exs
+- [x] T043 [P] [US2] Add integration tests for DSL functionality in test/dantzig/dsl/integration_test.exs
+- [x] T044 [P] [US2] Add integration tests for HiGHS solver in test/dantzig/solver/highs_integration_test.exs
+- [x] T045 [P] [US2] Add edge case tests for infeasible problems in test/edge_cases/infeasible_problems_test.exs
 - [ ] T046 [P] [US2] Add edge case tests for unbounded objectives in test/edge_cases/unbounded_objectives_test.exs
 - [ ] T047 [P] [US2] Add edge case tests for invalid constraint syntax in test/edge_cases/invalid_syntax_test.exs
 - [ ] T048 [P] [US2] Add edge case tests for numerical precision in test/edge_cases/numerical_precision_test.exs
