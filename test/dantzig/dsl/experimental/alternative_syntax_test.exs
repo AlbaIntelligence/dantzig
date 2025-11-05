@@ -1,6 +1,7 @@
 defmodule Dantzig.DSL.AlternativeSyntaxTest do
   use ExUnit.Case, async: true
   import Dantzig.Problem.DSL
+  require Dantzig.Problem, as: Problem
 
   test "Alternative syntax - using for comprehension directly" do
     food_names = ["bread", "milk"]
@@ -15,7 +16,7 @@ defmodule Dantzig.DSL.AlternativeSyntaxTest do
         end
       end
 
-    assert length(problem.variable_defs) == 2
+    assert map_size(problem.variable_defs) == 2
     assert Map.has_key?(problem.variable_defs, "qty_bread")
     assert Map.has_key?(problem.variable_defs, "qty_milk")
   end
@@ -32,7 +33,7 @@ defmodule Dantzig.DSL.AlternativeSyntaxTest do
         variables("qty_milk", [], :continuous, "Amount of milk")
       end
 
-    assert length(problem.variable_defs) == 2
+    assert map_size(problem.variable_defs) == 2
     assert Map.has_key?(problem.variable_defs, "qty_bread")
     assert Map.has_key?(problem.variable_defs, "qty_milk")
   end

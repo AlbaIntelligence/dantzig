@@ -40,7 +40,11 @@ IO.puts("")
 
 # Create the optimization problem
 problem =
-  Problem.define do
+  Problem.define model_parameters: %{
+                   items_dict: items_dict,
+                   item_names: item_names,
+                   capacity: capacity
+                 } do
     new(
       name: "Knapsack Problem",
       description: "Select items to maximize value while respecting weight constraint"
@@ -85,7 +89,8 @@ IO.puts("Selected items:")
 
 {total_weight, total_value} =
   Enum.reduce(items, {0, 0}, fn item, {acc_weight, acc_value} ->
-    selected = Problem.get_variable_value(solution, "select", {item.name})
+    var_name = "select_#{item.name}"
+    selected = solution.variables[var_name] || 0
 
     if selected > 0.5 do
       IO.puts("  ✓ #{item.name} (weight: #{item.weight}, value: #{item.value})")

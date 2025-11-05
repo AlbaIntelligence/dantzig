@@ -46,4 +46,16 @@ defmodule Dantzig.Config do
   def put_highs_binary_path(value) do
     Application.put_env(:dantzig, :highs_binary_path, value)
   end
+
+  @doc """
+  Compatibility getter used in coverage tests.
+  Currently supports a limited set of keys; unknown keys raise ArgumentError.
+  """
+  def get(key) do
+    case key do
+      "highs_version" -> get_highs_version()
+      "highs_binary_path" -> get_highs_binary_path()
+      _ -> raise ArgumentError, "Unknown config key: #{inspect(key)}"
+    end
+  end
 end

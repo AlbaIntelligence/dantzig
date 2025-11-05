@@ -1,5 +1,4 @@
 #!/usr/bin/env elixir
-that(are)
 
 # Production Planning Problem Example
 #
@@ -73,7 +72,7 @@ IO.puts("")
 
 # Create the optimization problem
 problem =
-  Problem.define do
+  Problem.define model_parameters: %{demand: demand, production_cost: production_cost, holding_cost: holding_cost, max_production: max_production, initial_inventory: initial_inventory, time_periods: time_periods} do
     new(
       name: "Production Planning Problem",
       description: "Minimize production and inventory costs over 4 periods"
@@ -118,9 +117,8 @@ problem =
     # Inventory cannot be negative (already handled by variable bounds)
 
     # Objective: minimize total production + holding costs
-    # For now, we'll use a simplified objective and calculate actual cost from solution
     objective(
-      sum(for t <- time_periods, do: produce(t) * 0 + inventory(t) * 0),
+      sum(for t <- time_periods, do: produce(t) * production_cost[t] + inventory(t) * holding_cost),
       direction: :minimize
     )
   end
@@ -154,11 +152,11 @@ Enum.each(time_periods, fn period ->
   IO.puts("Period #{period}:")
 
   IO.puts(
-    "  Production: #{Float.round(produced, 2)} units (cost: $#{Float.round(production_cost, 2)})"
+    "  Production: #{Float.round(produced * 1.0, 2)} units (cost: $#{Float.round(production_cost * 1.0, 2)})"
   )
 
   IO.puts(
-    "  Ending Inventory: #{Float.round(inventory, 2)} units (holding cost: $#{Float.round(holding_cost_period, 2)})"
+    "  Ending Inventory: #{Float.round(inventory * 1.0, 2)} units (holding cost: $#{Float.round(holding_cost_period * 1.0, 2)})"
   )
 
   IO.puts("  Demand: #{demand[period]} units")
@@ -168,9 +166,9 @@ end)
 total_cost = total_production_cost + total_holding_cost
 
 IO.puts("Summary:")
-IO.puts("  Total production cost: $#{Float.round(total_production_cost, 2)}")
-IO.puts("  Total holding cost: $#{Float.round(total_holding_cost, 2)}")
-IO.puts("  Total cost: $#{Float.round(total_cost, 2)}")
+IO.puts("  Total production cost: $#{Float.round(total_production_cost * 1.0, 2)}")
+IO.puts("  Total holding cost: $#{Float.round(total_holding_cost * 1.0, 2)}")
+IO.puts("  Total cost: $#{Float.round(total_cost * 1.0, 2)}")
 IO.puts("  Reported objective: #{objective_value}")
 IO.puts("  Cost matches objective: #{abs(total_cost - objective_value) < 0.001}")
 
@@ -201,7 +199,7 @@ Enum.each(2..4, fn period ->
   valid = abs(balance - current_inventory) < 0.001
 
   IO.puts(
-    "  Period #{period}: #{Float.round(prev_inventory, 2)} + #{Float.round(produced, 2)} - #{demand[period]} = #{Float.round(balance, 2)} (inventory: #{Float.round(current_inventory, 2)}) #{if valid, do: "✅ OK", else: "❌ VIOLATED"}"
+    "  Period #{period}: #{Float.round(prev_inventory * 1.0, 2)} + #{Float.round(produced * 1.0, 2)} - #{demand[period]} = #{Float.round(balance * 1.0, 2)} (inventory: #{Float.round(current_inventory * 1.0, 2)}) #{if valid, do: "✅ OK", else: "❌ VIOLATED"}"
   )
 end)
 

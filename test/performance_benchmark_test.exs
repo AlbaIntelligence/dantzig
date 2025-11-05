@@ -1,7 +1,7 @@
 defmodule PerformanceBenchmarkTest do
   use ExUnit.Case
 
-  alias Dantzig.Problem
+  require Dantzig.Problem, as: Problem
 
   @moduletag :performance
 
@@ -9,36 +9,42 @@ defmodule PerformanceBenchmarkTest do
     test "knapsack problem scaling" do
       # Test with increasing number of items
       for num_items <- [5, 10, 15] do
-        {time, _result} = :timer.tc(fn ->
-          create_and_solve_knapsack(num_items)
-        end)
+        {time, _result} =
+          :timer.tc(fn ->
+            create_and_solve_knapsack(num_items)
+          end)
 
         IO.puts("Knapsack with #{num_items} items: #{time / 1_000}ms")
-        assert time < 30_000_000  # Should complete within 30 seconds
+        # Should complete within 30 seconds
+        assert time < 30_000_000
       end
     end
 
     test "assignment problem scaling" do
       # Test with increasing matrix sizes
       for size <- [3, 4, 5] do
-        {time, _result} = :timer.tc(fn ->
-          create_and_solve_assignment(size)
-        end)
+        {time, _result} =
+          :timer.tc(fn ->
+            create_and_solve_assignment(size)
+          end)
 
         IO.puts("Assignment #{size}x#{size}: #{time / 1_000}ms")
-        assert time < 10_000_000  # Should complete within 10 seconds
+        # Should complete within 10 seconds
+        assert time < 10_000_000
       end
     end
 
     test "production planning scaling" do
       # Test with increasing time periods
       for periods <- [4, 6, 8] do
-        {time, _result} = :timer.tc(fn ->
-          create_and_solve_production_planning(periods)
-        end)
+        {time, _result} =
+          :timer.tc(fn ->
+            create_and_solve_production_planning(periods)
+          end)
 
         IO.puts("Production planning #{periods} periods: #{time / 1_000}ms")
-        assert time < 15_000_000  # Should complete within 15 seconds
+        # Should complete within 15 seconds
+        assert time < 15_000_000
       end
     end
 
@@ -53,7 +59,8 @@ defmodule PerformanceBenchmarkTest do
       memory_used = final_memory - initial_memory
 
       IO.puts("Memory usage for 20-item knapsack: #{memory_used} bytes")
-      assert memory_used < 100_000_000  # Should use less than 100MB
+      # Should use less than 100MB
+      assert memory_used < 100_000_000
       assert solution != nil
     end
   end
@@ -67,10 +74,10 @@ defmodule PerformanceBenchmarkTest do
 
     problem =
       Problem.define do
-        new(direction: :maximize)
-        variables("select", [item <- items], :binary)
-        constraints([item <- items], select(item) <= 1)
-        objective(sum(for item <- items, do: select(item) * values[item]))
+        new(name: "Knapsack")
+        variables("select", [item <- items], :binary, "Item selection")
+        constraints([item <- items], select(item) <= 1, "Item selection constraint")
+        objective(sum(select(:_)), :maximize)
       end
 
     Dantzig.solve(problem)
@@ -79,18 +86,14 @@ defmodule PerformanceBenchmarkTest do
   defp create_and_solve_assignment(size) do
     workers = for i <- 1..size, do: "Worker#{i}"
     tasks = for i <- 1..size, do: "Task#{i}"
-    costs = for w <- workers, into: %{}, do: {
-      w,
-      for t <- tasks, into: %{}, do: {"Task#{String.to_integer(String.last(t))}", w <> t}
-    }
 
     problem =
       Problem.define do
-        new(direction: :minimize)
-        variables("assign", [w <- workers, t <- tasks], :binary)
-        constraints([w <- workers], sum(assign(w, :_)) == 1)
-        constraints([t <- tasks], sum(assign(:_, t)) == 1)
-        objective(sum(for w <- workers, t <- tasks, do: assign(w, t) * 1))
+        new(name: "Assignment")
+        variables("assign", [w <- workers, t <- tasks], :binary, "Task assignment")
+        constraints([w <- workers], sum(assign(w, :_)) == 1, "One task per worker")
+        constraints([t <- tasks], sum(assign(:_, t)) == 1, "One worker per task")
+        objective(sum(assign(:_)), :minimize)
       end
 
     Dantzig.solve(problem)
@@ -103,14 +106,19 @@ defmodule PerformanceBenchmarkTest do
 
     problem =
       Problem.define do
-        new(direction: :minimize)
-        variables("produce", [t <- time_periods], :continuous, min: 0)
-        variables("inventory", [t <- time_periods], :continuous, min: 0)
+        new(name: "Production Planning")
+        variables("produce", [t <- time_periods], :continuous, "Production amount")
+        variables("inventory", [t <- time_periods], :continuous, "Inventory level")
 
-        constraints([t <- [1]], produce(t) - demand[1] == 0)
-        constraints([t <- 2..periods], inventory(t-1) + produce(t) - demand[t] == 0)
+        constraints([t <- [1]], produce(t) >= demand[1], "Initial demand")
 
-        objective(sum(for t <- time_periods, do: produce(t) * production_cost[t]))
+        constraints(
+          [t <- 2..periods],
+          inventory(t - 1) + produce(t) >= demand[t],
+          "Demand constraint period #{t}"
+        )
+
+        objective(sum(produce(:_)), :minimize)
       end
 
     Dantzig.solve(problem)
@@ -123,10 +131,10 @@ defmodule PerformanceBenchmarkTest do
     capacity = num_items * 2
 
     Problem.define do
-      new(direction: :maximize)
-      variables("select", [item <- items], :binary)
-      constraints([item <- items], select(item) <= 1)
-      objective(sum(for item <- items, do: select(item) * values[item]))
+      new(name: "Large Knapsack")
+      variables("select", [item <- items], :binary, "Item selection")
+      constraints([item <- items], select(item) <= 1, "Item selection constraint")
+      objective(sum(select(:_)), :maximize)
     end
   end
 end

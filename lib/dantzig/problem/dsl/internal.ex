@@ -48,7 +48,7 @@ defmodule Dantzig.Problem.DSL.Internal do
     do: Dantzig.Problem.DSL.VariableManager.create_var_name(var_name, index_vals)
 
   def create_constraint_name(description, index_vals),
-    do: Dantzig.Problem.DSL.ConstraintManager.create_constraint_name(description, index_vals)
+    do: Dantzig.Problem.DSL.ConstraintManager.create_constraint_name(description, %{}, index_vals)
 
   def parse_constraint_expression(expr, bindings, problem),
     do: Dantzig.Problem.DSL.ConstraintManager.parse_constraint_expression(expr, bindings, problem)
@@ -61,4 +61,10 @@ defmodule Dantzig.Problem.DSL.Internal do
     do: Dantzig.Problem.DSL.ExpressionParser.parse_sum_expression(expr, bindings, problem)
 
   def normalize_sum_ast(expr), do: Dantzig.Problem.DSL.ExpressionParser.normalize_sum_ast(expr)
+
+  def evaluate_expression(expr),
+    do: Dantzig.Problem.DSL.VariableManager.evaluate_expression(expr)
+
+  def parse_objective_expression(objective_expr, problem),
+    do: Dantzig.Problem.DSL.ConstraintManager.parse_objective_expression(objective_expr, problem)
 end

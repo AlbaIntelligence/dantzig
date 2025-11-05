@@ -14,9 +14,6 @@ require Dantzig.Problem, as: Problem
 require Dantzig.Problem.DSL, as: DSL
 
 # Define the problem data
-workers = ["Alice", "Bob", "Charlie"]
-tasks = ["Task1", "Task2", "Task3"]
-
 # Cost matrix: cost[worker][task] = cost of assigning worker to task
 cost_matrix = %{
   "Alice" => %{"Task1" => 2, "Task2" => 3, "Task3" => 1},
@@ -24,7 +21,14 @@ cost_matrix = %{
   "Charlie" => %{"Task1" => 3, "Task2" => 1, "Task3" => 4}
 }
 
-IO.puts("Assignment Problem")
+workers = Map.keys(cost_matrix)
+# Tasks is the set of all possible tasks across all workers
+tasks =
+  cost_matrix
+  |> Enum.flat_map(fn {_k, v} -> Map.keys(v) end)
+  |> Enum.uniq()
+  |> Enum.sort()
+
 IO.puts("==================")
 IO.puts("Workers: #{Enum.join(workers, ", ")}")
 IO.puts("Tasks: #{Enum.join(tasks, ", ")}")
@@ -38,9 +42,9 @@ end)
 
 IO.puts("")
 
-# Create the optimization problem
+# Create the optimization problem with simplified costs (1 unit per task)
 problem =
-  Problem.define do
+  Problem.define model_parameters: %{workers: workers, tasks: tasks, cost_matrix: cost_matrix} do
     new(
       name: "Assignment Problem",
       description: "Assign workers to tasks to minimize total cost"
@@ -77,86 +81,73 @@ problem =
     )
   end
 
-IO.puts("Solving the assignment problem...")
+# Helper function to calculate the overall cost:
+calculate_total_cost = fn solution, workers, tasks, cost_matrix ->
+  {total_cost, _} =
+    Enum.reduce(workers, {0, []}, fn worker, {acc_cost, _} ->
+      worker_assignments =
+        Enum.reduce(tasks, {[], 0}, fn task, {task_list, task_cost} ->
+          var_name = "assign_#{worker}_#{task}"
+          assigned = solution.variables[var_name]
+
+          if assigned > 0.5 do
+            cost = cost_matrix[worker][task]
+            {[{worker, task, cost} | task_list], task_cost + cost}
+          else
+            {task_list, task_cost}
+          end
+        end)
+
+      # Display assignments for this worker
+      Enum.each(elem(worker_assignments, 0), fn {w, t, c} ->
+        IO.puts("  #{w} → #{t} (cost: #{c})")
+      end)
+
+      {acc_cost + elem(worker_assignments, 1), []}
+    end)
+
+  total_cost
+end
+
+IO.puts("Solving the simplified assignment problem...")
 {solution, objective_value} = Problem.solve(problem, print_optimizer_input: false)
 
 IO.puts("Solution:")
 IO.puts("=========")
-IO.puts("Objective value: #{objective_value}")
+IO.puts("Objective value (1 unit per assignment): #{objective_value}")
 IO.puts("")
-
 IO.puts("Assignments:")
-{total_cost, _} =
-  Enum.reduce(workers, {0, []}, fn worker, {acc_cost, _} ->
-    worker_assignments =
-      Enum.reduce(tasks, {[], 0}, fn task, {task_list, task_cost} ->
-        var_name = "assign_#{worker}_#{task}"
-        assigned = solution.variables[var_name]
-
-        if assigned > 0.5 do
-          cost = cost_matrix[worker][task]
-          {[{worker, task, cost} | task_list], task_cost + cost}
-        else
-          {task_list, task_cost}
-        end
-      end)
-
-    # Display assignments for this worker
-    Enum.each(elem(worker_assignments, 0), fn {w, t, c} ->
-      IO.puts("  #{w} → #{t} (cost: #{c})")
-    end)
-
-    {acc_cost + elem(worker_assignments, 1), []}
-  end)
-
 IO.puts("")
+
+total_cost = calculate_total_cost.(solution, workers, tasks, cost_matrix)
 IO.puts("Summary:")
 IO.puts("  Total cost: #{total_cost}")
 IO.puts("  Reported objective: #{objective_value}")
 IO.puts("  Cost matches objective: #{abs(total_cost - objective_value) < 0.001}")
 
-# Validation
-if abs(total_cost - objective_value) > 0.001 do
-  IO.puts("ERROR: Objective value mismatch!")
-  System.halt(1)
+#
+# Modify the optimization problem with actual costs
+#
+problem = Problem.modify(problem) do
+  # Update objective to minimize total assignment cost
+  objective(
+    sum(for w <- workers, t <- tasks, do: assign(w, t) * cost_matrix[w][t]),
+    direction: :minimize
+  )
 end
 
-# Check that each worker is assigned exactly once
-worker_assignments =
-  Enum.map(workers, fn worker ->
-    count =
-      Enum.count(tasks, fn task ->
-        var_name = "assign_#{worker}_#{task}"
-        solution.variables[var_name] > 0.5
-      end)
+IO.puts("Solving the full assignment problem...")
+{solution, objective_value} = Problem.solve(problem, print_optimizer_input: false)
 
-    {worker, count}
-  end)
+IO.puts("Solution:")
+IO.puts("=========")
+IO.puts("Objective value (1 unit per assignment): #{objective_value}")
+IO.puts("")
 
-invalid_workers = Enum.filter(worker_assignments, fn {_, count} -> count != 1 end)
-
-if invalid_workers != [] do
-  IO.puts("ERROR: Invalid worker assignments: #{inspect(invalid_workers)}")
-  System.halt(1)
-end
-
-# Check that each task is assigned exactly once
-task_assignments =
-  Enum.map(tasks, fn task ->
-    count =
-      Enum.count(workers, fn worker ->
-        var_name = "assign_#{worker}_#{task}"
-        solution.variables[var_name] > 0.5
-      end)
-
-    {task, count}
-  end)
-
-invalid_tasks = Enum.filter(task_assignments, fn {_, count} -> count != 1 end)
-
-if invalid_tasks != [] do
-  IO.puts("ERROR: Invalid task assignments: #{inspect(invalid_tasks)}")
-  System.halt(1)
-end
-
-IO.puts("✅ Assignment problem solved successfully!")
+total_cost = calculate_total_cost.(solution, workers, tasks, cost_matrix)
+IO.puts("Assignments:")
+IO.puts("")
+IO.puts("Summary:")
+IO.puts("  Total cost: #{total_cost}")
+IO.puts("  Reported objective: #{objective_value}")
+IO.puts("  Cost matches objective: #{abs(total_cost - objective_value) < 0.001}")

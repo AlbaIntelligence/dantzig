@@ -23,5 +23,5 @@ defmodule Dantzig.Problem.DSL.GeneratorManager do
     do: Dantzig.Problem.DSL.VariableManager.create_var_name(var_name, index_vals)
 
   def create_constraint_name(description, index_vals),
-    do: Dantzig.Problem.DSL.ConstraintManager.create_constraint_name(description, index_vals)
+    do: Dantzig.Problem.DSL.ConstraintManager.create_constraint_name(description, %{}, index_vals)
 end

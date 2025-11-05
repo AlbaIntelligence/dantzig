@@ -65,14 +65,14 @@ problem =
       :continuous,
       min: 0.0,
       max: :infinity,
-      description: "Flow on arc #{arc |> elem(0)} → #{arc |> elem(1)}"
+      description: "Flow on arc"
     )
 
     # Capacity constraints: flow cannot exceed arc capacity
     constraints(
       [arc <- arcs],
-      flow(arc) <= arc |> elem(2),
-      "Capacity constraint for arc #{arc |> elem(0)} → #{arc |> elem(1)}"
+      flow(arc) <= elem(arc, 2),
+      "Capacity constraint for arc"
     )
 
     # Flow conservation constraints for intermediate nodes (A, B, C)
@@ -90,7 +90,7 @@ problem =
 
     # Objective: maximize total flow into sink (or equivalently, out of source)
     objective(
-      sum(for {_, to, _} <- arcs, to == "T", do: flow({to |> elem(0), to |> elem(1)})),
+      sum(for {from, to, _} <- arcs, to == "T", do: flow(from, to)),
       direction: :maximize
     )
   end

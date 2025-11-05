@@ -16,27 +16,26 @@ Maximize `3x + 4y` subject to `x + 2y ≤ 14`, `3x - y ≤ 0`, `x, y ≥ 0`.
 ```elixir
 defmodule HelloLP do
   require Dantzig.Problem, as: Problem
-  alias Dantzig.Constraint
   alias Dantzig.Solution
-  use Dantzig.Polynomial.Operators
 
   def run() do
-    problem = Problem.new(direction: :maximize)
+    problem = Problem.define do
+      new(name: "Hello LP", description: "Simple linear programming example", direction: :maximize)
 
-    {problem, x} = Problem.new_variable(problem, "x", min: 0)
-    {problem, y} = Problem.new_variable(problem, "y", min: 0)
+      variables("x", :continuous, min: 0, description: "Variable x")
+      variables("y", :continuous, min: 0, description: "Variable y")
 
-    problem =
-      problem
-      |> Problem.add_constraint(Constraint.new_linear(x + 2*y, :<=, 14, name: "c1"))
-      |> Problem.add_constraint(Constraint.new_linear(3*x - y, :<=,  0, name: "c2"))
-      |> Problem.maximize(3*x + 4*y)
+      constraints(x + 2*y <= 14, "Resource constraint")
+      constraints(3*x - y <= 0, "Linear constraint")
+
+      objective(3*x + 4*y, direction: :maximize)
+    end
 
     {:ok, solution} = Dantzig.solve(problem)
 
     IO.inspect({
-      Solution.evaluate(solution, x),
-      Solution.evaluate(solution, y),
+      Solution.evaluate(solution, "x"),
+      Solution.evaluate(solution, "y"),
       solution.objective
     })
   end
@@ -52,42 +51,76 @@ Minimize `(x - 5)^2 + (y - 2)^2` with bounds `0 ≤ x ≤ 10`, `0 ≤ y ≤ 10`.
 ```elixir
 defmodule QuadraticExample do
   require Dantzig.Problem, as: Problem
-  alias Dantzig.Constraint
   alias Dantzig.Solution
-  use Dantzig.Polynomial.Operators
 
   def run() do
-    problem = Problem.new(direction: :minimize)
-    {problem, x} = Problem.new_variable(problem, "x", min: 0, max: 10)
-    {problem, y} = Problem.new_variable(problem, "y", min: 0, max: 10)
+    problem = Problem.define do
+      new(name: "Quadratic Example", description: "Quadratic programming example", direction: :minimize)
 
-    obj = (x - 5) * (x - 5) + (y - 2) * (y - 2)
-    problem = Problem.minimize(problem, obj)
+      variables("x", :continuous, min: 0, max: 10, description: "Variable x")
+      variables("y", :continuous, min: 0, max: 10, description: "Variable y")
+
+      objective((x - 5) * (x - 5) + (y - 2) * (y - 2), direction: :minimize)
+    end
 
     {:ok, solution} = Dantzig.solve(problem)
 
-    {Solution.evaluate(solution, x), Solution.evaluate(solution, y), solution.objective}
+    {Solution.evaluate(solution, "x"), Solution.evaluate(solution, "y"), solution.objective}
   end
 end
 ```
 
 Note: Degree must be ≤ 2; cubic or higher raises.
 
-## 3) Constraints via macros
+## 3) Generator Variables and Constraints
 
-You can write constraints using `Constraint.new/1` macro form:
+The DSL supports generator syntax for creating multiple variables and constraints efficiently:
 
 ```elixir
-constraint = Dantzig.Constraint.new(x + y == 10, name: "balance")
+defmodule GeneratorExample do
+  require Dantzig.Problem, as: Problem
+  alias Dantzig.Solution
+
+  def run() do
+    problem = Problem.define do
+      new(name: "Generator Example", description: "Example with generators", direction: :maximize)
+
+      # Create 2D variables: x[i,j] for i=1..3, j=1..3
+      variables("x", [i <- 1..3, j <- 1..3], :binary, "Binary variables")
+
+      # Constraints: exactly one variable per row
+      constraints([i <- 1..3], sum(x(i, :_)) == 1, "One per row")
+
+      # Constraints: exactly one variable per column
+      constraints([j <- 1..3], sum(x(:_, j)) == 1, "One per column")
+
+      # Objective: maximize total sum
+      objective(sum(x(:_, :_)), direction: :maximize)
+    end
+
+    {:ok, solution} = Dantzig.solve(problem)
+    IO.inspect(solution)
+  end
+end
 ```
 
-Or linear-only:
+### ⚠️ Deprecated Syntax
+
+The following old syntax is **deprecated** and should not be used in new code:
 
 ```elixir
+# ❌ DEPRECATED: Old imperative syntax
+problem = Problem.new(direction: :maximize)
+{problem, x} = Problem.new_variable(problem, "x", min: 0)
+problem = Problem.add_constraint(problem, Constraint.new_linear(x + 2*y, :<=, 14))
+problem = Problem.maximize(problem, 3*x + 4*y)
+
+# ❌ DEPRECATED: Old constraint macros
+constraint = Dantzig.Constraint.new(x + y == 10, name: "balance")
 constraint = Dantzig.Constraint.new_linear(2*x + 3*y <= 20, name: "capacity")
 ```
 
-These macros rewrite arithmetic to polynomial operations and normalize the constraint.
+**Use the new DSL syntax instead** (shown in examples above).
 
 ## 4) Implicit problem style (macros)
 

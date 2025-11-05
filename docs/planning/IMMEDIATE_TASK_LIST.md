@@ -125,82 +125,84 @@
 
 ### Priority 1: Simple Problems (Start Here)
 
-1. **N-Queens Problem** - `examples/nqueens_dsl.exs` ✅ (Already exists)
+TASK_01. **N-Queens Problem** - `examples/nqueens_dsl.exs` ✅ (Already exists)
 
    - Place N queens on N×N board without conflicts
    - Test with 4×4 and 8×8 boards
    - Verify no two queens attack each other
 
-2. **Diet Problem** - `examples/diet_problem.exs` ✅ (Already exists)
+TASK_02. **Diet Problem** - `examples/diet_problem.exs` ✅ (Already exists)
 
    - Minimize cost while meeting nutritional requirements
    - Test with 3 foods, 2 nutrients
    - Verify nutritional constraints satisfied
 
-3. **Knapsack Problem** - `examples/knapsack_problem.exs`
+TASK_03. **Knapsack Problem** - `examples/knapsack_problem.exs`
 
    - Maximize value within weight constraint
    - Test with 5 items, capacity 20
    - Verify total weight ≤ capacity
 
-4. **Assignment Problem** - `examples/assignment_problem.exs`
+TASK_04. **Assignment Problem** - `examples/assignment_problem.exs`
    - Assign workers to tasks optimally
    - Test with 3×3 assignment matrix
    - Verify each worker/task assigned exactly once
 
 ### Priority 2: Medium Complexity Problems
 
-5. **Transportation Problem** - `examples/transportation_problem.exs`
+TASK_05. **Transportation Problem** - `examples/transportation_problem.exs`
 
-   - Minimize shipping costs from suppliers to customers
-   - Test with 3 suppliers, 4 customers
-   - Validate solution makes economic sense
+- Minimize shipping costs from suppliers to customers
+- Test with 3 suppliers, 4 customers
+- Validate solution makes economic sense
 
-6. **Production Planning** - `examples/production_planning.exs`
+TASK_06. **Production Planning** - `examples/production_planning.exs`
 
-   - Optimize production over 4 time periods
-   - Include inventory holding costs
-   - Verify demand satisfaction
+- Optimize production over 4 time periods
+- Include inventory holding costs
+- Verify demand satisfaction
 
-7. **Network Flow** - `examples/network_flow.exs`
+TASK_07. **Network Flow** - `examples/network_flow.exs`
 
-   - Maximize flow through 5-node network
-   - Include capacity constraints
-   - Verify flow conservation
+- Maximize flow through 5-node network
+- Include capacity constraints
+- Verify flow conservation
 
-8. **Blending Problem** - `examples/blending_problem.exs`
-   - Blend raw materials to meet specifications
-   - Test with 3 materials, 2 quality constraints
-   - Verify quality specifications met
+TASK_08. **Blending Problem** - `examples/blending_problem.exs`
+- Blend raw materials to meet specifications
+- Test with 3 materials, 2 quality constraints
+- Verify quality specifications met
 
 ### Priority 3: Complex Problems
 
-9. **Cutting Stock Problem** - `examples/cutting_stock.exs`
+TASK_09. **Cutting Stock Problem** - `examples/cutting_stock.exs`
 
-   - Minimize waste when cutting standard lengths
-   - Test with 3 stock lengths, 4 demand lengths
-   - Verify demand satisfaction
+- Minimize waste when cutting standard lengths
+- Test with 3 stock lengths, 4 demand lengths
+- Verify demand satisfaction
 
-10. **Facility Location** - `examples/facility_location.exs`
-    - Choose optimal locations for facilities
-    - Test with 3 potential facilities, 5 customers
-    - Verify service constraints
+TASK_10. **Facility Location** - `examples/facility_location.exs`
+
+- Choose optimal locations for facilities
+- Test with 3 potential facilities, 5 customers
+- Verify service constraints
 
 ### Priority 4: Advanced Problems
 
-11. **Portfolio Optimization** - `examples/portfolio_optimization.exs`
+TASK_11. **Portfolio Optimization** - `examples/portfolio_optimization.exs`
 
-    - Maximize return while controlling risk
-    - Test with 4 assets, risk constraint
-    - Verify risk limits respected
+- Maximize return while controlling risk
+- Test with 4 assets, risk constraint
+- Verify risk limits respected
 
-12. **School Timetabling** - `examples/school_timetabling.exs` ⭐ (Showcase Example)
-    - Schedule teachers, students, rooms, and equipment
-    - **Complexity**: Teachers with skills/availability, students with curriculum, rooms with equipment
-    - **Scale**: 5 teachers, 3 subjects, 4 time slots, 3 rooms, 2 equipment types
-    - **Constraints**: Teacher availability, room capacity, equipment requirements, curriculum needs
-    - **Objective**: Minimize conflicts and maximize resource utilization
-    - **Note**: This will be the showcase example for README.md
+TASK_12. **School Scheduling** - `examples/school_timetabling.exs` ⭐ (Showcase Example)
+
+- Schedule teachers, students, rooms, and equipment
+- **Complexity**: Teachers with skills/availability, students with curriculum, rooms with equipment
+- **Scale**: 5 teachers, 3 subjects, 4 time slots, 3 rooms, 2 equipment types
+- **Constraints**: Teacher availability, room capacity, equipment requirements, curriculum needs
+- **Objective**: Minimize conflicts and maximize resource utilization
+- **Note**: This will be the showcase example for README.md
 
 ### Testing Strategy for Examples
 

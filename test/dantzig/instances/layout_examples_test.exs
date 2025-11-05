@@ -10,7 +10,7 @@ defmodule Danztig.Instances.LayoutExampleTest do
     Polynomial.algebra do
       total_width = 300.0
 
-      problem = Problem.new(direction: :maximize)
+      problem = Problem.new()
       {problem, left_margin} = Problem.new_variable(problem, "left_margin", min: 0.0)
       {problem, center} = Problem.new_variable(problem, "center", min: 0.0)
       {problem, right_margin} = Problem.new_variable(problem, "right_margin", min: 0.0)
@@ -20,7 +20,7 @@ defmodule Danztig.Instances.LayoutExampleTest do
         |> Problem.add_constraint(
           Constraint.new(left_margin + center + right_margin == total_width)
         )
-        |> Problem.increment_objective(center - left_margin - right_margin)
+        |> Problem.set_objective(center - left_margin - right_margin, :maximize)
     end
 
     solution = Dantzig.solve!(problem)

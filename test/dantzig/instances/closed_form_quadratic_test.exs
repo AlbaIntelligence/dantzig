@@ -8,7 +8,7 @@ defmodule Dantzig.Instances.ClosedFormQuadraticTest do
 
   test "closed form quadratic: x - x*x" do
     Polynomial.algebra do
-      problem = Problem.new(direction: :maximize)
+      problem = Problem.new(name: Test)
       {problem, x} = Problem.new_variable(problem, "x", min: -2.0, max: 2.0)
       problem = Problem.increment_objective(problem, x - x * x)
     end

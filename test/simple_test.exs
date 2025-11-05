@@ -7,10 +7,10 @@ IO.puts("Testing DSL functionality...")
 try do
   problem =
     Problem.define do
-      new(direction: :maximize)
-      variables("x", :continuous, min: 0)
-      constraints(x <= 10)
-      objective(x)
+      new(name: "Simple Test")
+      variables("x", [], :continuous, "Variable x")
+      constraints(x <= 10, "Upper bound")
+      objective(x, :maximize)
     end
 
   IO.puts("✅ Problem creation successful")

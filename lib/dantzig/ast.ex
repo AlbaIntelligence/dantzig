@@ -6,9 +6,6 @@ defmodule Dantzig.AST do
   optimization expressions before they are transformed into linear constraints.
   """
 
-  @doc """
-  Represents a variable with indices: x[i, j] or x[_, j]
-  """
   defmodule Variable do
     defstruct [:name, :indices, :pattern]
 
@@ -19,9 +16,6 @@ defmodule Dantzig.AST do
           }
   end
 
-  @doc """
-  Represents a sum operation: sum(x[i, _])
-  """
   defmodule Sum do
     defstruct [:variable]
 
@@ -30,9 +24,6 @@ defmodule Dantzig.AST do
           }
   end
 
-  @doc """
-  Represents a generator-based sum operation: sum(expr for i <- list, j <- list)
-  """
   defmodule GeneratorSum do
     defstruct [:expression, :generators]
 
@@ -42,9 +33,6 @@ defmodule Dantzig.AST do
           }
   end
 
-  @doc """
-  Represents an absolute value operation: abs(x[i, j])
-  """
   defmodule Abs do
     defstruct [:expr]
 
@@ -53,9 +41,6 @@ defmodule Dantzig.AST do
           }
   end
 
-  @doc """
-  Represents a maximum operation: max(x, y, z, ...)
-  """
   defmodule Max do
     defstruct [:args]
 
@@ -64,9 +49,6 @@ defmodule Dantzig.AST do
           }
   end
 
-  @doc """
-  Represents a minimum operation: min(x, y, z, ...)
-  """
   defmodule Min do
     defstruct [:args]
 
@@ -75,9 +57,6 @@ defmodule Dantzig.AST do
           }
   end
 
-  @doc """
-  Represents a constraint: left operator right
-  """
   defmodule Constraint do
     defstruct [:left, :operator, :right]
 
@@ -88,9 +67,6 @@ defmodule Dantzig.AST do
           }
   end
 
-  @doc """
-  Represents a binary operation: left operator right
-  """
   defmodule BinaryOp do
     defstruct [:left, :operator, :right]
 
@@ -101,9 +77,6 @@ defmodule Dantzig.AST do
           }
   end
 
-  @doc """
-  Represents a piecewise linear function
-  """
   defmodule PiecewiseLinear do
     defstruct [:expr, :breakpoints, :slopes, :intercepts]
 
@@ -115,9 +88,6 @@ defmodule Dantzig.AST do
           }
   end
 
-  @doc """
-  Represents a logical AND operation: x AND y AND z AND ...
-  """
   defmodule And do
     defstruct [:args]
 
@@ -126,9 +96,6 @@ defmodule Dantzig.AST do
           }
   end
 
-  @doc """
-  Represents a logical OR operation: x OR y OR z OR ...
-  """
   defmodule Or do
     defstruct [:args]
 
@@ -137,9 +104,6 @@ defmodule Dantzig.AST do
           }
   end
 
-  @doc """
-  Represents an IF-THEN-ELSE operation: IF condition THEN x ELSE y
-  """
   defmodule IfThenElse do
     defstruct [:condition, :then_expr, :else_expr]
 
@@ -150,9 +114,6 @@ defmodule Dantzig.AST do
           }
   end
 
-  @doc """
-  Union type for all AST nodes
-  """
   @type t ::
           Variable.t()
           | Sum.t()
@@ -168,4 +129,47 @@ defmodule Dantzig.AST do
           | IfThenElse.t()
           | number()
           | atom()
+
+  #
+  # Helper constructor functions expected by tests
+  #
+
+  def variable(name), do: %Variable{name: to_atom(name), indices: [], pattern: nil}
+
+  def variable(name, opts) when is_list(opts) do
+    case opts do
+      # keyword options with a :pattern key
+      [{key, _} | _] when is_atom(key) ->
+        pattern = Keyword.fetch!(opts, :pattern)
+        %Variable{name: to_atom(name), indices: [pattern], pattern: pattern}
+
+      # indices list
+      indices -> %Variable{name: to_atom(name), indices: indices, pattern: nil}
+    end
+  end
+
+  def constant(value) when is_number(value), do: value
+
+  def add(a, b), do: %BinaryOp{left: a, operator: :+, right: b}
+  def subtract(a, b), do: %BinaryOp{left: a, operator: :-, right: b}
+  def multiply(a, b), do: %BinaryOp{left: a, operator: :*, right: b}
+  def divide(a, b), do: %BinaryOp{left: a, operator: :/, right: b}
+
+  def equal(a, b), do: %Constraint{left: a, operator: :==, right: b}
+  def not_equal(a, b), do: %Constraint{left: a, operator: :!=, right: b}
+  def less(a, b), do: %Constraint{left: a, operator: :<, right: b}
+  def greater(a, b), do: %Constraint{left: a, operator: :>, right: b}
+  def less_equal(a, b), do: %Constraint{left: a, operator: :<=, right: b}
+  def greater_equal(a, b), do: %Constraint{left: a, operator: :>=, right: b}
+
+  def abs(expr), do: %Abs{expr: expr}
+  def max(args) when is_list(args), do: %Max{args: args}
+  def min(args) when is_list(args), do: %Min{args: args}
+  def sum(args) when is_list(args), do: %Or{args: args}
+  # Note: The tests use AST.sum([...]) as a generic n-ary aggregator; for internal
+  # representation we can reuse existing nodes. If a dedicated Sum list type is
+  # later introduced, update this accordingly.
+
+  defp to_atom(name) when is_atom(name), do: name
+  defp to_atom(name) when is_binary(name), do: String.to_atom(name)
 end

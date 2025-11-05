@@ -76,7 +76,7 @@ end
 
 # Create the optimization problem
 problem =
-  Problem.define do
+  Problem.define model_parameters: %{supply: supply, demand: demand, suppliers: suppliers, customers: customers, cost_matrix: cost_matrix} do
     new(
       name: "Transportation Problem",
       description: "Minimize shipping costs from suppliers to customers"
@@ -107,9 +107,8 @@ problem =
     )
 
     # Objective: minimize total shipping cost
-    # For now, we'll use a simplified objective and calculate actual cost from solution
     objective(
-      sum(for s <- suppliers, c <- customers, do: ship(s, c) * 0),
+      sum(for s <- suppliers, c <- customers, do: ship(s, c) * cost_matrix[s][c]),
       direction: :minimize
     )
   end

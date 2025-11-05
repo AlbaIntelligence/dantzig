@@ -5,7 +5,7 @@ defmodule Dantzig.AST.TransformerTest do
 
   describe "abs/1 transformation" do
     test "transforms abs(x) into auxiliary variable and constraints" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x} = Problem.new_variable(problem, "x", type: :continuous)
 
       abs_expr = AST.abs(x)
@@ -24,7 +24,7 @@ defmodule Dantzig.AST.TransformerTest do
     end
 
     test "transforms abs(x) with different constraint names" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x} = Problem.new_variable(problem, "x", type: :continuous)
 
       abs_expr = AST.abs(x)
@@ -38,7 +38,7 @@ defmodule Dantzig.AST.TransformerTest do
     end
 
     test "transforms nested abs expressions" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x} = Problem.new_variable(problem, "x", type: :continuous)
       {problem, y} = Problem.new_variable(problem, "y", type: :continuous)
 
@@ -60,7 +60,7 @@ defmodule Dantzig.AST.TransformerTest do
     end
 
     test "transforms abs with polynomial expressions" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x} = Problem.new_variable(problem, "x", type: :continuous)
       {problem, y} = Problem.new_variable(problem, "y", type: :continuous)
 
@@ -79,7 +79,7 @@ defmodule Dantzig.AST.TransformerTest do
 
   describe "variadic max transformation" do
     test "transforms max(x1, x2, x3) into auxiliary variable and constraints" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x1} = Problem.new_variable(problem, "x1", type: :continuous)
       {problem, x2} = Problem.new_variable(problem, "x2", type: :continuous)
       {problem, x3} = Problem.new_variable(problem, "x3", type: :continuous)
@@ -100,7 +100,7 @@ defmodule Dantzig.AST.TransformerTest do
     end
 
     test "transforms max with 2 arguments" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x1} = Problem.new_variable(problem, "x1", type: :continuous)
       {problem, x2} = Problem.new_variable(problem, "x2", type: :continuous)
 
@@ -112,7 +112,7 @@ defmodule Dantzig.AST.TransformerTest do
     end
 
     test "transforms max with 5 arguments" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
 
       variables =
         for i <- 1..5 do
@@ -128,7 +128,7 @@ defmodule Dantzig.AST.TransformerTest do
     end
 
     test "transforms max with mixed variable types" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x1} = Problem.new_variable(problem, "x1", type: :binary)
       {problem, x2} = Problem.new_variable(problem, "x2", type: :continuous)
       {problem, x3} = Problem.new_variable(problem, "x3", type: :integer)
@@ -145,7 +145,7 @@ defmodule Dantzig.AST.TransformerTest do
 
   describe "variadic min transformation" do
     test "transforms min(x1, x2, x3) into auxiliary variable and constraints" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x1} = Problem.new_variable(problem, "x1", type: :continuous)
       {problem, x2} = Problem.new_variable(problem, "x2", type: :continuous)
       {problem, x3} = Problem.new_variable(problem, "x3", type: :continuous)
@@ -166,7 +166,7 @@ defmodule Dantzig.AST.TransformerTest do
     end
 
     test "transforms min with 2 arguments" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x1} = Problem.new_variable(problem, "x1", type: :continuous)
       {problem, x2} = Problem.new_variable(problem, "x2", type: :continuous)
 
@@ -178,7 +178,7 @@ defmodule Dantzig.AST.TransformerTest do
     end
 
     test "transforms min with 4 arguments" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
 
       variables =
         for i <- 1..4 do
@@ -196,7 +196,7 @@ defmodule Dantzig.AST.TransformerTest do
 
   describe "variadic and transformation" do
     test "transforms and(x1, x2, x3) into auxiliary variable and constraints" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x1} = Problem.new_variable(problem, "x1", type: :binary)
       {problem, x2} = Problem.new_variable(problem, "x2", type: :binary)
       {problem, x3} = Problem.new_variable(problem, "x3", type: :binary)
@@ -217,7 +217,7 @@ defmodule Dantzig.AST.TransformerTest do
     end
 
     test "transforms and with 2 arguments" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x1} = Problem.new_variable(problem, "x1", type: :binary)
       {problem, x2} = Problem.new_variable(problem, "x2", type: :binary)
 
@@ -229,7 +229,7 @@ defmodule Dantzig.AST.TransformerTest do
     end
 
     test "transforms and with 4 arguments" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
 
       variables =
         for i <- 1..4 do
@@ -247,7 +247,7 @@ defmodule Dantzig.AST.TransformerTest do
 
   describe "variadic or transformation" do
     test "transforms or(x1, x2, x3) into auxiliary variable and constraints" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x1} = Problem.new_variable(problem, "x1", type: :binary)
       {problem, x2} = Problem.new_variable(problem, "x2", type: :binary)
       {problem, x3} = Problem.new_variable(problem, "x3", type: :binary)
@@ -268,7 +268,7 @@ defmodule Dantzig.AST.TransformerTest do
     end
 
     test "transforms or with 2 arguments" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x1} = Problem.new_variable(problem, "x1", type: :binary)
       {problem, x2} = Problem.new_variable(problem, "x2", type: :binary)
 
@@ -280,7 +280,7 @@ defmodule Dantzig.AST.TransformerTest do
     end
 
     test "transforms or with 4 arguments" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
 
       variables =
         for i <- 1..4 do
@@ -298,7 +298,7 @@ defmodule Dantzig.AST.TransformerTest do
 
   describe "if-then-else transformation" do
     test "transforms if-then-else with binary condition" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, condition} = Problem.new_variable(problem, "condition", type: :binary)
       {problem, then_expr} = Problem.new_variable(problem, "then_expr", type: :continuous)
       {problem, else_expr} = Problem.new_variable(problem, "else_expr", type: :continuous)
@@ -319,7 +319,7 @@ defmodule Dantzig.AST.TransformerTest do
     end
 
     test "transforms nested if-then-else expressions" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, c1} = Problem.new_variable(problem, "c1", type: :binary)
       {problem, c2} = Problem.new_variable(problem, "c2", type: :binary)
       {problem, x} = Problem.new_variable(problem, "x", type: :continuous)
@@ -342,7 +342,7 @@ defmodule Dantzig.AST.TransformerTest do
     end
 
     test "transforms if-then-else with polynomial expressions" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, condition} = Problem.new_variable(problem, "condition", type: :binary)
       {problem, x} = Problem.new_variable(problem, "x", type: :continuous)
       {problem, y} = Problem.new_variable(problem, "y", type: :continuous)
@@ -362,7 +362,7 @@ defmodule Dantzig.AST.TransformerTest do
 
   describe "piecewise linear transformation" do
     test "transforms piecewise linear function with 3 breakpoints" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x} = Problem.new_variable(problem, "x", type: :continuous)
 
       breakpoints = [0.0, 1.0, 2.0]
@@ -387,7 +387,7 @@ defmodule Dantzig.AST.TransformerTest do
     end
 
     test "transforms piecewise linear function with 2 breakpoints" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x} = Problem.new_variable(problem, "x", type: :continuous)
 
       breakpoints = [0.0, 1.0]
@@ -406,7 +406,7 @@ defmodule Dantzig.AST.TransformerTest do
     end
 
     test "transforms piecewise linear function with 4 breakpoints" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x} = Problem.new_variable(problem, "x", type: :continuous)
 
       breakpoints = [0.0, 1.0, 2.0, 3.0]
@@ -427,7 +427,7 @@ defmodule Dantzig.AST.TransformerTest do
 
   describe "pattern-based operations" do
     test "transforms max(x[_]) with 1D variables" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
 
       problem =
         Problem.put_variables_nd(problem, "x", %{
@@ -452,7 +452,7 @@ defmodule Dantzig.AST.TransformerTest do
     end
 
     test "transforms min(x[_]) with 2D variables" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
 
       problem =
         Problem.put_variables_nd(problem, "x", %{
@@ -478,7 +478,7 @@ defmodule Dantzig.AST.TransformerTest do
     end
 
     test "transforms and(x[_]) with 3D variables" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
 
       problem =
         Problem.put_variables_nd(problem, "x", %{
@@ -504,7 +504,7 @@ defmodule Dantzig.AST.TransformerTest do
     end
 
     test "transforms or(x[_]) with 4D variables" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
 
       problem =
         Problem.put_variables_nd(problem, "x", %{
@@ -532,7 +532,7 @@ defmodule Dantzig.AST.TransformerTest do
 
   describe "complex nested expressions" do
     test "transforms complex expression with multiple operations" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x} = Problem.new_variable(problem, "x", type: :continuous)
       {problem, y} = Problem.new_variable(problem, "y", type: :continuous)
       {problem, z} = Problem.new_variable(problem, "z", type: :binary)
@@ -563,7 +563,7 @@ defmodule Dantzig.AST.TransformerTest do
     end
 
     test "transforms expression with piecewise linear and variadic operations" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x} = Problem.new_variable(problem, "x", type: :continuous)
       {problem, y} = Problem.new_variable(problem, "y", type: :continuous)
       {problem, z} = Problem.new_variable(problem, "z", type: :continuous)
@@ -590,7 +590,7 @@ defmodule Dantzig.AST.TransformerTest do
 
   describe "error handling" do
     test "raises error for invalid constraint name" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x} = Problem.new_variable(problem, "x", type: :continuous)
 
       abs_expr = AST.abs(x)
@@ -601,7 +601,7 @@ defmodule Dantzig.AST.TransformerTest do
     end
 
     test "raises error for empty variadic operation" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
 
       max_expr = AST.max([])
 
@@ -611,7 +611,7 @@ defmodule Dantzig.AST.TransformerTest do
     end
 
     test "raises error for single argument variadic operation" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x} = Problem.new_variable(problem, "x", type: :continuous)
 
       max_expr = AST.max([x])
@@ -622,7 +622,7 @@ defmodule Dantzig.AST.TransformerTest do
     end
 
     test "raises error for invalid piecewise linear parameters" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x} = Problem.new_variable(problem, "x", type: :continuous)
 
       # Mismatched lengths
@@ -636,7 +636,7 @@ defmodule Dantzig.AST.TransformerTest do
 
   describe "linear expressions (no transformation)" do
     test "leaves linear expressions unchanged" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x} = Problem.new_variable(problem, "x", type: :continuous)
       {problem, y} = Problem.new_variable(problem, "y", type: :continuous)
 
@@ -652,7 +652,7 @@ defmodule Dantzig.AST.TransformerTest do
     end
 
     test "leaves simple variable references unchanged" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
       {problem, x} = Problem.new_variable(problem, "x", type: :continuous)
 
       var_expr = x
@@ -664,7 +664,7 @@ defmodule Dantzig.AST.TransformerTest do
     end
 
     test "leaves constant expressions unchanged" do
-      problem = Problem.new(direction: :minimize)
+      problem = Problem.new(name: Test)
 
       const_expr = AST.constant(42.0)
       {new_problem, transformed} = Transformer.transform_expression(const_expr, problem, "const")

@@ -64,6 +64,26 @@ defmodule Dantzig.Polynomial do
     end)
   end
 
+  @doc """
+  Compatibility constructor: build a polynomial from a map of variable => coefficient.
+
+  Example:
+    Dantzig.Polynomial.new(%{"x" => 1.0, "y" => 2.0})
+  """
+  def new(%{} = var_to_coeff) do
+    terms =
+      for {var, coeff} <- var_to_coeff, into: %{} do
+        {[var], coeff}
+      end
+
+    %__MODULE__{simplified: merge_and_simplify_terms(terms)}
+  end
+
+  def new(_invalid) do
+    raise ArgumentError,
+          "Invalid argument to Dantzig.Polynomial.new/1; expected map of var=>coeff"
+  end
+
   def monomial(coefficient, variable) do
     %__MODULE__{simplified: %{[variable] => coefficient}}
   end

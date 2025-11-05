@@ -93,7 +93,7 @@ defmodule Dantzig.HiGHS do
       " ",
       operator_to_iodata(constraint.operator),
       " ",
-      to_string(constraint.right_hand_side),
+      format_lp_value(constraint.right_hand_side),
       "\n"
     ]
 
@@ -115,7 +115,7 @@ defmodule Dantzig.HiGHS do
           " ",
           operator_to_iodata(constraint.operator),
           " ",
-          to_string(constraint.right_hand_side),
+          format_lp_value(constraint.right_hand_side),
           "\n"
         ]
     end
@@ -128,23 +128,61 @@ defmodule Dantzig.HiGHS do
     end
   end
 
-  # Sanitize row/constraint names for LP format
+  # Sanitize variable/constraint names for LP format (CPLEX-compatible)
   defp sanitize_name(name) when is_binary(name) do
+    # Apply LP format constraints: alphanumeric + ! " # $ % & ( ) , . ; ? @ _ ' ~
+    # Cannot start with number or period, avoid 'E'/'e' (exponential notation)
     sanitized =
       name
-      |> String.replace(~r/[^A-Za-z0-9_\.]+/, "_")
+      # Replace prohibited characters (exponential notation 'E', '+', '-', '*', '^', '[', ']')
+      # 'e' followed by non-letter -> 'x_'
+      |> String.replace(~r/[eE](?![a-zA-Z_])/, "x_")
+      # Standalone 'e' or 'E'
+      |> String.replace(~r/[eE]+/, "x_")
+      |> String.replace(~r/[\+\-\*\^\[\]]/, "_")
+      # Replace prohibited characters with underscore
+      |> String.replace(~r/[^A-Za-z0-9_!"#\$%&()\,\.\;\?@_'~]/, "_")
+      # Trim leading/trailing underscores
       |> String.trim("_")
+
+    # Enforce length limit
+    sanitized =
+      if String.length(sanitized) > 255 do
+        String.slice(sanitized, 0, 255)
+      else
+        sanitized
+      end
 
     case sanitized do
       <<first::binary-size(1), _rest::binary>> ->
-        if first =~ ~r/[A-Za-z_]/ do
-          sanitized
-        else
-          "c_" <> sanitized
+        cond do
+          # Must start with letter or underscore
+          first =~ ~r/[A-Za-z_]/ ->
+            # Emit warning for significant changes
+            if String.length(name) > 255 or name =~ ~r/[eE\+*\^\[\]]/ do
+              IO.warn(
+                "LP format: variable/constraint name '#{name}' was modified to '#{sanitized}' for solver compatibility"
+              )
+            end
+
+            sanitized
+
+          # Starts with digit or period - prepend underscore
+          true ->
+            IO.warn(
+              "LP format: variable/constraint name '#{name}' was modified to '#{sanitized}' (added underscore prefix)"
+            )
+
+            sanitized
         end
 
       _ ->
-        "c_"
+        # Empty after sanitization - use default
+        IO.warn(
+          "LP format: variable/constraint name '#{name}' was modified to 'var_' (empty after sanitization)"
+        )
+
+        "var_"
     end
   end
 
@@ -189,20 +227,26 @@ defmodule Dantzig.HiGHS do
             "  #{v.name} free\n"
 
           {nil, max} ->
-            "  #{v.name} <= #{max}\n"
+            "  #{v.name} <= #{format_lp_value(max)}\n"
 
           {min, nil} ->
             min_str =
-              if is_struct(min, Polynomial), do: Polynomial.serialize(min), else: to_string(min)
+              if is_struct(min, Polynomial),
+                do: Polynomial.serialize(min),
+                else: format_lp_value(min)
 
             "  #{min_str} <= #{v.name}\n"
 
           {min, max} ->
             min_str =
-              if is_struct(min, Polynomial), do: Polynomial.serialize(min), else: to_string(min)
+              if is_struct(min, Polynomial),
+                do: Polynomial.serialize(min),
+                else: format_lp_value(min)
 
             max_str =
-              if is_struct(max, Polynomial), do: Polynomial.serialize(max), else: to_string(max)
+              if is_struct(max, Polynomial),
+                do: Polynomial.serialize(max),
+                else: format_lp_value(max)
 
             "  #{min_str} <= #{v.name}\n  #{v.name} <= #{max_str}\n"
         end
@@ -225,4 +269,14 @@ defmodule Dantzig.HiGHS do
       general_vars
     end
   end
+
+  # Format :infinity for LP export - convert to large finite number
+  # LP solvers don't understand the atom :infinity, so we use 1e+30
+  defp format_lp_value(:infinity), do: "1e+30"
+
+  # Handle Polynomial structs specially
+  defp format_lp_value(%Polynomial{} = poly), do: Polynomial.serialize(poly)
+
+  # Convert all other values to string
+  defp format_lp_value(value), do: to_string(value)
 end

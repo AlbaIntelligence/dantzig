@@ -54,6 +54,29 @@ defmodule Dantzig.AST.Parser do
   """
   def parse_expression(ast) do
     case ast do
+      # Comparisons -> constraints
+      {op, _, [left, right]} when op in [:==, :!=, :<=, :>=, :<, :>] ->
+        %AST.Constraint{
+          left: parse_expression(left),
+          operator: op,
+          right: parse_expression(right)
+        }
+
+      # Access-based indexed variable: x[[i, j]] and x[_]
+      {{:., _, [Access, :get]}, _, [var_ast, indices_ast]} when is_list(indices_ast) ->
+        %AST.Variable{
+          name: extract_var_name(var_ast),
+          indices: indices_ast,
+          pattern: nil
+        }
+
+      # Unary minus on numbers
+      {:-, _, [number]} when is_number(number) ->
+        -number
+
+      # n-ary sum like sum(x, y, z)
+      {:sum, _, args} when is_list(args) and length(args) >= 2 ->
+        Dantzig.AST.sum(Enum.map(args, &parse_expression/1))
       # sum(expr, :for, generators) - generator-based sum
       {:sum, _, [expr, :for, generators]} ->
         %AST.GeneratorSum{
@@ -63,7 +86,7 @@ defmodule Dantzig.AST.Parser do
 
       # sum(x[i, _]) - pattern-based sum
       {:sum, _, [var_expr]} ->
-        %AST.Sum{variable: parse_variable_expression(var_expr)}
+        Dantzig.AST.sum([parse_variable_expression(var_expr)])
 
       # abs(x[i, j])
       {:abs, _, [expr]} ->
@@ -153,13 +176,17 @@ defmodule Dantzig.AST.Parser do
       literal when is_number(literal) ->
         literal
 
-      # Variables
+      # Variables (bare atom)
       var when is_atom(var) ->
         %AST.Variable{name: var, indices: [], pattern: nil}
 
-      # Variable expressions
+      # Variable expressions with indices x[[...]] and general {name, _, indices}
       {var_name, _, indices} when is_list(indices) ->
         %AST.Variable{name: var_name, indices: indices, pattern: nil}
+
+      # Bare variable AST tuple {name, _, _}
+      {var_name, _, _ctx} when is_atom(var_name) ->
+        %AST.Variable{name: var_name, indices: [], pattern: nil}
 
       _ ->
         raise ArgumentError, "Unsupported expression: #{inspect(ast)}"
@@ -170,20 +197,27 @@ defmodule Dantzig.AST.Parser do
   Parse generators from for comprehension syntax: [i <- 1..8, j <- 1..8]
   """
   def parse_generators(generators) do
-    Enum.map(generators, fn
-      {:<-, _, [var, range]} when is_struct(range, Range) ->
-        {var, Enum.to_list(range)}
+    case generators do
+      [] -> raise ArgumentError, "Invalid generator: []"
+      list when is_list(list) ->
+        Enum.map(list, fn
+          {:<-, _, [var, range]} when is_struct(range, Range) ->
+            {normalize_var(var), Enum.to_list(range)}
 
-      {:<-, _, [var, list]} when is_list(list) ->
-        {var, list}
+          {:<-, _, [var, list]} when is_list(list) ->
+            {normalize_var(var), list}
 
-      {:<-, _, [var, expr]} ->
-        # Handle computed expressions
-        {var, evaluate_expression(expr)}
+          {:<-, _, [var, expr]} ->
+            {normalize_var(var), evaluate_expression(expr)}
 
-      _ ->
-        raise ArgumentError, "Invalid generator: #{inspect(generators)}"
-    end)
+          # Filters are kept as {:filter, expr} with normalized variable nodes
+          expr ->
+            {:filter, normalize_var_nodes(expr)}
+        end)
+
+      other ->
+        raise ArgumentError, "Invalid generator: #{inspect(other)}"
+    end
   end
 
   @doc """
@@ -193,23 +227,23 @@ defmodule Dantzig.AST.Parser do
     case generators do
       # Single generator: i <- 1..3
       {:<-, _, [var, range]} when is_struct(range, Range) ->
-        [{var, Enum.to_list(range)}]
+        [{normalize_var(var), Enum.to_list(range)}]
 
       # Single generator with list: i <- [1, 2, 3]
       {:<-, _, [var, list]} when is_list(list) ->
-        [{var, list}]
+        [{normalize_var(var), list}]
 
       # Multiple generators: [i <- 1..2, j <- 1..2]
       list when is_list(list) ->
         Enum.map(list, fn
           {:<-, _, [var, range]} when is_struct(range, Range) ->
-            {var, Enum.to_list(range)}
+            {normalize_var(var), Enum.to_list(range)}
 
           {:<-, _, [var, list]} when is_list(list) ->
-            {var, list}
+            {normalize_var(var), list}
 
           {:<-, _, [var, expr]} ->
-            {var, evaluate_expression(expr)}
+            {normalize_var(var), evaluate_expression(expr)}
 
           _ ->
             raise ArgumentError, "Invalid generator in sum: #{inspect(list)}"
@@ -224,31 +258,18 @@ defmodule Dantzig.AST.Parser do
   Detect if function arguments contain pattern-based expressions like x[_]
   """
   def detect_pattern_based_args(args) do
-    case args do
-      # Single pattern-based argument: max(x[_])
-      [{var_name, _, indices}] when is_list(indices) ->
-        if Enum.all?(indices, &(&1 == :_)) do
-          {:pattern, var_name, indices}
-        else
-          :explicit
-        end
+    Enum.map(args, fn
+      # Pattern args like x[_]
+      {{:., _, [Access, :get]}, _, [var_ast, indices_ast]} when is_list(indices_ast) ->
+        %AST.Variable{name: extract_var_name(var_ast), indices: indices_ast, pattern: :_}
 
-      # Multiple pattern-based arguments: max(x[_], y[_])
-      args when is_list(args) ->
-        if Enum.all?(args, fn
-             {var_name, _, indices} when is_list(indices) -> Enum.all?(indices, &(&1 == :_))
-             _ -> false
-           end) do
-          # For now, we'll handle single pattern case
-          # Multiple patterns would need more complex handling
-          :explicit
-        else
-          :explicit
-        end
+      # Bare variable
+      {var_name, _, _} when is_atom(var_name) ->
+        %AST.Variable{name: var_name, indices: [], pattern: nil}
 
-      _ ->
-        :explicit
-    end
+      # Fallback
+      other -> parse_expression(other)
+    end)
   end
 
   @doc """
@@ -259,6 +280,12 @@ defmodule Dantzig.AST.Parser do
       # Range
       range when is_struct(range, Range) ->
         Enum.to_list(range)
+
+      # Range AST like 1..4
+      {:.., _, [left, right]} ->
+        left_val = evaluate_expression(left)
+        right_val = evaluate_expression(right)
+        Enum.to_list(left_val..right_val)
 
       # List
       list when is_list(list) ->
@@ -293,4 +320,18 @@ defmodule Dantzig.AST.Parser do
         raise ArgumentError, "Cannot evaluate expression: #{inspect(expr)}"
     end
   end
+
+  # Normalize variable AST node to atom name
+  defp normalize_var({name, _, _}) when is_atom(name), do: name
+  defp normalize_var(name) when is_atom(name), do: name
+
+  # Walk expression AST and replace variable nodes with atoms
+  defp normalize_var_nodes(expr) do
+    Macro.prewalk(expr, fn
+      {name, _, ctx} when is_atom(name) and not is_list(ctx) -> name
+      other -> other
+    end)
+  end
+
+  defp extract_var_name({name, _, _}) when is_atom(name), do: name
 end

@@ -28,18 +28,18 @@ defmodule Dantzig.DSL.GeneratorSyntaxTest do
     assert elem(second_gen, 0) == :<-
   end
 
-  test "DSL.variables macro handles generator syntax" do
-    # Test that DSL.variables can accept the [i <- 1..4, j <- 1..4] syntax
+  test "DSL.add_variables macro handles generator syntax" do
+    # Test that DSL.add_variables can accept the [i <- 1..4, j <- 1..4] syntax
     problem = Problem.new(name: "test")
 
     # This should work with the generator syntax - use proper AST
     result =
-      DSL.variables(
+      DSL.add_variables(
         problem,
         "x",
         [{:<-, [], [{:i, [], nil}, 1..4]}, {:<-, [], [{:j, [], nil}, 1..4]}],
         :binary,
-        description: "Test variables"
+        "Test variables"
       )
 
     # Verify the result

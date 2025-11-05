@@ -37,7 +37,7 @@ defmodule Dantzig.DSL.ComprehensiveDSLTest do
   describe "Level 1: Basic Variable Creation" do
     test "Simple variable creation with string names", %{food_names: food_names} do
       problem =
-        Problem.define do
+        Problem.define model_parameters: %{food_names: food_names} do
           new(name: "Simple Diet", description: "Test basic variable creation")
           variables("qty", [food <- food_names], :continuous, "Amount of food")
         end
@@ -69,7 +69,7 @@ defmodule Dantzig.DSL.ComprehensiveDSLTest do
   describe "Level 2: Basic Variable Access" do
     test "Simple variable access without arithmetic", %{food_names: food_names} do
       problem =
-        Problem.define do
+        Problem.define model_parameters: %{food_names: food_names} do
           new(name: "Simple Variable Access", description: "Test basic variable access")
           variables("qty", [food <- food_names], :continuous, "Amount of food")
           objective(sum(for food <- food_names, do: qty(food)), direction: :minimize)
@@ -95,7 +95,7 @@ defmodule Dantzig.DSL.ComprehensiveDSLTest do
   describe "Level 3: Variable Access with Arithmetic" do
     test "Variable access with constant multiplication", %{food_names: food_names} do
       problem =
-        Problem.define do
+        Problem.define model_parameters: %{food_names: food_names} do
           new(name: "Variable with Constant", description: "Test variable * constant")
           variables("qty", [food <- food_names], :continuous, "Amount of food")
           objective(sum(for food <- food_names, do: qty(food) * 1.0), direction: :minimize)
@@ -107,7 +107,7 @@ defmodule Dantzig.DSL.ComprehensiveDSLTest do
 
     test "Variable access with constant addition", %{food_names: food_names} do
       problem =
-        Problem.define do
+        Problem.define model_parameters: %{food_names: food_names} do
           new(name: "Variable with Addition", description: "Test variable + constant")
           variables("qty", [food <- food_names], :continuous, "Amount of food")
           objective(sum(for food <- food_names, do: qty(food) + 1.0), direction: :minimize)
@@ -131,7 +131,7 @@ defmodule Dantzig.DSL.ComprehensiveDSLTest do
 
     test "Variable access with constant division", %{food_names: food_names} do
       problem =
-        Problem.define do
+        Problem.define model_parameters: %{food_names: food_names} do
           new(name: "Variable with Division", description: "Test variable / constant")
           variables("qty", [food <- food_names], :continuous, "Amount of food")
           objective(sum(for food <- food_names, do: qty(food) / 2.0), direction: :minimize)
@@ -145,9 +145,9 @@ defmodule Dantzig.DSL.ComprehensiveDSLTest do
   describe "Level 4: Complex Arithmetic Expressions" do
     test "Complex arithmetic expression", %{food_names: food_names} do
       problem =
-        Problem.define do
+        Problem.define model_parameters: %{food_names: food_names} do
           new(name: "Complex Arithmetic", description: "Test complex arithmetic")
-          variables("qty", [food <- food_names], :continuous, "Amount of food")
+          variables("qty", Dantzig.Problem.DSL.generators([food <- food_names]), :continuous, "Amount of food")
           objective(sum(for food <- food_names, do: qty(food) * 2.0 + 1.0), direction: :minimize)
         end
 
@@ -183,7 +183,7 @@ defmodule Dantzig.DSL.ComprehensiveDSLTest do
       assert_raise CompileError, fn ->
         Problem.define do
           new(name: "Map Access Test", description: "Test map access")
-          variables("qty", [food <- food_names], :continuous, "Amount of food")
+          variables("qty", Dantzig.Problem.DSL.generators([food <- food_names]), :continuous, "Amount of food")
 
           objective(sum(for food <- food_names, do: qty(food) * foods[food]["cost"]),
             direction: :minimize

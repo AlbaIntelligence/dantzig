@@ -6,6 +6,8 @@
 
 **Mathematical Optimization for Elixir** — Write optimization problems naturally, like mathematical notation, with automatic linearization and powerful pattern-based modeling.
 
+> ⚠️ **Important**: Old imperative syntax is deprecated. See [Deprecation Notice](docs/DEPRECATION_NOTICE.md) for migration guide.
+
 ```elixir
 require Dantzig.Problem, as: Problem
 
@@ -95,8 +97,8 @@ IO.inspect({solution.objective, solution.variables})
 
 ## 📖 Documentation & Learning
 
-| Level               | Guide                                          | Description                     |
-| ------------------- | ---------------------------------------------- | ------------------------------- |
+| Level              | Guide                                          | Description                     |
+| ------------------ | ---------------------------------------------- | ------------------------------- |
 | 🏃 **Beginner**     | [Getting Started](docs/GETTING_STARTED.md)     | Your first optimization problem |
 | 📚 **Intermediate** | [DSL Tutorial](docs/COMPREHENSIVE_TUTORIAL.md) | Complete guide with examples    |
 | 🏗️ **Advanced**     | [Architecture](docs/ARCHITECTURE.md)           | System design deep dive         |
@@ -176,34 +178,33 @@ constraints([i <- 1..3, j <- 1..3], x(i, j) <= capacity[i][j], "Capacity limits"
 
 ### **Complex Problems**
 
-- **School Timetabling**: `mix run examples/school_timetabling.exs` (60 variables!)
 - **N-Queens**: `mix run examples/nqueens_dsl.exs`
 - **Pattern Operations**: `mix run examples/pattern_based_operations_example.exs`
+- **Network Flow**: `mix run examples/network_flow.exs`
 
-## 🏫 School Timetabling Showcase
+## ⚡ HiGHS Solver Integration
 
-**Problem**: Schedule 5 teachers across 3 subjects, 4 time slots, and 3 rooms with complex constraints.
+**World-Class Optimization Power**: Dantzig integrates seamlessly with the HiGHS solver, providing access to cutting-edge optimization algorithms.
 
-**Generated Timetable**:
+**Automatic Binary Management**: The HiGHS solver binary is automatically downloaded and managed for your platform.
 
-| Time Slot  | Room 1                  | Room 2                  | Room 3                  |
-| ---------- | ----------------------- | ----------------------- | ----------------------- |
-| **Slot 1** | Teacher4<br/>📐 Math    | Teacher2<br/>📚 English | Teacher1<br/>🔬 Science |
-| **Slot 2** | Teacher3<br/>📚 English | Teacher5<br/>🔬 Science | Available               |
-| **Slot 3** | Teacher4<br/>🔬 Science | Teacher1<br/>📐 Math    | Teacher2<br/>📐 Math    |
-| **Slot 4** | Teacher3<br/>🔬 Science | Teacher5<br/>🔬 Science | Teacher4<br/>📚 English |
+**High Performance**: Leverages HiGHS's advanced algorithms for linear programming, mixed-integer programming, and quadratic programming.
 
-**Legend:** 📐 Math, 🔬 Science, 📚 English
+```elixir
+# Automatic HiGHS integration - no manual setup required!
+{:ok, solution} = Dantzig.solve(problem)
 
-**Key Results**:
+# Custom configuration (optional)
+config :dantzig, :highs_binary_path, "/usr/local/bin/highs"
+config :dantzig, :highs_version, "1.9.0"
 
-- ✅ **60 decision variables** automatically created
-- ✅ **Complex multi-dimensional constraints** handled elegantly
-- ✅ **Real-world scheduling scenario** successfully optimized
-- ✅ **Teacher qualifications** properly enforced
-- ✅ **No room conflicts** or double-booking
-
-This demonstrates Dantzig's power for complex, real-world optimization problems.
+# Advanced solver options
+config :dantzig, :solver_options, [
+  parallel: true,
+  presolve: :on,
+  time_limit: 300.0
+]
+```
 
 ## 🔧 Configuration
 
@@ -219,8 +220,8 @@ config :dantzig, :highs_version, "1.9.0"
 
 ## 📊 Current Capabilities
 
-| Feature                     | Status      | Notes                                   |
-| --------------------------- | ----------- | --------------------------------------- |
+| Feature                     | Status     | Notes                                   |
+| --------------------------- | ---------- | --------------------------------------- |
 | **Linear Programming**      | ✅ Complete | Full support                            |
 | **Quadratic Programming**   | ✅ Complete | Degree ≤ 2 expressions                  |
 | **Pattern-based Modeling**  | ✅ Complete | N-dimensional variables                 |

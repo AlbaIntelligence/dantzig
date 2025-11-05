@@ -5,90 +5,96 @@ defmodule Dantzig.AST.ParserTest do
 
   describe "parse_generators/1" do
     test "parses single generator with range" do
-      generators = [i <- 1..5]
+      generators = quote do: [i <- 1..5]
       parsed = Parser.parse_generators(generators)
 
-      assert parsed == [{:i, :in, [1, 2, 3, 4, 5]}]
+      assert parsed == [{:i, [1, 2, 3, 4, 5]}]
     end
 
     test "parses single generator with list" do
-      generators = [i <- [1, 3, 5, 7]]
+      generators = quote do: [i <- [1, 3, 5, 7]]
       parsed = Parser.parse_generators(generators)
 
-      assert parsed == [{:i, :in, [1, 3, 5, 7]}]
+      assert parsed == [{:i, [1, 3, 5, 7]}]
     end
 
     test "parses multiple generators" do
-      generators = [i <- 1..3, j <- 1..2]
+      generators = quote do: [i <- 1..3, j <- 1..2]
       parsed = Parser.parse_generators(generators)
 
       assert parsed == [
-               {:i, :in, [1, 2, 3]},
-               {:j, :in, [1, 2]}
+               {:i, [1, 2, 3]},
+               {:j, [1, 2]}
              ]
     end
 
     test "parses generators with filters" do
-      generators = [i <- 1..6, rem(i, 2) == 0]
+      generators = quote do: [i <- 1..6, rem(i, 2) == 0]
       parsed = Parser.parse_generators(generators)
 
       assert parsed == [
-               {:i, :in, [1, 2, 3, 4, 5, 6]},
-               {:filter, rem(:i, 2) == 0}
+               {:i, [1, 2, 3, 4, 5, 6]},
+               {:filter,
+                {:==, [context: Elixir, imports: [{1, Kernel}]],
+                 [{:rem, [context: Elixir, imports: [{1, Kernel}]], [:i, 2]}, 0]}}
              ]
     end
 
     test "parses multiple generators with filters" do
-      generators = [i <- 1..4, j <- 1..4, i + j <= 4]
+      generators = quote do: [i <- 1..4, j <- 1..4, i + j <= 4]
       parsed = Parser.parse_generators(generators)
 
       assert parsed == [
-               {:i, :in, [1, 2, 3, 4]},
-               {:j, :in, [1, 2, 3, 4]},
-               {:filter, :i + :j <= 4}
+               {:i, [1, 2, 3, 4]},
+               {:j, [1, 2, 3, 4]},
+               {:filter,
+                {:<=, [context: Elixir, imports: [{1, Kernel}]],
+                 [{:+, [context: Elixir, imports: [{1, Kernel}]], [:i, :j]}, 4]}}
              ]
     end
 
     test "parses generators with complex filters" do
-      generators = [i <- 1..10, j <- 1..10, rem(i, 2) == 0, j > 5]
+      generators = quote do: [i <- 1..10, j <- 1..10, rem(i, 2) == 0, j > 5]
       parsed = Parser.parse_generators(generators)
 
       assert parsed == [
-               {:i, :in, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]},
-               {:j, :in, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]},
-               {:filter, rem(:i, 2) == 0},
-               {:filter, :j > 5}
+               {:i, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]},
+               {:j, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]},
+               {:filter,
+                {:==, [context: Elixir, imports: [{1, Kernel}]],
+                 [{:rem, [context: Elixir, imports: [{1, Kernel}]], [:i, 2]}, 0]}},
+               {:filter, {:>, [context: Elixir, imports: [{1, Kernel}]], [:j, 5]}}
              ]
     end
 
     test "parses generators with different variable names" do
-      generators = [row <- 1..3, col <- 1..3, time <- 1..2]
+      generators = quote do: [row <- 1..3, col <- 1..3, time <- 1..2]
       parsed = Parser.parse_generators(generators)
 
       assert parsed == [
-               {:row, :in, [1, 2, 3]},
-               {:col, :in, [1, 2, 3]},
-               {:time, :in, [1, 2]}
+               {:row, [1, 2, 3]},
+               {:col, [1, 2, 3]},
+               {:time, [1, 2]}
              ]
     end
 
     test "parses generators with single element lists" do
-      generators = [i <- [5], j <- [10]]
+      generators = quote do: [i <- [5], j <- [10]]
       parsed = Parser.parse_generators(generators)
 
       assert parsed == [
-               {:i, :in, [5]},
-               {:j, :in, [10]}
+               {:i, [5]},
+               {:j, [10]}
              ]
     end
 
     test "parses generators with empty lists" do
-      generators = [i <- [], j <- 1..2]
+      generators = quote do: [i <- [], j <- 1..2]
       parsed = Parser.parse_generators(generators)
 
       assert parsed == [
-               {:i, :in, []},
-               {:j, :in, [1, 2]}
+               {:i, []},
+               {:j, [1, 2]}
              ]
     end
   end
@@ -463,7 +469,7 @@ defmodule Dantzig.AST.ParserTest do
   describe "error handling" do
     test "raises error for invalid generator syntax" do
       # Should be <-
-      generators = [i = 1..5]
+      generators = quote do: [i = 1..5]
 
       assert_raise ArgumentError, fn ->
         Parser.parse_generators(generators)
@@ -479,12 +485,11 @@ defmodule Dantzig.AST.ParserTest do
     end
 
     test "raises error for invalid expression" do
-      expr =
-        quote do:
-                x ++
-                  assert_raise(ArgumentError, fn ->
-                    Parser.parse_expression(expr)
-                  end)
+      expr = quote do: x ++ y
+
+      assert_raise ArgumentError, fn ->
+        Parser.parse_expression(expr)
+      end
     end
 
     test "raises error for unsupported function" do

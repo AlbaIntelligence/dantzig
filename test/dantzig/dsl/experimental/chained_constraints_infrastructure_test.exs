@@ -40,9 +40,9 @@ defmodule Dantzig.DSL.ChainedConstraintsInfrastructureTest do
     names = Enum.map(constraints, & &1.name)
 
     # Should have interpolated names
-    assert "Test constraint for l_name_calories" in names
-    assert "Test constraint for l_name_protein" in names
-    assert "Test constraint for l_name_fat" in names
+    assert "Test constraint for calories" in names
+    assert "Test constraint for protein" in names
+    assert "Test constraint for fat" in names
   end
 
   test "chained constraints with multiple generators" do
@@ -80,11 +80,11 @@ defmodule Dantzig.DSL.ChainedConstraintsInfrastructureTest do
     constraints = Map.values(result.constraints)
     names = Enum.map(constraints, & &1.name)
 
-    # Should have combinations like "Test constraint for l_name and food_calories_hamburger"
-    assert "Test constraint for l_name and food_calories_hamburger" in names
-    assert "Test constraint for l_name and food_calories_chicken" in names
-    assert "Test constraint for l_name and food_protein_hamburger" in names
-    assert "Test constraint for l_name and food_protein_chicken" in names
+    # Should have combinations like "Test constraint for calories and hamburger"
+    assert "Test constraint for calories and hamburger" in names
+    assert "Test constraint for calories and chicken" in names
+    assert "Test constraint for protein and hamburger" in names
+    assert "Test constraint for protein and chicken" in names
   end
 
   test "chained constraints with empty generator list" do
@@ -111,7 +111,7 @@ defmodule Dantzig.DSL.ChainedConstraintsInfrastructureTest do
     # Check name
     constraints = Map.values(result.constraints)
     names = Enum.map(constraints, & &1.name)
-    assert "No generators_" in names
+    assert "No generators" in names
   end
 
   test "chained constraints with single element generator" do
@@ -138,7 +138,7 @@ defmodule Dantzig.DSL.ChainedConstraintsInfrastructureTest do
     # Check name
     constraints = Map.values(result.constraints)
     names = Enum.map(constraints, & &1.name)
-    assert "Single generator: l_name_single" in names
+    assert "Single generator: single" in names
   end
 
   test "chained constraints with complex generator ranges" do
@@ -177,12 +177,12 @@ defmodule Dantzig.DSL.ChainedConstraintsInfrastructureTest do
     constraints = Map.values(result.constraints)
     names = Enum.map(constraints, & &1.name)
 
-    # Should have combinations like "Constraint i for food_1_hamburger"
-    assert "Constraint i for food_1_hamburger" in names
-    assert "Constraint i for food_1_chicken" in names
-    assert "Constraint i for food_2_hamburger" in names
-    assert "Constraint i for food_2_chicken" in names
-    assert "Constraint i for food_3_hamburger" in names
-    assert "Constraint i for food_3_chicken" in names
+    # Should have combinations like "Constraint 1 for hamburger"
+    assert "Constraint 1 for hamburger" in names
+    assert "Constraint 1 for chicken" in names
+    assert "Constraint 2 for hamburger" in names
+    assert "Constraint 2 for chicken" in names
+    assert "Constraint 3 for hamburger" in names
+    assert "Constraint 3 for chicken" in names
   end
 end
