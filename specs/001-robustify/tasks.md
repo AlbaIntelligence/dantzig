@@ -112,11 +112,11 @@
 - [x] T028 [US1] Fix unused variable warnings in lib/dantzig/dsl/variable_access.ex
 - [x] T029 [US1] Fix undefined function warnings in lib/dantzig/problem/dsl.ex
 - [x] T030 [US1] Resolve typing violations in lib/dantzig/problem/dsl/expression_parser.ex
-- [ ] T031 [US1] Fix missing imports and dependencies across all test files
-- [ ] T032 [US1] Validate all tests compile successfully with `mix test --compile`
-- [ ] T033 [US1] Implement backward compatibility validation for existing API usage patterns
-- [ ] T034 [US1] Enhance error messages for common DSL usage mistakes with clear, actionable guidance
-- [ ] T035 [US1] Add error message tests for at least 90% of common usage mistakes
+- [x] T031 [US1] Fix missing imports and dependencies across all test files
+- [x] T032 [US1] Validate all tests compile successfully with `mix test --compile`
+- [x] T033 [US1] Implement backward compatibility validation for existing API usage patterns
+- [x] T034 [US1] Enhance error messages for common DSL usage mistakes with clear, actionable guidance
+- [x] T035 [US1] Add error message tests for at least 90% of common usage mistakes
 
 ---
 
