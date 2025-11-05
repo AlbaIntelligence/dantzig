@@ -51,7 +51,7 @@ defmodule Dantzig.Problem.DSLReducer do
 
         Enum.reduce(values, acc, fn value, acc_problem ->
           case {var_ast, inner_ast} do
-            {head_var_ast, {:variables, meta, [name, gen_list, type, desc]}}
+            {head_var_ast, {:variables, _meta, [name, gen_list, type, desc]}}
             when is_list(gen_list) ->
               # If inner is variables("base", [var], type, desc), expand to scalar variables/3
               expanded_problem =

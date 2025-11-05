@@ -38,7 +38,7 @@ defmodule Dantzig.Problem.AST do
           Enum.map(args, fn
             # AST tuple representing a generator variable: {:i, [], Elixir} -> :i
             # Extract the atom so ExpressionParser can look it up in bindings
-            {atom, _, ctx} = arg when is_atom(atom) and (is_atom(ctx) or is_nil(ctx)) ->
+            {atom, _, ctx} when is_atom(atom) and (is_atom(ctx) or is_nil(ctx)) ->
               # Normalize to just the atom for bindings lookup
               atom
             
@@ -78,7 +78,7 @@ defmodule Dantzig.Problem.AST do
             Enum.map(args, fn
               # AST tuple representing a generator variable: {:i, [], Elixir} -> :i
               # Extract the atom so ExpressionParser can look it up in bindings
-              {atom, _, ctx} = arg when is_atom(atom) and (is_atom(ctx) or is_nil(ctx)) ->
+              {atom, _, ctx} when is_atom(atom) and (is_atom(ctx) or is_nil(ctx)) ->
                 # Normalize to just the atom for bindings lookup
                 atom
               

@@ -37,7 +37,7 @@ defmodule Dantzig.Problem.DSL.VariableManager do
   end
 
   # Create variable name with parentheses-based indexing
-  defp create_var_name(var_name, index_vals) do
+  def create_var_name(var_name, index_vals) do
     sanitized_base = sanitize_index(var_name)
 
     case index_vals do

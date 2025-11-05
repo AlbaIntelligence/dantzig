@@ -20,9 +20,6 @@ defmodule Dantzig.Problem do
   alias Dantzig.Constraint
   alias Dantzig.SolvedConstraint
   alias Dantzig.Problem.DSLReducer
-  alias Dantzig.Problem.ConstraintParser
-
-  @nr_of_zeros 8
 
   @type t :: %__MODULE__{}
 
@@ -246,20 +243,8 @@ defmodule Dantzig.Problem do
   # Helper functions for imperative API macro transformation
 
   @doc false
-  defp transform_generators_to_ast(generators),
-    do: Dantzig.Problem.AST.transform_generators_to_ast(generators)
-
-  @doc false
   defp transform_constraint_expression_to_ast(expr),
     do: Dantzig.Problem.AST.transform_constraint_expression_to_ast(expr)
-
-  @doc false
-  defp transform_objective_expression_to_ast(expr),
-    do: Dantzig.Problem.AST.transform_objective_expression_to_ast(expr)
-
-  @doc false
-  defp transform_description_to_ast(description),
-    do: Dantzig.Problem.AST.transform_description_to_ast(description)
 
   @doc """
   Solve the problem and return both solution and objective value.
@@ -459,31 +444,6 @@ defmodule Dantzig.Problem do
       Dantzig.Problem.DSL.__set_objective__(problem, objective_expr, opts)
     after
       Process.delete(:dantzig_eval_env)
-    end
-  end
-
-  # Validate bounds based on variable type
-  defp validate_bounds_for_single_variable!(var_type, min_bound, max_bound) do
-    case var_type do
-      :binary ->
-        if min_bound != nil or max_bound != nil do
-          raise ArgumentError, "Binary variables cannot have bounds"
-        end
-
-      :integer ->
-        if min_bound != nil and is_float(min_bound) do
-          raise ArgumentError, "Integer variables cannot have floating point bounds"
-        end
-
-        if max_bound != nil and is_float(max_bound) do
-          raise ArgumentError, "Integer variables cannot have floating point bounds"
-        end
-
-      :continuous ->
-        :ok
-
-      _ ->
-        raise ArgumentError, "Unknown variable type"
     end
   end
 
@@ -792,10 +752,6 @@ defmodule Dantzig.Problem do
               "Unsupported constraint expression: #{inspect(constraint_expr)}"
     end
   end
-
-  # Evaluate simple expressions to numeric values where possible
-  defp evaluate_simple_expression(expr),
-    do: Dantzig.Problem.AST.evaluate_simple_expression(expr)
 
   # Parse simple expressions to polynomials (with problem context for variable lookup)
   defp parse_simple_expression_to_polynomial(problem, expr),

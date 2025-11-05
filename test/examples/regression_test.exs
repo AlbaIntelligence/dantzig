@@ -12,7 +12,7 @@ defmodule Examples.RegressionTest do
   use ExUnit.Case, async: true
   require Dantzig.Problem, as: Problem
 
-  @QUEEN_COUNT = 4
+  @queen_count 4
 
   describe "Knapsack Problem Regression" do
     test "knapsack problem still works correctly" do
@@ -61,27 +61,27 @@ defmodule Examples.RegressionTest do
   end
 
   describe "N-Queens Problem Regression" do
-    test "N-Queens #{@QUEEN_COUNT}x#{@QUEEN_COUNT} problem still works correctly" do
+    test "N-Queens #{@queen_count}x#{@queen_count} problem still works correctly" do
       # Create 4x4 N-Queens problem
       problem =
         Problem.define do
           new(
-            name: "N-Queens #{@QUEEN_COUNT}x#{@QUEEN_COUNT}",
-            description: "#{@QUEEN_COUNT}x#{@QUEEN_COUNT} N-Queens problem"
+            name: "N-Queens #{@queen_count}x#{@queen_count}",
+            description: "#{@queen_count}x#{@queen_count} N-Queens problem"
           )
 
           variables(
             "queen",
-            [i <- 1..@QUEEN_COUNT, j <- 1..@QUEEN_COUNT],
+            [i <- 1..@queen_count, j <- 1..@queen_count],
             :binary,
             "Queen position"
           )
 
           # One queen per row
-          constraints([i <- 1..@QUEEN_COUNT], sum(queen(i, :_)) == 1, "One queen per row")
+          constraints([i <- 1..@queen_count], sum(queen(i, :_)) == 1, "One queen per row")
 
           # One queen per column
-          constraints([j <- 1..@QUEEN_COUNT], sum(queen(:_, j)) == 1, "One queen per column")
+          constraints([j <- 1..@queen_count], sum(queen(:_, j)) == 1, "One queen per column")
 
           # Set objective (maximize queens placed)
           objective(sum(queen(:_, :_)), direction: :maximize)
@@ -198,9 +198,9 @@ defmodule Examples.RegressionTest do
     Problem.define do
       new(name: "N-Queens", description: "Place N queens on N×N board")
 
-      variables("queen", [i <- 1..@QUEEN_COUNT, j <- 1..@QUEEN_COUNT], :binary, "Queen position")
+      variables("queen", [i <- 1..@queen_count, j <- 1..@queen_count], :binary, "Queen position")
 
-      constraints([i <- 1..@QUEEN_COUNT], sum(queen(i, :_)) == 1, "One queen per row")
+      constraints([i <- 1..@queen_count], sum(queen(i, :_)) == 1, "One queen per row")
       constraints([j <- 1..@QUEEN_COUNT], sum(queen(:_, j)) == 1, "One queen per column")
 
       objective(sum(queen(:_, :_)), direction: :maximize)

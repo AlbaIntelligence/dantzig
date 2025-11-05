@@ -109,7 +109,11 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
             Polynomial.add(p1, Polynomial.scale(p2, -1))
 
           {:-, %Polynomial{} = p, v} when is_number(v) ->
-            Polynomial.add(p, Polynomial.const(-v))
+            # Guard ensures v is a number - convert to float then negate
+            v_float = if is_integer(v), do: :erlang.float(v), else: v
+            # Explicit float operation - type checker needs literal float
+            neg_val = -1.0 * v_float
+            Polynomial.add(p, Polynomial.const(neg_val))
 
           {:-, v, %Polynomial{} = p} when is_number(v) ->
             Polynomial.add(Polynomial.const(v), Polynomial.scale(p, -1))
@@ -138,7 +142,12 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
             end
 
           {:/, %Polynomial{} = p, v} when is_number(v) ->
-            Polynomial.scale(p, 1.0 / v)
+            # Guard ensures v is a number - convert to float explicitly
+            v_float = case v do
+              n when is_integer(n) -> :erlang.float(n)
+              n when is_float(n) -> n
+            end
+            Polynomial.scale(p, 1.0 / v_float)
 
           {:/, %Polynomial{} = p1, %Polynomial{} = p2} ->
             # Handle polynomial / polynomial (e.g., variable / constant polynomial)
@@ -280,7 +289,7 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
         end
 
       # Handle variable reference AST nodes like {:queen2d_1_1, [], Elixir} (when variable not in scope)
-      {var_name, _meta, context}
+      {var_name, _meta, _context}
       when is_atom(var_name) and
              tuple_size(expr) == 3 and
              var_name not in [:+, :-, :*, :/, :==, :<=, :>=, :!=, :<, :>, :., :|>, :..] ->

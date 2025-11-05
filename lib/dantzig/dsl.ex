@@ -6,9 +6,6 @@ defmodule Dantzig.DSL do
   from the Problem.DSL module.
   """
 
-  # Re-export DSL functionality from Problem.DSL
-  import Dantzig.Problem.DSL, only: [define: 1, define: 2]
-
   @doc """
   Parse an expression using the DSL.
 

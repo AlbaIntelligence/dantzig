@@ -10,9 +10,6 @@ defmodule Dantzig.Problem.DSL do
   require Dantzig.Polynomial, as: Polynomial
   alias Dantzig.Problem.DSL.Internal
 
-  # Import DSL components
-  import Dantzig.DSL.SumFunction, only: [sum: 1, sum: 3]
-
   # Test functions for experimental features
   defmacro access_variable_test(var_name, indices) do
     quote do
@@ -31,6 +28,10 @@ defmodule Dantzig.Problem.DSL do
       {:access_proof_of_concept, unquote(var_name), unquote(indices)}
     end
   end
+
+  # ============================================================================
+  # variables/5 - All clauses with 5 arguments grouped together
+  # ============================================================================
 
   # Variables with bounds - var_name, generators, type, description, opts (MOST SPECIFIC - 5 args)
   defmacro variables(var_name, generators, type, description, opts)
@@ -57,6 +58,25 @@ defmodule Dantzig.Problem.DSL do
        ]}
     end
   end
+
+  # DEPRECATED: Backward compatibility wrapper for tests that call DSL.variables with problem as first arg
+  # Use add_variables/5 instead
+  @deprecated "Use add_variables/5 instead of variables/5"
+  defmacro variables(problem, var_name, generators, var_type, opts) do
+    quote do
+      Dantzig.Problem.DSL.VariableManager.add_variables(
+        unquote(problem),
+        unquote(generators),
+        unquote(var_name),
+        unquote(var_type),
+        unquote(opts)
+      )
+    end
+  end
+
+  # ============================================================================
+  # variables/4 - All clauses with 4 arguments grouped together
+  # ============================================================================
 
   # Variables with bounds - var_name, generators, type, opts (4 args with bounds)
   defmacro variables(var_name, generators, type, opts)
@@ -126,6 +146,10 @@ defmodule Dantzig.Problem.DSL do
     end
   end
 
+  # ============================================================================
+  # variables/3 - All clauses with 3 arguments grouped together
+  # ============================================================================
+
   # Variables with bounds - var_name, type, opts (3 args with bounds)
   defmacro variables(var_name, type, opts)
            when is_atom(type) and is_list(opts) and not is_binary(hd(opts)) do
@@ -157,21 +181,6 @@ defmodule Dantzig.Problem.DSL do
          unquote(type),
          unquote(description)
        ]}
-    end
-  end
-
-  # DEPRECATED: Backward compatibility wrapper for tests that call DSL.variables with problem as first arg
-  # Use add_variables/5 instead
-  @deprecated "Use add_variables/5 instead of variables/5"
-  defmacro variables(problem, var_name, generators, var_type, opts) do
-    quote do
-      Dantzig.Problem.DSL.VariableManager.add_variables(
-        unquote(problem),
-        unquote(generators),
-        unquote(var_name),
-        unquote(var_type),
-        unquote(opts)
-      )
     end
   end
 
@@ -321,142 +330,6 @@ defmodule Dantzig.Problem.DSL do
   end
 
   @doc """
-  Internal DSL syntax for variables inside Problem.define/modify blocks.
-  This is the clean syntax used within define blocks without needing to pass the problem.
-
-  Supports:
-  - variables("name", :type, "description")
-  - variables("name", :type, "description", min_bound: 0, max_bound: 100)
-  - variables("name", [generators], :type, "description")
-  - variables("name", [generators], :type, "description", min_bound: 0, max_bound: 100)
-  """
-  # variables("name", :type, "description")
-  defmacro variables(var_name, type, description) when is_atom(type) and is_binary(description) do
-    quote do
-      {:variables, [],
-       [
-         unquote(var_name),
-         [],
-         unquote(type),
-         unquote(description)
-       ]}
-    end
-  end
-
-  # variables("name", :type, "description", min_bound: X, max_bound: Y)
-  defmacro variables(var_name, type, description, opts)
-           when is_atom(type) and is_binary(description) and is_list(opts) do
-    quote do
-      min_bound = unquote(Keyword.get(opts, :min_bound))
-      max_bound = unquote(Keyword.get(opts, :max_bound))
-
-      {:variables, [],
-       [
-         unquote(var_name),
-         unquote(type)
-         | [description: unquote(description)] ++
-             if(min_bound != nil, do: [min_bound: min_bound], else: []) ++
-             if(max_bound != nil, do: [max_bound: max_bound], else: [])
-       ]}
-    end
-  end
-
-  # variables("name", :type, opts_with_bounds)
-  defmacro variables(var_name, type, opts)
-           when is_atom(type) and is_list(opts) and not is_binary(hd(opts)) do
-    description = Keyword.get(opts, :description) || ""
-
-    quote do
-      min_bound = unquote(Keyword.get(opts, :min_bound))
-      max_bound = unquote(Keyword.get(opts, :max_bound))
-
-      {:variables, [],
-       [
-         unquote(var_name),
-         unquote(type)
-         | [description: unquote(description)] ++
-             if(min_bound != nil, do: [min_bound: min_bound], else: []) ++
-             if(max_bound != nil, do: [max_bound: max_bound], else: [])
-       ]}
-    end
-  end
-
-  # variables("name", [generators], :type, "description")
-  defmacro variables(var_name, generators, type, description)
-           when is_list(generators) and is_atom(type) and is_binary(description) do
-    # Normalize generator syntax like [i <- 1..n] to quoted var AST
-    transformed_generators =
-      Enum.map(generators, fn
-        {:<-, meta, [var, range]} -> {:<-, meta, [quote(do: unquote(var)), range]}
-        other -> other
-      end)
-
-    quote do
-      {:variables, [],
-       [
-         unquote(var_name),
-         unquote(transformed_generators),
-         unquote(type),
-         unquote(description)
-       ]}
-    end
-  end
-
-  # variables("name", [generators], :type, "description", min_bound: X, max_bound: Y)
-  defmacro variables(var_name, generators, type, description, opts)
-           when is_list(generators) and is_atom(type) and is_binary(description) and is_list(opts) do
-    # Normalize generator syntax like [i <- 1..n] to quoted var AST
-    transformed_generators =
-      Enum.map(generators, fn
-        {:<-, meta, [var, range]} -> {:<-, meta, [quote(do: unquote(var)), range]}
-        other -> other
-      end)
-
-    quote do
-      min_bound = unquote(Keyword.get(opts, :min_bound))
-      max_bound = unquote(Keyword.get(opts, :max_bound))
-
-      {:variables, [],
-       [
-         unquote(var_name),
-         unquote(transformed_generators),
-         unquote(type)
-         | [description: unquote(description)] ++
-             if(min_bound != nil, do: [min_bound: min_bound], else: []) ++
-             if(max_bound != nil, do: [max_bound: max_bound], else: [])
-       ]}
-    end
-  end
-
-  # variables("name", [generators], :type, opts_with_bounds)
-  defmacro variables(var_name, generators, type, opts)
-           when is_list(generators) and is_atom(type) and is_list(opts) do
-    description = Keyword.get(opts, :description) || ""
-
-    # Normalize generator syntax like [i <- 1..n] to quoted var AST
-    transformed_generators =
-      Enum.map(generators, fn
-        {:<-, meta, [var, range]} -> {:<-, meta, [quote(do: unquote(var)), range]}
-        other -> other
-      end)
-
-    quote do
-      min_bound = unquote(Keyword.get(opts, :min_bound))
-      max_bound = unquote(Keyword.get(opts, :max_bound))
-
-      {:variables, [],
-       [
-         unquote(var_name),
-         unquote(transformed_generators),
-         unquote(type)
-         | [description: unquote(description)] ++
-             if(min_bound != nil, do: [min_bound: min_bound], else: []) ++
-             if(max_bound != nil, do: [max_bound: max_bound], else: [])
-       ]}
-    end
-  end
-
-  @doc """
   Public DSL macro for constraints - matches nqueens_dsl.exs syntax.
   """
   defmacro constraints(problem, generators, constraint_expr, description \\ nil) do
@@ -477,7 +350,7 @@ defmodule Dantzig.Problem.DSL do
     transformed_description =
       case description do
         # If description is a string literal with interpolation, convert to AST
-        {:<<>>, meta, parts} when is_list(parts) ->
+        {:<<>>, _meta, parts} when is_list(parts) ->
           # This is already an interpolated string AST, pass it through
           description
 
@@ -751,34 +624,4 @@ defmodule Dantzig.Problem.DSL do
 
   # TODO: REMOVE THE FOLLOWING UNUSED PLACEHOLDER FUNCTIONS AFTER CHECKING THEY ARE ACTUALLY UNUSED
   # Removed placeholder process_define_block/1 to avoid drift with Problem.define
-
-  defp parse_generators(generators), do: Internal.parse_generators(generators)
-
-  defp evaluate_expression(expr), do: Internal.evaluate_expression(expr)
-
-  defp generate_combinations_from_parsed_generators(parsed_generators),
-    do: Internal.generate_combinations_from_parsed_generators(parsed_generators)
-
-  defp create_bindings(parsed_generators, index_vals),
-    do: Internal.create_bindings(parsed_generators, index_vals)
-
-  defp parse_constraint_expression(constraint_expr, bindings, problem),
-    do: Internal.parse_constraint_expression(constraint_expr, bindings, problem)
-
-  defp parse_expression_to_polynomial(expr, bindings, problem),
-    do: Internal.parse_expression_to_polynomial(expr, bindings, problem)
-
-  defp parse_objective_expression(objective_expr, problem),
-    do: Internal.parse_objective_expression(objective_expr, problem)
-
-  defp parse_sum_expression(expr, bindings, problem),
-    do: Internal.parse_sum_expression(expr, bindings, problem)
-
-  # Normalize remote-call sum ASTs into tuple form expected by the parser
-  defp normalize_sum_ast(expr), do: Internal.normalize_sum_ast(expr)
-
-  defp create_var_name(var_name, index_vals), do: Internal.create_var_name(var_name, index_vals)
-
-  defp create_constraint_name(description, index_vals),
-    do: Internal.create_constraint_name(description, index_vals)
 end
