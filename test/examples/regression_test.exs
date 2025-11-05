@@ -95,7 +95,7 @@ defmodule Examples.RegressionTest do
 
       # N-Queens specific validation
       assert objective_value >= 0, "Should place at least 0 queens"
-      assert objective_value <= @QUEEN_COUNT, "Cannot place more than 4 queens on 4x4 board"
+      assert objective_value <= @queen_count, "Cannot place more than 4 queens on 4x4 board"
 
       # Check that no two queens attack each other (simplified check)
       queens_placed = count_queens_placed(solution)
@@ -241,7 +241,7 @@ defmodule Examples.RegressionTest do
   defp count_queens_placed(solution) do
     # Count how many queens are actually placed (simplified)
     # Placeholder - would need to count actual placements
-    @QUEEN_COUNT
+    @queen_count
   end
 
   defp calculate_total_nutrition(solution, foods, nutrition_type) do

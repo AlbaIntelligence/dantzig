@@ -1,4 +1,9 @@
-defmodule Dantzig.ProblemTest do
+defmodule Dantzig.Core.ProblemTest do
+  @moduledoc """
+  Tests for Problem module core functionality.
+  
+  This module tests the core Problem functionality and AST transformations.
+  """
   use ExUnit.Case
   require Dantzig.Problem, as: Problem
   alias Dantzig.Problem.AST
