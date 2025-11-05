@@ -400,8 +400,8 @@
 
 ### Tests for Backward Compatibility
 
-- [ ] T119 [P] [BC] Create backward compatibility validation test in test/backward_compatibility/backward_compatibility_test.exs
-- [ ] T120 [P] [BC] Create API contract validation test in test/backward_compatibility/api_contract_test.exs
+- [ ] T119 [P] [BC] Create API contract validation test in test/backward_compatibility/api_contract_test.exs (NOTE: T021 and T033 already created/expanded backward compatibility tests; this task focuses on API contract validation)
+- [ ] T120 [P] [BC] Create backward compatibility regression test suite in test/backward_compatibility/regression_test.exs (NOTE: Expands on T021/T033 with comprehensive regression scenarios)
 
 ### Implementation for Backward Compatibility
 
