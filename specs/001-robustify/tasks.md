@@ -170,7 +170,7 @@
 ### Implementation for User Story 3
 
 - [x] T056 [US3] Enhance documentation for examples/simple_working_example.exs
-- [ ] T057 [US3] Enhance documentation for examples/assignment_problem.exs
+- [x] T057 [US3] Enhance documentation for examples/assignment_problem.exs
 - [ ] T058 [US3] Enhance documentation for examples/blending_problem.exs
 - [ ] T059 [US3] Enhance documentation for examples/knapsack_problem.exs
 - [ ] T060 [US3] Enhance documentation for examples/network_flow.exs (create if missing, or document why excluded)
