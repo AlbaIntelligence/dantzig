@@ -26,7 +26,6 @@ defmodule Examples.DocumentationQualityTest do
 
   # Minimum documentation requirements
   @min_comment_lines 5  # Minimum number of comment lines for documentation
-  @min_description_length 100  # Minimum characters in header description
 
   test "example files have header documentation" do
     # Verify that example files have header comments
