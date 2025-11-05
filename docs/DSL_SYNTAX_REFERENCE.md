@@ -90,13 +90,43 @@ end
 
 (Note: `variables/3` is equivalent to `variables/4`, which can accept generators (see below) with an empty generator list: `variables("name", [], :type, "description")`. The empty generator list is equivalent to no generators provided. `variables/3` and `variables/4`, having different arities, are different functions.)
 
+Variable deifinitions can include a minimum bound and/or a maximum bound provided as parameters for integer or continuous variables. The type of the variable dictates the type of the bounds. Infinity is denoted as:
+
+- positive infinity: `:infinity`, `:infty`, `:inf`, `:pos_infinity`, `:pos_infty`, `:pos_inf`
+- negative infinity: `:neg_infinity`, `:neg_infty`, `:neg_inf`
+
 ```elixir
 problem = Problem.define do
   new(name: "Problem Name", description: "Problem description")
 
   # variables/3 takes a variable name, a type and a description
-  variables("var_name", :binary, "Description")
-  variables("var_name", :continuous, "Description")
+  variables("var_int_1", :integer, "Description")
+  variables("var_int_2", :integer, "Desciption", min_bound: 0, max_bound: 100)
+  variables("var_int_3", :integer, "Desciption", min_bound: 0, max_bound: :infinity)
+  variables("var_int_4", :integer, "Desciption", min_bound: :neg_infty, max_bound: 13)
+
+  variables("var_bin_1", :binary, "Description")
+
+  variables("var_float_1", :continuous, "Description")
+  variables("var_float_2", :continuous, "Desciption", min_bound: 0, max_bound: 100)
+  variables("var_float_3", :continuous, "Desciption", min_bound: 0, max_bound: :infinity)
+  variables("var_float_4", :continuous, "Desciption", min_bound: :neg_infty, max_bound: 13)
+  variables("var_float_2", :continuous, "Desciption", min_bound: 0.889, max_bound: 100.864)
+  variables("var_float_3", :continuous, "Desciption", min_bound: -235.12, max_bound: :infinity)
+  variables("var_float_4", :continuous, "Desciption", min_bound: :neg_infty, max_bound: 13.29345)
+end
+```
+
+The following statements generate errors.
+
+```elixir
+problem = Problem.define do
+  new(name: "Problem Name", description: "Problem description")
+
+  variables("var_int_1", :integer, "Description", min_bound: 0.0, max_bound: 100e5) # No floating point values allowed for integers
+
+  variables("var_bin_1", :binary, "Description", min_bound: 0) # Binary variables have no bounds
+  variables("var_bin_2", :binary, "Description", max_bound: :inf) # Binary variables have no bounds
 end
 ```
 
@@ -108,8 +138,8 @@ problem = Problem.define do
 end
 
 problem = Problem.modify(problem) do
-  variables("var_name", :binary, "Description")
-  variables("var_name", :continuous, "Description")
+  variables("var_name_1", :binary, "Description")
+  variables("var_name_2", :continuous, "Description")
 end
 ```
 

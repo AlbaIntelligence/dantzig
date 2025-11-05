@@ -56,13 +56,19 @@ defmodule Dantzig.Problem.DSL.VariableManager do
   end
 
   # Public implementation entrypoints used by macros in Dantzig.Problem.DSL
-  def add_variables(problem, generators, var_name, var_type, _description) do
+  def add_variables(problem, generators, var_name, var_type, opts_or_description) do
     # Support empty generators (variables/3 equivalence)
     parsed_generators =
       case generators do
         [] -> []
         _ -> parse_generators(generators)
       end
+
+    # Extract bounds and description from opts_or_description
+    {min_bound, max_bound, description} = extract_bounds_and_description(opts_or_description)
+
+    # Validate bounds based on variable type
+    validate_bounds(var_type, min_bound, max_bound)
 
     combinations =
       case parsed_generators do
@@ -74,8 +80,16 @@ defmodule Dantzig.Problem.DSL.VariableManager do
       Enum.reduce(combinations, {problem, %{}}, fn index_vals, {current_problem, acc} ->
         var_name_with_indices = create_var_name(var_name, index_vals)
 
+        # Create variable with bounds
+        variable_opts = [
+          type: var_type,
+          min: min_bound,
+          max: max_bound,
+          description: description
+        ]
+
         {new_problem, monomial} =
-          Problem.new_variable(current_problem, var_name_with_indices, type: var_type)
+          Problem.new_variable(current_problem, var_name_with_indices, variable_opts)
 
         key = List.to_tuple(index_vals)
         new_acc = Map.put(acc, key, monomial)
@@ -83,6 +97,57 @@ defmodule Dantzig.Problem.DSL.VariableManager do
       end)
 
     Problem.put_variables_nd(final_problem, var_name, var_map)
+  end
+
+  # Extract bounds and description from options or description
+  defp extract_bounds_and_description(opts_or_description) do
+    case opts_or_description do
+      opts when is_list(opts) ->
+        # Extract bounds and description from keyword list
+        min_bound = Keyword.get(opts, :min_bound)
+        max_bound = Keyword.get(opts, :max_bound)
+        description = Keyword.get(opts, :description)
+        {min_bound, max_bound, description}
+
+      desc when is_binary(desc) ->
+        # Simple description string, no bounds
+        {nil, nil, desc}
+
+      _ ->
+        # No description, no bounds
+        {nil, nil, nil}
+    end
+  end
+
+  # Validate bounds based on variable type
+  defp validate_bounds(var_type, min_bound, max_bound) do
+    case var_type do
+      :binary ->
+        # Binary variables cannot have bounds
+        if min_bound != nil or max_bound != nil do
+          raise ArgumentError,
+                "Binary variables cannot have bounds. Found: min_bound: #{inspect(min_bound)}, max_bound: #{inspect(max_bound)}"
+        end
+
+      :integer ->
+        # Integer variables cannot have floating point bounds
+        if min_bound != nil and is_float(min_bound) do
+          raise ArgumentError,
+                "Integer variables cannot have floating point bounds. Found min_bound: #{inspect(min_bound)}"
+        end
+
+        if max_bound != nil and is_float(max_bound) do
+          raise ArgumentError,
+                "Integer variables cannot have floating point bounds. Found max_bound: #{inspect(max_bound)}"
+        end
+
+      :continuous ->
+        # Continuous variables can have any bounds
+        :ok
+
+      _ ->
+        raise ArgumentError, "Unknown variable type: #{inspect(var_type)}"
+    end
   end
 
   # Generator parsing and management

@@ -460,6 +460,31 @@ defmodule Dantzig.Problem do
     end
   end
 
+  # Validate bounds based on variable type
+  defp validate_bounds_for_single_variable!(var_type, min_bound, max_bound) do
+    case var_type do
+      :binary ->
+        if min_bound != nil or max_bound != nil do
+          raise ArgumentError, "Binary variables cannot have bounds"
+        end
+
+      :integer ->
+        if min_bound != nil and is_float(min_bound) do
+          raise ArgumentError, "Integer variables cannot have floating point bounds"
+        end
+
+        if max_bound != nil and is_float(max_bound) do
+          raise ArgumentError, "Integer variables cannot have floating point bounds"
+        end
+
+      :continuous ->
+        :ok
+
+      _ ->
+        raise ArgumentError, "Unknown variable type"
+    end
+  end
+
   # Helper used by the macro to reduce the block at compile-time into runtime calls
   def __define_reduce__(exprs) when is_list(exprs) do
     {initial_problem, rest} =
@@ -555,35 +580,111 @@ defmodule Dantzig.Problem do
           end
         end)
 
-      # Simple syntax: variables("name", :type, "description")
+      # Simple syntax: variables("name", :type, "description") - 4-element AST with binary description
       {:variables, _, [name, type, description]} = _ast, acc
       when is_binary(name) and is_atom(type) and is_binary(description) ->
         # Create single variable with simple syntax
         {new_problem, _} = new_variable(acc, name, type: type, description: description)
         new_problem
 
-      # Simple syntax with options: variables("name", :type, description: "desc", min: 0, max: 1)
-      {:variables, _, [name, type | opts]} = _ast, acc
-      when is_binary(name) and is_atom(type) and is_list(opts) ->
-        # Extract description from opts if present, otherwise use nil
-        description = Keyword.get(opts, :description)
-        var_opts = Keyword.delete(opts, :description)
+      # Simple syntax with bounds in opts: variables("name", :type, [bounds...]) - 4-element AST with opts list
+      {:variables, _, [name, [], type, opts]} = _ast, acc
+      when is_binary(name) and is_atom(type) and is_list(opts) and not is_binary(hd(opts)) ->
+        # Extract description and bounds from opts
+        description = Keyword.get(opts, :description, "")
+        min_bound = Keyword.get(opts, :min_bound)
+        max_bound = Keyword.get(opts, :max_bound)
 
-        {new_problem, _} =
-          new_variable(acc, name, [type: type, description: description] ++ var_opts)
+        # Validate bounds before creating variable
+        validate_bounds_for_single_variable!(type, min_bound, max_bound)
+
+        # Build variable options - convert bounds to the format expected by new_variable
+        var_opts = [type: type, description: description]
+        var_opts = if min_bound != nil, do: Keyword.put(var_opts, :min, min_bound), else: var_opts
+        var_opts = if max_bound != nil, do: Keyword.put(var_opts, :max, max_bound), else: var_opts
+
+        {new_problem, _} = new_variable(acc, name, var_opts)
 
         new_problem
 
-      # Generator syntax: variables("name", [generators], :type, opts_or_desc)
+      # Simple syntax with options: variables("name", :type, description: "desc", min_bound: 0, max_bound: 1)
+      {:variables, _, [name, type | remaining]} = _ast, acc
+      when is_binary(name) and is_atom(type) ->
+        # Extract description and bounds from the remaining elements
+        {description, bounds_list} =
+          case remaining do
+            [desc, [min_bound: _, max_bound: _] = bounds] when is_binary(desc) ->
+              {desc, bounds}
+
+            [desc, bounds] when is_binary(desc) and is_list(bounds) ->
+              {desc, bounds}
+
+            [[min_bound: _, max_bound: _] = bounds] ->
+              {"", bounds}
+
+            [bounds] when is_list(bounds) ->
+              {"", bounds}
+
+            _ ->
+              {"", []}
+          end
+
+        # Extract bounds from bounds_list
+        min_bound = Keyword.get(bounds_list, :min_bound)
+        max_bound = Keyword.get(bounds_list, :max_bound)
+
+        # Validate bounds before creating variable
+        validate_bounds_for_single_variable!(type, min_bound, max_bound)
+
+        # Build variable options - convert bounds to the format expected by new_variable
+        var_opts = [type: type, description: description]
+        var_opts = if min_bound != nil, do: Keyword.put(var_opts, :min, min_bound), else: var_opts
+        var_opts = if max_bound != nil, do: Keyword.put(var_opts, :max, max_bound), else: var_opts
+
+        {new_problem, _} = new_variable(acc, name, var_opts)
+
+        new_problem
+
+      # Generator syntax with bounds: variables("name", [generators], :type, description, bounds_opts) - MATCH FIRST
+      {:variables, _, [name, generators, type, description, bounds_opts]} = _ast, acc
+      when is_binary(name) and is_list(generators) and is_atom(type) and is_binary(description) and
+             is_list(bounds_opts) ->
+        # Extract bounds and merge with description
+        {min_bound, max_bound} =
+          case bounds_opts do
+            [min_bound: min_val, max_bound: max_val] -> {min_val, max_val}
+            [max_bound: max_val, min_bound: min_val] -> {min_val, max_val}
+            [min_bound: min_val] -> {min_val, nil}
+            [max_bound: max_val] -> {nil, max_val}
+            _ -> {nil, nil}
+          end
+
+        # Validate bounds before creating variables
+        validate_bounds_for_single_variable!(type, min_bound, max_bound)
+
+        # Create options with bounds - keep min_bound/max_bound format for VariableManager
+        var_opts = [type: type, description: description]
+
+        var_opts =
+          if min_bound != nil, do: Keyword.put(var_opts, :min_bound, min_bound), else: var_opts
+
+        var_opts =
+          if max_bound != nil, do: Keyword.put(var_opts, :max_bound, max_bound), else: var_opts
+
+        variables(
+          acc,
+          name,
+          generators,
+          type,
+          var_opts
+        )
+
+      # Generator syntax: variables("name", [generators], :type, opts_or_desc) - MATCH SECOND
       {:variables, _, [name, generators, type, opts_or_desc]} = _ast, acc ->
         # Allow either description string or keyword opts; if interpolated binary AST, skip description
         case opts_or_desc do
           desc when is_binary(desc) ->
             variables(acc, name, generators, type, description: desc)
-
-          {:<<>>, _meta, _parts} ->
-            # Interpolated binary with generator vars – defer naming; pass no description
-            variables(acc, name, generators, type, [])
 
           opts when is_list(opts) ->
             variables(acc, name, generators, type, opts)
@@ -680,16 +781,92 @@ defmodule Dantzig.Problem do
         {new_problem, _} = new_variable(acc, name, type: type, description: description)
         new_problem
 
-      {:variables, _, [name, type | opts]} = _ast, acc
-      when is_binary(name) and is_atom(type) and is_list(opts) ->
-        description = Keyword.get(opts, :description)
-        var_opts = Keyword.delete(opts, :description)
+      # Simple syntax with bounds in opts for modify: variables("name", :type, [bounds...]) - 4-element AST with opts list
+      {:variables, _, [name, [], type, opts]} = _ast, acc
+      when is_binary(name) and is_atom(type) and is_list(opts) and not is_binary(hd(opts)) ->
+        # Extract description and bounds from opts
+        description = Keyword.get(opts, :description, "")
+        min_bound = Keyword.get(opts, :min_bound)
+        max_bound = Keyword.get(opts, :max_bound)
 
-        {new_problem, _} =
-          new_variable(acc, name, [type: type, description: description] ++ var_opts)
+        # Validate bounds before creating variable
+        validate_bounds_for_single_variable!(type, min_bound, max_bound)
+
+        # Build variable options - convert bounds to the format expected by new_variable
+        var_opts = [type: type, description: description]
+        var_opts = if min_bound != nil, do: Keyword.put(var_opts, :min, min_bound), else: var_opts
+        var_opts = if max_bound != nil, do: Keyword.put(var_opts, :max, max_bound), else: var_opts
+
+        {new_problem, _} = new_variable(acc, name, var_opts)
 
         new_problem
 
+      {:variables, _, [name, type | remaining]} = _ast, acc
+      when is_binary(name) and is_atom(type) ->
+        # Extract description and bounds from the remaining elements
+        {description, bounds_list} =
+          case remaining do
+            [desc, [min_bound: _, max_bound: _] = bounds] when is_binary(desc) ->
+              {desc, bounds}
+
+            [desc, bounds] when is_binary(desc) and is_list(bounds) ->
+              {desc, bounds}
+
+            [[min_bound: _, max_bound: _] = bounds] ->
+              {"", bounds}
+
+            [bounds] when is_list(bounds) ->
+              {"", bounds}
+
+            _ ->
+              {"", []}
+          end
+
+        # Extract bounds from bounds_list
+        min_bound = Keyword.get(bounds_list, :min_bound)
+        max_bound = Keyword.get(bounds_list, :max_bound)
+
+        # Validate bounds before creating variable
+        validate_bounds_for_single_variable!(type, min_bound, max_bound)
+
+        # Build variable options - convert bounds to the format expected by new_variable
+        var_opts = [type: type, description: description]
+        var_opts = if min_bound != nil, do: Keyword.put(var_opts, :min, min_bound), else: var_opts
+        var_opts = if max_bound != nil, do: Keyword.put(var_opts, :max, max_bound), else: var_opts
+
+        {new_problem, _} = new_variable(acc, name, var_opts)
+
+        new_problem
+
+      # Generator syntax with bounds: variables("name", [generators], :type, description, bounds_opts) - MATCH FIRST
+      {:variables, _, [name, generators, type, description, bounds_opts]} = _ast, acc
+      when is_binary(name) and is_list(generators) and is_atom(type) and is_binary(description) and
+             is_list(bounds_opts) ->
+        # Extract bounds from bounds_opts and merge with description
+        min_bound = Keyword.get(bounds_opts, :min_bound)
+        max_bound = Keyword.get(bounds_opts, :max_bound)
+
+        # Validate bounds before creating variables
+        validate_bounds_for_single_variable!(type, min_bound, max_bound)
+
+        # Create options with bounds - keep min_bound/max_bound format for VariableManager
+        var_opts = [type: type, description: description]
+
+        var_opts =
+          if min_bound != nil, do: Keyword.put(var_opts, :min_bound, min_bound), else: var_opts
+
+        var_opts =
+          if max_bound != nil, do: Keyword.put(var_opts, :max_bound, max_bound), else: var_opts
+
+        variables(
+          acc,
+          name,
+          generators,
+          type,
+          var_opts
+        )
+
+      # Generator syntax: variables("name", [generators], :type, opts_or_desc) - MATCH SECOND
       {:variables, _, [name, generators, type, opts_or_desc]} = _ast, acc ->
         case opts_or_desc do
           desc when is_binary(desc) ->
@@ -745,15 +922,13 @@ defmodule Dantzig.Problem do
   """
   @spec variables(t(), String.t(), list(), atom(), keyword()) :: t()
   def variables(problem, var_name, generators, var_type, opts \\ []) do
-    description = Keyword.get(opts, :description)
-
-    # Use the existing DSL implementation
+    # Use the existing DSL implementation - pass entire opts for bounds handling
     Dantzig.Problem.DSL.__add_variables__(
       problem,
       generators,
       var_name,
       var_type,
-      description
+      opts
     )
   end
 

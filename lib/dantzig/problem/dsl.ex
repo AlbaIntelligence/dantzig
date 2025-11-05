@@ -32,6 +32,134 @@ defmodule Dantzig.Problem.DSL do
     end
   end
 
+  # Variables with bounds - var_name, generators, type, description, opts (MOST SPECIFIC - 5 args)
+  defmacro variables(var_name, generators, type, description, opts)
+           when is_list(generators) and is_atom(type) and is_binary(description) and is_list(opts) do
+    # Normalize generator syntax like [i <- 1..n] to quoted var AST
+    transformed_generators =
+      Enum.map(generators, fn
+        {:<-, meta, [var, range]} -> {:<-, meta, [quote(do: unquote(var)), range]}
+        other -> other
+      end)
+
+    quote do
+      min_bound = unquote(Keyword.get(opts, :min_bound))
+      max_bound = unquote(Keyword.get(opts, :max_bound))
+
+      {:variables, [],
+       [
+         unquote(var_name),
+         unquote(transformed_generators),
+         unquote(type)
+         | [description: unquote(description)] ++
+             if(min_bound != nil, do: [min_bound: min_bound], else: []) ++
+             if(max_bound != nil, do: [max_bound: max_bound], else: [])
+       ]}
+    end
+  end
+
+  # Variables with bounds - var_name, generators, type, opts (4 args with bounds)
+  defmacro variables(var_name, generators, type, opts)
+           when is_list(generators) and is_atom(type) and is_list(opts) do
+    description = Keyword.get(opts, :description) || ""
+
+    # Normalize generator syntax like [i <- 1..n] to quoted var AST
+    transformed_generators =
+      Enum.map(generators, fn
+        {:<-, meta, [var, range]} -> {:<-, meta, [quote(do: unquote(var)), range]}
+        other -> other
+      end)
+
+    quote do
+      min_bound = unquote(Keyword.get(opts, :min_bound))
+      max_bound = unquote(Keyword.get(opts, :max_bound))
+
+      {:variables, [],
+       [
+         unquote(var_name),
+         unquote(transformed_generators),
+         unquote(type)
+         | [description: unquote(description)] ++
+             if(min_bound != nil, do: [min_bound: min_bound], else: []) ++
+             if(max_bound != nil, do: [max_bound: max_bound], else: [])
+       ]}
+    end
+  end
+
+  # Variables without bounds - var_name, generators, type, description (4 args, no bounds)
+  defmacro variables(var_name, generators, type, description)
+           when is_list(generators) and is_atom(type) and is_binary(description) do
+    # Normalize generator syntax like [i <- 1..n] to quoted var AST
+    transformed_generators =
+      Enum.map(generators, fn
+        {:<-, meta, [var, range]} -> {:<-, meta, [quote(do: unquote(var)), range]}
+        other -> other
+      end)
+
+    quote do
+      {:variables, [],
+       [
+         unquote(var_name),
+         unquote(transformed_generators),
+         unquote(type),
+         unquote(description)
+       ]}
+    end
+  end
+
+  # Variables with bounds - var_name, type, description, opts (4 args, no generators)
+  defmacro variables(var_name, type, description, opts)
+           when is_atom(type) and is_binary(description) and is_list(opts) do
+    quote do
+      min_bound = unquote(Keyword.get(opts, :min_bound))
+      max_bound = unquote(Keyword.get(opts, :max_bound))
+
+      {:variables, [],
+       [
+         unquote(var_name),
+         [],
+         unquote(type)
+         | [description: unquote(description)] ++
+             if(min_bound != nil, do: [min_bound: min_bound], else: []) ++
+             if(max_bound != nil, do: [max_bound: max_bound], else: [])
+       ]}
+    end
+  end
+
+  # Variables with bounds - var_name, type, opts (3 args with bounds)
+  defmacro variables(var_name, type, opts)
+           when is_atom(type) and is_list(opts) and not is_binary(hd(opts)) do
+    description = Keyword.get(opts, :description) || ""
+
+    quote do
+      min_bound = unquote(Keyword.get(opts, :min_bound))
+      max_bound = unquote(Keyword.get(opts, :max_bound))
+
+      {:variables, [],
+       [
+         unquote(var_name),
+         [],
+         unquote(type)
+         | [description: unquote(description)] ++
+             if(min_bound != nil, do: [min_bound: min_bound], else: []) ++
+             if(max_bound != nil, do: [max_bound: max_bound], else: [])
+       ]}
+    end
+  end
+
+  # Variables without bounds - var_name, type, description (3 args, no bounds)
+  defmacro variables(var_name, type, description) when is_atom(type) and is_binary(description) do
+    quote do
+      {:variables, [],
+       [
+         unquote(var_name),
+         [],
+         unquote(type),
+         unquote(description)
+       ]}
+    end
+  end
+
   # DEPRECATED: Backward compatibility wrapper for tests that call DSL.variables with problem as first arg
   # Use add_variables/5 instead
   @deprecated "Use add_variables/5 instead of variables/5"
@@ -195,28 +323,135 @@ defmodule Dantzig.Problem.DSL do
   @doc """
   Internal DSL syntax for variables inside Problem.define/modify blocks.
   This is the clean syntax used within define blocks without needing to pass the problem.
+
+  Supports:
+  - variables("name", :type, "description")
+  - variables("name", :type, "description", min_bound: 0, max_bound: 100)
+  - variables("name", [generators], :type, "description")
+  - variables("name", [generators], :type, "description", min_bound: 0, max_bound: 100)
   """
-  defmacro variables(var_name, generators, var_type, description) do
+  # variables("name", :type, "description")
+  defmacro variables(var_name, type, description) when is_atom(type) and is_binary(description) do
+    quote do
+      {:variables, [],
+       [
+         unquote(var_name),
+         [],
+         unquote(type),
+         unquote(description)
+       ]}
+    end
+  end
+
+  # variables("name", :type, "description", min_bound: X, max_bound: Y)
+  defmacro variables(var_name, type, description, opts)
+           when is_atom(type) and is_binary(description) and is_list(opts) do
+    quote do
+      min_bound = unquote(Keyword.get(opts, :min_bound))
+      max_bound = unquote(Keyword.get(opts, :max_bound))
+
+      {:variables, [],
+       [
+         unquote(var_name),
+         unquote(type)
+         | [description: unquote(description)] ++
+             if(min_bound != nil, do: [min_bound: min_bound], else: []) ++
+             if(max_bound != nil, do: [max_bound: max_bound], else: [])
+       ]}
+    end
+  end
+
+  # variables("name", :type, opts_with_bounds)
+  defmacro variables(var_name, type, opts)
+           when is_atom(type) and is_list(opts) and not is_binary(hd(opts)) do
+    description = Keyword.get(opts, :description) || ""
+
+    quote do
+      min_bound = unquote(Keyword.get(opts, :min_bound))
+      max_bound = unquote(Keyword.get(opts, :max_bound))
+
+      {:variables, [],
+       [
+         unquote(var_name),
+         unquote(type)
+         | [description: unquote(description)] ++
+             if(min_bound != nil, do: [min_bound: min_bound], else: []) ++
+             if(max_bound != nil, do: [max_bound: max_bound], else: [])
+       ]}
+    end
+  end
+
+  # variables("name", [generators], :type, "description")
+  defmacro variables(var_name, generators, type, description)
+           when is_list(generators) and is_atom(type) and is_binary(description) do
     # Normalize generator syntax like [i <- 1..n] to quoted var AST
     transformed_generators =
-      case generators do
-        list when is_list(list) ->
-          Enum.map(list, fn
-            {:<-, meta, [var, range]} -> {:<-, meta, [quote(do: unquote(var)), range]}
-            other -> other
-          end)
-
-        other ->
-          other
-      end
+      Enum.map(generators, fn
+        {:<-, meta, [var, range]} -> {:<-, meta, [quote(do: unquote(var)), range]}
+        other -> other
+      end)
 
     quote do
       {:variables, [],
        [
          unquote(var_name),
          unquote(transformed_generators),
-         unquote(var_type),
+         unquote(type),
          unquote(description)
+       ]}
+    end
+  end
+
+  # variables("name", [generators], :type, "description", min_bound: X, max_bound: Y)
+  defmacro variables(var_name, generators, type, description, opts)
+           when is_list(generators) and is_atom(type) and is_binary(description) and is_list(opts) do
+    # Normalize generator syntax like [i <- 1..n] to quoted var AST
+    transformed_generators =
+      Enum.map(generators, fn
+        {:<-, meta, [var, range]} -> {:<-, meta, [quote(do: unquote(var)), range]}
+        other -> other
+      end)
+
+    quote do
+      min_bound = unquote(Keyword.get(opts, :min_bound))
+      max_bound = unquote(Keyword.get(opts, :max_bound))
+
+      {:variables, [],
+       [
+         unquote(var_name),
+         unquote(transformed_generators),
+         unquote(type)
+         | [description: unquote(description)] ++
+             if(min_bound != nil, do: [min_bound: min_bound], else: []) ++
+             if(max_bound != nil, do: [max_bound: max_bound], else: [])
+       ]}
+    end
+  end
+
+  # variables("name", [generators], :type, opts_with_bounds)
+  defmacro variables(var_name, generators, type, opts)
+           when is_list(generators) and is_atom(type) and is_list(opts) do
+    description = Keyword.get(opts, :description) || ""
+
+    # Normalize generator syntax like [i <- 1..n] to quoted var AST
+    transformed_generators =
+      Enum.map(generators, fn
+        {:<-, meta, [var, range]} -> {:<-, meta, [quote(do: unquote(var)), range]}
+        other -> other
+      end)
+
+    quote do
+      min_bound = unquote(Keyword.get(opts, :min_bound))
+      max_bound = unquote(Keyword.get(opts, :max_bound))
+
+      {:variables, [],
+       [
+         unquote(var_name),
+         unquote(transformed_generators),
+         unquote(type)
+         | [description: unquote(description)] ++
+             if(min_bound != nil, do: [min_bound: min_bound], else: []) ++
+             if(max_bound != nil, do: [max_bound: max_bound], else: [])
        ]}
     end
   end
@@ -233,6 +468,7 @@ defmodule Dantzig.Problem.DSL do
             {:<-, meta, [var, range]} -> {:<-, meta, [quote(do: unquote(var)), range]}
             other -> other
           end)
+
         other ->
           other
       end
@@ -270,7 +506,7 @@ defmodule Dantzig.Problem.DSL do
 
   @doc """
   Public DSL macro for objective - matches nqueens_dsl.exs syntax.
-  
+
   Supports two forms:
   1. `objective(problem, objective_expr, opts)` - external API (when first arg is a variable)
   2. `objective(objective_expr, opts)` - internal DSL (inside Problem.define/modify blocks)
@@ -352,8 +588,15 @@ defmodule Dantzig.Problem.DSL do
 
   # Implementation functions
 
-  def __add_variables__(problem, generators, var_name, var_type, description),
-    do: Internal.add_variables(problem, generators, var_name, var_type, description)
+  def __add_variables__(problem, generators, var_name, var_type, opts_or_description),
+    do:
+      Dantzig.Problem.DSL.VariableManager.add_variables(
+        problem,
+        generators,
+        var_name,
+        var_type,
+        opts_or_description
+      )
 
   def __set_objective__(problem, objective_expr, opts),
     do: Internal.set_objective(problem, objective_expr, opts)
