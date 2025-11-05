@@ -161,7 +161,27 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
             end
 
           _ ->
-            raise ArgumentError, "Unsupported arithmetic: #{inspect({op, left, right})}"
+            raise ArgumentError,
+                  """
+                  Unsupported arithmetic operation: #{op}
+
+                  Operation: #{op}
+                  Left operand: #{inspect(left)}
+                  Right operand: #{inspect(right)}
+
+                  Supported arithmetic operations in DSL expressions:
+                  - Addition (+): x(i) + y(j), x(i) + 5.0
+                  - Subtraction (-): x(i) - y(j), x(i) - 5.0
+                  - Multiplication (*): x(i) * 2.0, cost[i] * x(i)
+                  - Division (/): x(i) / 2.0
+
+                  Note: Division by variables is not supported in linear programming.
+                  Only division by constants (numbers) is allowed.
+
+                  Example of correct usage:
+                    constraints([i <- 1..n], x(i) + y(i) <= 10)
+                    constraints([i <- 1..n], cost[i] * x(i) <= budget)
+                  """
         end
 
       # Simple variable access: {var_name, _, nil} (no indices)
@@ -189,7 +209,21 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
           if var_def do
             Polynomial.variable(var_name_str)
           else
-            raise ArgumentError, "Undefined variable: #{var_name_str}"
+            raise ArgumentError,
+                  """
+                  Undefined variable: #{var_name_str}
+
+                  To fix this:
+                  1. Make sure you've defined the variable using `variables("#{var_name_str}", ...)` in your Problem.define block
+                  2. Check for typos in the variable name
+                  3. If using indexed variables (e.g., x(i)), ensure the indices match your generator variables
+
+                  Example:
+                    Problem.define do
+                      variables("#{var_name_str}", [i <- 1..n], :continuous)
+                      constraints([i <- 1..n], #{var_name_str}(i) <= 10)
+                    end
+                  """
           end
         end
 
@@ -309,13 +343,51 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
 
               {:ok, _other} ->
                 raise ArgumentError,
-                      "Unsupported expression: #{inspect(expr)}. " <>
-                        "If #{inspect(var_name)} is meant to be a variable, ensure it was created with variables() first."
+                      """
+                      Unsupported expression in constraint/objective: #{inspect(expr)}
+
+                      The expression #{inspect(var_name)} was evaluated as a constant from model_parameters,
+                      but it cannot be used directly in a constraint or objective expression.
+
+                      If #{inspect(var_name)} is meant to be a variable:
+                        1. Define it using `variables("#{var_name}", ...)` in your Problem.define block
+                        2. Use it with proper indexing: #{var_name}(i) or #{var_name}(i, j)
+
+                      If #{inspect(var_name)} is meant to be a constant:
+                        1. Access it directly by name in expressions: #{var_name}
+                        2. Use it in arithmetic: cost[i] * x(i) where cost is from model_parameters
+
+                      Example:
+                        Problem.define model_parameters: %{max_val: 10} do
+                          variables("x", [i <- 1..n], :continuous)
+                          constraints([i <- 1..n], x(i) <= max_val)  # max_val from model_parameters
+                        end
+                      """
 
               :error ->
                 raise ArgumentError,
-                      "Unsupported expression: #{inspect(expr)}. " <>
-                        "If #{inspect(var_name)} is meant to be a variable, ensure it was created with variables() first."
+                      """
+                      Cannot evaluate expression: #{inspect(expr)}
+
+                      The expression #{inspect(var_name)} could not be evaluated as:
+                      - A variable (not found in problem variables)
+                      - A constant from model_parameters (not found in model_parameters map)
+
+                      To fix this:
+                      1. If #{inspect(var_name)} should be a variable:
+                         - Define it using `variables("#{var_name}", ...)` before using it
+                         - Check for typos in the variable name
+
+                      2. If #{inspect(var_name)} should be a constant:
+                         - Add it to model_parameters: `Problem.define model_parameters: %{#{var_name}: value} do`
+                         - Or use a literal value instead
+
+                      Example:
+                        Problem.define model_parameters: %{n: 10} do
+                          variables("x", [i <- 1..n], :continuous)
+                          constraints([i <- 1..n], x(i) <= 10)
+                        end
+                      """
             end
           end
         else

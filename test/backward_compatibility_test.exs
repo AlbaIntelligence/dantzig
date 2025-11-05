@@ -75,14 +75,8 @@ defmodule Dantzig.BackwardCompatibilityTest do
     left = Dantzig.Polynomial.new(%{"x" => 1.0})
     right = Dantzig.Polynomial.new(%{})
 
-    # Test keyword list API
-    constraint =
-      Constraint.new(
-        left: left,
-        operator: :==,
-        right: right,
-        description: "Test constraint"
-      )
+    # Test macro API with comparison expression
+    constraint = Constraint.new(left == right, description: "Test constraint")
 
     assert is_struct(constraint, Dantzig.Constraint)
     assert constraint.left == left

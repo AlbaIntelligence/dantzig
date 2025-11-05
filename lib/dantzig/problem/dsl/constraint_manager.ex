@@ -96,7 +96,22 @@ defmodule Dantzig.Problem.DSL.ConstraintManager do
 
     if direction not in [:minimize, :maximize] do
       raise ArgumentError,
-            "Objective direction must be :minimize or :maximize, got: #{inspect(direction)}"
+            """
+            Invalid objective direction: #{inspect(direction)}
+
+            Objective direction must be one of:
+            - :minimize (to minimize the objective function)
+            - :maximize (to maximize the objective function)
+
+            Got: #{inspect(direction)}
+
+            Example of correct usage:
+              objective(sum(x(:_)), direction: :minimize)
+              objective(sum(x(:_)), direction: :maximize)
+
+            Or in Problem.define:
+              objective(sum(x(:_)), direction: :minimize)
+            """
     end
 
     objective = parse_objective_expression(objective_expr, problem)
