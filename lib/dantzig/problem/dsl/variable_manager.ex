@@ -11,6 +11,50 @@ defmodule Dantzig.Problem.DSL.VariableManager do
 
   require Dantzig.Problem, as: Problem
 
+  # Sanitize a single index value for LP format compatibility
+  defp sanitize_index(value) do
+    str = value |> to_string()
+
+    # Only prefix with "var_" if it starts with 'e' or 'E'
+    sanitized =
+      if String.starts_with?(str, ["e", "E"]) do
+        "var_#{str}"
+      else
+        str
+      end
+
+    if sanitized != str do
+      IO.warn("Index starting with 'e' or 'E' was modified: #{value} -> #{sanitized}")
+    end
+
+    # Apply remaining LP format sanitization
+    sanitized
+    # Arithmetic and brackets
+    |> String.replace(~r/[\+\-\*\^\[\]]/, "_")
+    # Keep valid LP characters: alphanumeric + ! " # $ % & ( ) , . ; ? @ _ ' ~
+    |> String.replace(~r/[^A-Za-z0-9_!"#\$%&()\,\.\;\?@_'~]/, "_")
+    |> String.trim("_")
+  end
+
+  # Create variable name with parentheses-based indexing
+  defp create_var_name(var_name, index_vals) do
+    sanitized_base = sanitize_index(var_name)
+
+    case index_vals do
+      [] ->
+        sanitized_base
+
+      [_ | _] ->
+        # Use parentheses with comma-separated indices
+        sanitized_indices =
+          index_vals
+          |> Enum.map(&sanitize_index/1)
+          |> Enum.join(",")
+
+        "#{sanitized_base}(#{sanitized_indices})"
+    end
+  end
+
   # Public implementation entrypoints used by macros in Dantzig.Problem.DSL
   def add_variables(problem, generators, var_name, var_type, _description) do
     # Support empty generators (variables/3 equivalence)
@@ -39,17 +83,6 @@ defmodule Dantzig.Problem.DSL.VariableManager do
       end)
 
     Problem.put_variables_nd(final_problem, var_name, var_map)
-  end
-
-  def create_var_name(var_name, index_vals) do
-    case index_vals do
-      [] ->
-        var_name
-
-      _ ->
-        index_str = index_vals |> Enum.map(&to_string/1) |> Enum.join("_")
-        "#{var_name}_#{index_str}"
-    end
   end
 
   # Generator parsing and management

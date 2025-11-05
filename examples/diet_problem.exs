@@ -19,6 +19,7 @@ foods = [
   %{name: "ice cream", cost: 1.59, calories: 330, protein: 8, fat: 10, sodium: 180}
 ]
 
+# Convert food names to use underscores for valid variable names
 food_names = Enum.map(foods, & &1.name)
 foods_dict = for food_entry <- foods, into: %{}, do: {food_entry.name, food_entry}
 
@@ -55,12 +56,12 @@ problem_diet =
       description: "Amount of food to buy"
     )
 
-    # Chained constraint for nutritional limits
+    # Nutritional constraints
     constraints(
       [limit <- limits_names],
       sum(for food <- food_names, do: qty(food) * foods_dict[food][limit]) <=
         limits_dict[limit].max,
-      "Min and max #{limit}"
+      "Max #{limit}"
     )
 
     objective(

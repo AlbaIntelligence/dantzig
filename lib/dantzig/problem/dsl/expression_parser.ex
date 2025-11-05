@@ -164,13 +164,24 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
             _ -> raise ArgumentError, "Invalid variable name: #{inspect(var_name)}"
           end
 
-        # For simple variables, check if they exist in the problem
-        var_def = Problem.get_variable(problem, var_name_str)
+        # Check if this is a base variable name that has indexed variants
+        var_map = Problem.get_variables_nd(problem, var_name_str)
 
-        if var_def do
-          Polynomial.variable(var_name_str)
+        if var_map do
+          # This is a base variable name with indexed variants (e.g., "qty" with "qty_chicken", "qty_hamburger")
+          # Return the sum of all indexed variants
+          Enum.reduce(var_map, Polynomial.const(0), fn {_key, poly}, acc ->
+            Polynomial.add(acc, poly)
+          end)
         else
-          raise ArgumentError, "Undefined variable: #{var_name_str}"
+          # Check for simple variables (no indices)
+          var_def = Problem.get_variable(problem, var_name_str)
+
+          if var_def do
+            Polynomial.variable(var_name_str)
+          else
+            raise ArgumentError, "Undefined variable: #{var_name_str}"
+          end
         end
 
       # Generator-based variable access: {var_name, _, indices} with indices
@@ -247,7 +258,7 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
         var_name_str = to_string(atom)
         # Check if this atom corresponds to a variable name in the problem
         var_def = Problem.get_variable(problem, var_name_str)
-        
+
         if var_def do
           Polynomial.variable(var_name_str)
         else
@@ -255,29 +266,30 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
           case try_evaluate_constant(expr, bindings) do
             {:ok, val} when is_number(val) ->
               Polynomial.const(val)
-            
+
             {:ok, _other} ->
-              raise ArgumentError, 
-                "Unsupported expression: #{inspect(expr)}. " <>
-                "If #{inspect(atom)} is meant to be a variable, ensure it was created with variables() first."
-            
+              raise ArgumentError,
+                    "Unsupported expression: #{inspect(expr)}. " <>
+                      "If #{inspect(atom)} is meant to be a variable, ensure it was created with variables() first."
+
             :error ->
-              raise ArgumentError, 
-                "Unsupported expression: #{inspect(expr)}. " <>
-                "If #{inspect(atom)} is meant to be a variable, ensure it was created with variables() first."
+              raise ArgumentError,
+                    "Unsupported expression: #{inspect(expr)}. " <>
+                      "If #{inspect(atom)} is meant to be a variable, ensure it was created with variables() first."
           end
         end
 
       # Handle variable reference AST nodes like {:queen2d_1_1, [], Elixir} (when variable not in scope)
-      {var_name, _meta, context} when is_atom(var_name) and 
-                                      tuple_size(expr) == 3 and
-                                      var_name not in [:+, :-, :*, :/, :==, :<=, :>=, :!=, :<, :>, :., :|>, :..] ->
+      {var_name, _meta, context}
+      when is_atom(var_name) and
+             tuple_size(expr) == 3 and
+             var_name not in [:+, :-, :*, :/, :==, :<=, :>=, :!=, :<, :>, :., :|>, :..] ->
         var_name_str = to_string(var_name)
-        
+
         # If problem is provided, check if this corresponds to a variable name
         if not is_nil(problem) do
           var_def = Problem.get_variable(problem, var_name_str)
-          
+
           if var_def do
             Polynomial.variable(var_name_str)
           else
@@ -285,16 +297,16 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
             case try_evaluate_constant(expr, bindings) do
               {:ok, val} when is_number(val) ->
                 Polynomial.const(val)
-              
+
               {:ok, _other} ->
-                raise ArgumentError, 
-                  "Unsupported expression: #{inspect(expr)}. " <>
-                  "If #{inspect(var_name)} is meant to be a variable, ensure it was created with variables() first."
-              
+                raise ArgumentError,
+                      "Unsupported expression: #{inspect(expr)}. " <>
+                        "If #{inspect(var_name)} is meant to be a variable, ensure it was created with variables() first."
+
               :error ->
-                raise ArgumentError, 
-                  "Unsupported expression: #{inspect(expr)}. " <>
-                  "If #{inspect(var_name)} is meant to be a variable, ensure it was created with variables() first."
+                raise ArgumentError,
+                      "Unsupported expression: #{inspect(expr)}. " <>
+                        "If #{inspect(var_name)} is meant to be a variable, ensure it was created with variables() first."
             end
           end
         else
@@ -307,22 +319,23 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
       {{:., _, [container_ast, field_atom]}, _, []} when is_atom(field_atom) ->
         # Evaluate the container (which might be an Access.get result)
         expr_with_field = {{:., [], [container_ast, field_atom]}, [], []}
+
         case try_evaluate_constant(expr_with_field, bindings) do
           {:ok, val} when is_number(val) ->
             Polynomial.const(val)
-          
+
           {:ok, :infinity} ->
             # Allow :infinity for constraint bounds (handled by constraint manager)
             Polynomial.const(:infinity)
-          
+
           {:ok, non_numeric_val} ->
             raise ArgumentError,
-              "Constant access expression evaluated to non-numeric value: #{inspect(expr_with_field)} => #{inspect(non_numeric_val)}"
-          
+                  "Constant access expression evaluated to non-numeric value: #{inspect(expr_with_field)} => #{inspect(non_numeric_val)}"
+
           :error ->
             raise ArgumentError,
-              "Cannot evaluate constant access expression: #{inspect(expr_with_field)}. " <>
-              "Ensure the constant exists in model_parameters and indices are valid."
+                  "Cannot evaluate constant access expression: #{inspect(expr_with_field)}. " <>
+                    "Ensure the constant exists in model_parameters and indices are valid."
         end
 
       # Handle Access.get AST nodes (e.g., multiplier[i], cost[worker][task])
@@ -335,20 +348,20 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
         case try_evaluate_constant(access_expr, bindings) do
           {:ok, val} when is_number(val) ->
             Polynomial.const(val)
-          
+
           {:ok, nil} ->
             raise ArgumentError,
-              "Cannot evaluate constant access expression: #{inspect(access_expr)}. " <>
-              "The expression evaluated to nil. Ensure the constant exists in model_parameters and indices are valid."
-          
+                  "Cannot evaluate constant access expression: #{inspect(access_expr)}. " <>
+                    "The expression evaluated to nil. Ensure the constant exists in model_parameters and indices are valid."
+
           {:ok, non_numeric_val} ->
             raise ArgumentError,
-              "Constant access expression evaluated to non-numeric value: #{inspect(access_expr)} => #{inspect(non_numeric_val)}"
-          
+                  "Constant access expression evaluated to non-numeric value: #{inspect(access_expr)} => #{inspect(non_numeric_val)}"
+
           :error ->
             raise ArgumentError,
-              "Cannot evaluate constant access expression: #{inspect(access_expr)}. " <>
-              "Ensure the constant exists in model_parameters and indices are valid."
+                  "Cannot evaluate constant access expression: #{inspect(access_expr)}. " <>
+                    "Ensure the constant exists in model_parameters and indices are valid."
         end
 
       _ ->
@@ -419,13 +432,18 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
       {name, _, _ctx} when is_atom(name) ->
         # First check bindings (for generator variables like 'food' from 'for food <- food_names')
         case Map.fetch(bindings, name) do
-          {:ok, v} -> v
-          :error -> 
-            # Try as atom in environment
-            case eval_with_env(name) do
-              nil -> 
-                raise ArgumentError, "Cannot evaluate variable '#{name}' - not found in model_parameters/environment"
-              value -> value
+          {:ok, v} ->
+            v
+
+          :error ->
+            # If not in bindings, try the environment (model parameters + caller bindings)
+            case eval_with_env({name, [], nil}) do
+              nil ->
+                raise ArgumentError,
+                      "Cannot evaluate variable '#{name}' - not found in model_parameters/environment"
+
+              value ->
+                value
             end
         end
 
@@ -434,12 +452,17 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
       atom when is_atom(atom) ->
         # First check bindings (for generator variables)
         case Map.fetch(bindings, atom) do
-          {:ok, v} -> v
-          :error -> 
+          {:ok, v} ->
+            v
+
+          :error ->
             case eval_with_env(atom) do
-              nil -> 
-                raise ArgumentError, "Cannot evaluate atom '#{atom}' - not found in model_parameters/environment"
-              value -> value
+              nil ->
+                raise ArgumentError,
+                      "Cannot evaluate atom '#{atom}' - not found in model_parameters/environment"
+
+              value ->
+                value
             end
         end
 
@@ -462,12 +485,12 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
       # Pattern: {{:., meta}, [container_result, field_atom]} where container_result might be Access.get result
       {{:., _, [container_ast, field_atom]}, _, []} when is_atom(field_atom) ->
         container = evaluate_expression_with_bindings(container_ast, bindings)
-        
+
         cond do
           is_map(container) ->
             # Try atom key first, then string key
             Map.get(container, field_atom) || Map.get(container, to_string(field_atom))
-          
+
           true ->
             nil
         end
@@ -477,31 +500,71 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
       {{:., _, [Access, :get]}, _, [container_ast, key_ast]} ->
         # Recursively evaluate container (might be nested Access.get like foods_dict[food])
         container = evaluate_expression_with_bindings(container_ast, bindings)
-        # Recursively evaluate key (might be nested Access.get like nutrient_to_atom[limit])
-        key = evaluate_expression_with_bindings(key_ast, bindings)
+
+        # Handle key evaluation - distinguish between literal atoms and generator variables
+        resolved_key =
+          case key_ast do
+            # Check if this is a bare atom that should be treated as a literal key
+            # First handle bare atoms (like :calories)
+            atom when is_atom(atom) and not is_map_key(bindings, atom) ->
+              # This is a bare atom that's not a generator variable - treat as literal key
+              atom
+
+            # Handle AST node atoms (like {:calories, [], Elixir})
+            {atom_name, _, _} when is_atom(atom_name) ->
+              # Check if this atom exists as a generator variable in bindings
+              # If it exists, it's a generator variable - resolve it
+              # If it doesn't exist, it's a literal atom - use it as-is
+              case Map.fetch(bindings, atom_name) do
+                {:ok, value} when is_binary(value) or is_atom(value) ->
+                  # This is a generator variable, use its value
+                  value
+
+                _ ->
+                  # Not a generator variable - treat as literal atom
+                  atom_name
+              end
+
+            # For other expressions, evaluate normally
+            _ ->
+              evaluate_expression_with_bindings(key_ast, bindings)
+          end
+
+        key = resolved_key
 
         cond do
           is_map(container) ->
-            case key do
-              k when is_binary(k) -> 
+            case resolved_key do
+              k when is_binary(k) ->
                 # Try string key first, then atom key
                 result = Map.get(container, k) || Map.get(container, safe_to_atom(k))
+
                 if is_nil(result) do
-                  raise ArgumentError, "Key '#{k}' not found in map. Available keys: #{inspect(Map.keys(container))}"
+                  raise ArgumentError,
+                        "Key '#{k}' not found in map. Available keys: #{inspect(Map.keys(container))}"
                 end
+
                 result
+
               k when is_atom(k) ->
                 # Try atom key first, then string key
                 result = Map.get(container, k) || Map.get(container, Atom.to_string(k))
+
                 if is_nil(result) do
-                  raise ArgumentError, "Key '#{k}' not found in map. Available keys: #{inspect(Map.keys(container))}"
+                  raise ArgumentError,
+                        "Key '#{k}' not found in map. Available keys: #{inspect(Map.keys(container))}"
                 end
+
                 result
-              _ -> 
-                result = Map.get(container, key)
+
+              _ ->
+                result = Map.get(container, resolved_key)
+
                 if is_nil(result) do
-                  raise ArgumentError, "Key #{inspect(key)} not found in map. Available keys: #{inspect(Map.keys(container))}"
+                  raise ArgumentError,
+                        "Key #{inspect(resolved_key)} not found in map. Available keys: #{inspect(Map.keys(container))}"
                 end
+
                 result
             end
 
@@ -531,29 +594,38 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
                     cond do
                       idx >= 1 and idx <= length(container) ->
                         Enum.at(container, idx - 1)
+
                       idx >= 0 and idx < length(container) ->
                         Enum.at(container, idx)
+
                       true ->
                         nil
                     end
-                  
+
                   _ ->
                     nil
                 end
             end
 
           true ->
-            raise ArgumentError, "Cannot access element with key #{inspect(key)} from non-map/non-list container: #{inspect(container)}"
+            raise ArgumentError,
+                  "Cannot access element with key #{inspect(key)} from non-map/non-list container: #{inspect(container)}"
         end
 
       # Variables: prefer loop bindings, then env
       {name, _, _ctx} = var when is_atom(name) ->
         case Map.fetch(bindings, name) do
-          {:ok, v} -> v
-          :error -> 
+          {:ok, v} ->
+            v
+
+          :error ->
             case eval_with_env(var) do
-              nil -> raise ArgumentError, "Cannot evaluate variable '#{name}' - not found in model_parameters/environment"
-              value -> value
+              nil ->
+                raise ArgumentError,
+                      "Cannot evaluate variable '#{name}' - not found in model_parameters/environment"
+
+              value ->
+                value
             end
         end
 
@@ -584,9 +656,12 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
           raise ArgumentError, "for-comprehension in sum/1 must have a do: ... block"
         end
 
+        # Merge outer bindings with inner generator bindings to ensure both are available
         enumerate_for_bindings(gens, bindings)
         |> Enum.reduce(Polynomial.const(0), fn local_bindings, acc ->
-          inner_poly = parse_expression_to_polynomial(body, local_bindings, problem)
+          # Merge outer bindings with inner bindings (inner takes precedence)
+          merged_bindings = Map.merge(bindings, local_bindings)
+          inner_poly = parse_expression_to_polynomial(body, merged_bindings, problem)
           Polynomial.add(acc, inner_poly)
         end)
 
@@ -644,11 +719,12 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
   def enumerate_for_bindings([{:<-, _, [var, domain_ast]} | rest], bindings) do
     # Extract the atom name from the variable AST node
     # var can be {:food, [], Elixir} (AST node) or :food (atom)
-    var_name = case var do
-      {name, _, _} when is_atom(name) -> name
-      name when is_atom(name) -> name
-      _ -> raise ArgumentError, "Invalid generator variable: #{inspect(var)}"
-    end
+    var_name =
+      case var do
+        {name, _, _} when is_atom(name) -> name
+        name when is_atom(name) -> name
+        _ -> raise ArgumentError, "Invalid generator variable: #{inspect(var)}"
+      end
 
     # Use evaluate_expression_with_bindings to check environment for constants
     domain_values = evaluate_expression_with_bindings(domain_ast, bindings)
@@ -678,7 +754,7 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
   # Environment evaluation helper
   defp eval_with_env(quoted) do
     env = Process.get(:dantzig_eval_env)
-    
+
     case env do
       env_list when is_list(env_list) ->
         # Handle bare atoms by looking them up directly
@@ -687,21 +763,22 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
           case quoted do
             atom when is_atom(atom) ->
               atom
-            
+
             {atom, _, _} when is_atom(atom) ->
               atom
-            
+
             # For other expressions, evaluate as quoted expression
             _ ->
               nil
           end
-        
+
         if atom_to_lookup do
           # Try Keyword.fetch first (for keyword list format)
           case Keyword.fetch(env_list, atom_to_lookup) do
-            {:ok, value} -> 
+            {:ok, value} ->
               value
-            :error -> 
+
+            :error ->
               # Try Keyword.get as fallback (handles duplicate keys)
               Keyword.get(env_list, atom_to_lookup)
           end
@@ -736,10 +813,13 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
       val = evaluate_expression_with_bindings(expr, bindings)
       {:ok, val}
     rescue
-      e in ArgumentError -> 
+      e in ArgumentError ->
         # Re-raise with more context for debugging nested Access.get issues
-        raise ArgumentError, "Error evaluating expression #{inspect(expr)}: #{Exception.message(e)}"
-      Protocol.UndefinedError -> :error
+        raise ArgumentError,
+              "Error evaluating expression #{inspect(expr)}: #{Exception.message(e)}"
+
+      Protocol.UndefinedError ->
+        :error
     end
   end
 end

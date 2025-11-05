@@ -49,11 +49,11 @@ defmodule Dantzig.DSL.Arithmetic.ArithmeticOperationsTest do
       # Verify the objective contains both variables and constants
       objective_str = Dantzig.Polynomial.serialize(problem.objective)
 
-      assert String.contains?(objective_str, "qty_bread"),
-             "Expected objective to contain qty_bread, got: #{objective_str}"
+      assert String.contains?(objective_str, "qty(bread)"),
+             "Expected objective to contain qty(bread), got: #{objective_str}"
 
-      assert String.contains?(objective_str, "qty_milk"),
-             "Expected objective to contain qty_milk, got: #{objective_str}"
+      assert String.contains?(objective_str, "qty(milk)"),
+             "Expected objective to contain qty(milk), got: #{objective_str}"
     end
 
     @tag :subtraction
@@ -78,11 +78,11 @@ defmodule Dantzig.DSL.Arithmetic.ArithmeticOperationsTest do
       # Verify the objective contains both variables and constants
       objective_str = Dantzig.Polynomial.serialize(problem.objective)
 
-      assert String.contains?(objective_str, "qty_bread"),
-             "Expected objective to contain qty_bread, got: #{objective_str}"
+      assert String.contains?(objective_str, "qty(bread)"),
+             "Expected objective to contain qty(bread), got: #{objective_str}"
 
-      assert String.contains?(objective_str, "qty_milk"),
-             "Expected objective to contain qty_milk, got: #{objective_str}"
+      assert String.contains?(objective_str, "qty(milk)"),
+             "Expected objective to contain qty(milk), got: #{objective_str}"
     end
 
     @tag :multiplication
@@ -107,11 +107,11 @@ defmodule Dantzig.DSL.Arithmetic.ArithmeticOperationsTest do
       # Verify the objective contains scaled variables
       objective_str = Dantzig.Polynomial.serialize(problem.objective)
 
-      assert String.contains?(objective_str, "2.0 qty_bread"),
-             "Expected objective to contain '2.0 qty_bread', got: #{objective_str}"
+      assert String.contains?(objective_str, "2.0 qty(bread)"),
+             "Expected objective to contain '2.0 qty(bread)', got: #{objective_str}"
 
-      assert String.contains?(objective_str, "2.0 qty_milk"),
-             "Expected objective to contain '2.0 qty_milk', got: #{objective_str}"
+      assert String.contains?(objective_str, "2.0 qty(milk)"),
+             "Expected objective to contain '2.0 qty(milk)', got: #{objective_str}"
     end
 
     @tag :division
@@ -136,11 +136,11 @@ defmodule Dantzig.DSL.Arithmetic.ArithmeticOperationsTest do
       # Verify the objective contains scaled variables
       objective_str = Dantzig.Polynomial.serialize(problem.objective)
 
-      assert String.contains?(objective_str, "0.5 qty_bread"),
-             "Expected objective to contain '0.5 qty_bread', got: #{objective_str}"
+      assert String.contains?(objective_str, "0.5 qty(bread)"),
+             "Expected objective to contain '0.5 qty(bread)', got: #{objective_str}"
 
-      assert String.contains?(objective_str, "0.5 qty_milk"),
-             "Expected objective to contain '0.5 qty_milk', got: #{objective_str}"
+      assert String.contains?(objective_str, "0.5 qty(milk)"),
+             "Expected objective to contain '0.5 qty(milk)', got: #{objective_str}"
     end
   end
 
@@ -167,11 +167,11 @@ defmodule Dantzig.DSL.Arithmetic.ArithmeticOperationsTest do
       # Verify the objective contains scaled variables
       objective_str = Dantzig.Polynomial.serialize(problem.objective)
 
-      assert String.contains?(objective_str, "2.0 qty_bread"),
-             "Expected objective to contain '2.0 qty_bread', got: #{objective_str}"
+      assert String.contains?(objective_str, "2.0 qty(bread)"),
+             "Expected objective to contain '2.0 qty(bread)', got: #{objective_str}"
 
-      assert String.contains?(objective_str, "2.0 qty_milk"),
-             "Expected objective to contain '2.0 qty_milk', got: #{objective_str}"
+      assert String.contains?(objective_str, "2.0 qty(milk)"),
+             "Expected objective to contain '2.0 qty(milk)', got: #{objective_str}"
     end
 
     @tag :commutative
@@ -196,11 +196,11 @@ defmodule Dantzig.DSL.Arithmetic.ArithmeticOperationsTest do
       # Verify the objective contains both variables and constants
       objective_str = Dantzig.Polynomial.serialize(problem.objective)
 
-      assert String.contains?(objective_str, "qty_bread"),
-             "Expected objective to contain qty_bread, got: #{objective_str}"
+      assert String.contains?(objective_str, "qty(bread)"),
+             "Expected objective to contain qty(bread), got: #{objective_str}"
 
-      assert String.contains?(objective_str, "qty_milk"),
-             "Expected objective to contain qty_milk, got: #{objective_str}"
+      assert String.contains?(objective_str, "qty(milk)"),
+             "Expected objective to contain qty(milk), got: #{objective_str}"
     end
   end
 
@@ -227,11 +227,11 @@ defmodule Dantzig.DSL.Arithmetic.ArithmeticOperationsTest do
       # Verify the objective contains scaled variables and constants
       objective_str = Dantzig.Polynomial.serialize(problem.objective)
 
-      assert String.contains?(objective_str, "2.0 qty_bread"),
-             "Expected objective to contain '2.0 qty_bread', got: #{objective_str}"
+      assert String.contains?(objective_str, "2.0 qty(bread)"),
+             "Expected objective to contain '2.0 qty(bread)', got: #{objective_str}"
 
-      assert String.contains?(objective_str, "2.0 qty_milk"),
-             "Expected objective to contain '2.0 qty_milk', got: #{objective_str}"
+      assert String.contains?(objective_str, "2.0 qty(milk)"),
+             "Expected objective to contain '2.0 qty(milk)', got: #{objective_str}"
     end
 
     @tag :complex
@@ -259,11 +259,11 @@ defmodule Dantzig.DSL.Arithmetic.ArithmeticOperationsTest do
       # Verify the objective contains scaled variables and constants
       objective_str = Dantzig.Polynomial.serialize(problem.objective)
 
-      assert String.contains?(objective_str, "2.0 qty_bread"),
-             "Expected objective to contain '2.0 qty_bread', got: #{objective_str}"
+      assert String.contains?(objective_str, "2.0 qty(bread)"),
+             "Expected objective to contain '2.0 qty(bread)', got: #{objective_str}"
 
-      assert String.contains?(objective_str, "2.0 qty_milk"),
-             "Expected objective to contain '2.0 qty_milk', got: #{objective_str}"
+      assert String.contains?(objective_str, "2.0 qty(milk)"),
+             "Expected objective to contain '2.0 qty(milk)', got: #{objective_str}"
     end
   end
 
@@ -316,11 +316,11 @@ defmodule Dantzig.DSL.Arithmetic.ArithmeticOperationsTest do
       # Verify the objective contains negative coefficients
       objective_str = Dantzig.Polynomial.serialize(problem.objective)
 
-      assert String.contains?(objective_str, "- 1.0 qty_bread"),
-             "Expected objective to contain '- 1.0 qty_bread', got: #{objective_str}"
+      assert String.contains?(objective_str, "- 1.0 qty(bread)"),
+             "Expected objective to contain '- 1.0 qty(bread)', got: #{objective_str}"
 
-      assert String.contains?(objective_str, "- 1.0 qty_milk"),
-             "Expected objective to contain '- 1.0 qty_milk', got: #{objective_str}"
+      assert String.contains?(objective_str, "- 1.0 qty(milk)"),
+             "Expected objective to contain '- 1.0 qty(milk)', got: #{objective_str}"
     end
 
     @tag :edge_cases
@@ -345,11 +345,11 @@ defmodule Dantzig.DSL.Arithmetic.ArithmeticOperationsTest do
       # Verify the objective contains fractional coefficients
       objective_str = Dantzig.Polynomial.serialize(problem.objective)
 
-      assert String.contains?(objective_str, "0.5 qty_bread"),
-             "Expected objective to contain '0.5 qty_bread', got: #{objective_str}"
+      assert String.contains?(objective_str, "0.5 qty(bread)"),
+             "Expected objective to contain '0.5 qty(bread)', got: #{objective_str}"
 
-      assert String.contains?(objective_str, "0.5 qty_milk"),
-             "Expected objective to contain '0.5 qty_milk', got: #{objective_str}"
+      assert String.contains?(objective_str, "0.5 qty(milk)"),
+             "Expected objective to contain '0.5 qty(milk)', got: #{objective_str}"
     end
   end
 
@@ -377,11 +377,11 @@ defmodule Dantzig.DSL.Arithmetic.ArithmeticOperationsTest do
       # Verify the objective contains negative coefficients
       objective_str = Dantzig.Polynomial.serialize(problem.objective)
 
-      assert String.contains?(objective_str, "- 1.0 qty_bread"),
-             "Expected objective to contain '- 1.0 qty_bread', got: #{objective_str}"
+      assert String.contains?(objective_str, "- 1.0 qty(bread)"),
+             "Expected objective to contain '- 1.0 qty(bread)', got: #{objective_str}"
 
-      assert String.contains?(objective_str, "- 1.0 qty_milk"),
-             "Expected objective to contain '- 1.0 qty_milk', got: #{objective_str}"
+      assert String.contains?(objective_str, "- 1.0 qty(milk)"),
+             "Expected objective to contain '- 1.0 qty(milk)', got: #{objective_str}"
     end
   end
 end

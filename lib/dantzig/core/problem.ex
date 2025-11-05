@@ -309,7 +309,7 @@ defmodule Dantzig.Problem do
   defp define_impl(block, opts) do
     # Extract model_parameters AST from options if provided (will be evaluated at runtime)
     model_params_ast = Keyword.get(opts, :model_parameters, nil)
-    
+
     # Rewrite nested calls that must be qualified (e.g., sum(...))
     # and transform generator syntax [var <- list] into quoted expressions
     rewritten_block =
@@ -322,6 +322,7 @@ defmodule Dantzig.Problem do
           Enum.map(list, fn
             {:<-, meta2, [var2, range2]} ->
               {:<-, meta2, [quote(do: unquote(var2)), range2]}
+
             other ->
               other
           end)
@@ -360,16 +361,17 @@ defmodule Dantzig.Problem do
       # Evaluate model parameters at runtime and merge with caller bindings
       model_params = unquote(model_params_ast || quote(do: %{}))
       caller_binding = binding()
-      
+
       # Merge model parameters into binding for variable resolution
       # Model parameters take precedence over caller bindings if there's a conflict
-      extended_binding = 
+      extended_binding =
         case model_params do
           %{} = params_map when map_size(params_map) > 0 ->
             # Convert map to keyword list format for Code.eval_quoted
             Enum.reduce(params_map, caller_binding, fn {key, value}, acc ->
               Keyword.put(acc, key, value)
             end)
+
           _ ->
             caller_binding
         end
@@ -498,31 +500,41 @@ defmodule Dantzig.Problem do
                       end
 
                     if head_atom && gen_atom && head_atom == gen_atom do
-                    new_name = name <> "_" <> to_string(value)
+                      # Sanitize variable names for LP format compatibility (CPLEX-compatible)
+                      sanitized_value =
+                        to_string(value)
+                        |> String.replace(~r/[eE](?![a-zA-Z_])/, "x_")
+                        |> String.replace(~r/[eE]+/, "x_")
+                        |> String.replace(~r/[\+\-\*\^\[\]]/, "_")
+                        |> String.replace(~r/[^A-Za-z0-9_!"#\$%&()\,\.\;\?@_'~]/, "_")
+                        |> String.trim("_")
 
-                    # Interpolate variable description with current index when possible
-                    interp_desc =
-                      case desc do
-                        # Interpolated binary AST, evaluate with current binding
-                        {:<<>>, _m, _parts} = ast ->
-                          try do
-                            {val, _} = Code.eval_quoted(ast, [{head_atom, value}])
-                            to_string(val)
-                          rescue
-                            _ -> desc
-                          end
+                      # Create variable name with parentheses-based indexing
+                      new_name = "#{name}(#{sanitized_value})"
 
-                        # Plain string: replace occurrences of the generator var name with value
-                        bin when is_binary(bin) ->
-                          pattern = ~r/\b#{Regex.escape(to_string(head_atom))}\b/
-                          String.replace(bin, pattern, to_string(value))
+                      # Interpolate variable description with current index when possible
+                      interp_desc =
+                        case desc do
+                          # Interpolated binary AST, evaluate with current binding
+                          {:<<>>, _m, _parts} = ast ->
+                            try do
+                              {val, _} = Code.eval_quoted(ast, [{head_atom, value}])
+                              to_string(val)
+                            rescue
+                              _ -> desc
+                            end
 
-                        _ ->
-                          desc
-                      end
+                          # Plain string: replace occurrences of the generator var name with value
+                          bin when is_binary(bin) ->
+                            pattern = ~r/\b#{Regex.escape(to_string(head_atom))}\b/
+                            String.replace(bin, pattern, to_string(value))
 
-                    {new_p, _} =
-                      new_variable(acc_problem, new_name, type: type, description: interp_desc)
+                          _ ->
+                            desc
+                        end
+
+                      {new_p, _} =
+                        new_variable(acc_problem, new_name, type: type, description: interp_desc)
 
                       new_p
                     else
@@ -785,10 +797,10 @@ defmodule Dantzig.Problem do
   def constraint(problem, constraint_expr, description \\ nil) do
     # Transform the constraint expression AST
     transformed = transform_constraint_expression_to_ast(constraint_expr)
-    
+
     # Parse the simple constraint expression (no generators)
     constraint = parse_simple_constraint_expression(problem, transformed, description)
-    
+
     # Add the constraint to the problem
     add_constraint(problem, constraint)
   end
@@ -873,7 +885,8 @@ defmodule Dantzig.Problem do
     check_for_complex(expr, false)
   end
 
-  defp check_for_complex(expr, _found) when is_atom(expr) or is_number(expr) or is_binary(expr), do: false
+  defp check_for_complex(expr, _found) when is_atom(expr) or is_number(expr) or is_binary(expr),
+    do: false
 
   defp check_for_complex({:sum, _, _}, _found), do: true
   defp check_for_complex({:for, _, _}, _found), do: true
@@ -905,36 +918,72 @@ defmodule Dantzig.Problem do
   defp parse_constraint_with_full_parser(problem, constraint_expr, description, bindings) do
     case constraint_expr do
       {:==, _, [left_expr, right_value]} ->
-        left_poly = Dantzig.Problem.DSL.ExpressionParser.parse_expression_to_polynomial(left_expr, bindings, problem)
+        left_poly =
+          Dantzig.Problem.DSL.ExpressionParser.parse_expression_to_polynomial(
+            left_expr,
+            bindings,
+            problem
+          )
 
         right_poly =
           case right_value do
-            val when is_number(val) -> Polynomial.const(val)
-            _ -> Dantzig.Problem.DSL.ExpressionParser.parse_expression_to_polynomial(right_value, bindings, problem)
+            val when is_number(val) ->
+              Polynomial.const(val)
+
+            _ ->
+              Dantzig.Problem.DSL.ExpressionParser.parse_expression_to_polynomial(
+                right_value,
+                bindings,
+                problem
+              )
           end
 
         c = Constraint.new_linear(left_poly, :==, right_poly, name: description)
         if is_binary(description), do: %{c | description: description}, else: c
 
       {:<=, _, [left_expr, right_value]} ->
-        left_poly = Dantzig.Problem.DSL.ExpressionParser.parse_expression_to_polynomial(left_expr, bindings, problem)
+        left_poly =
+          Dantzig.Problem.DSL.ExpressionParser.parse_expression_to_polynomial(
+            left_expr,
+            bindings,
+            problem
+          )
 
         right_poly =
           case right_value do
-            val when is_number(val) -> Polynomial.const(val)
-            _ -> Dantzig.Problem.DSL.ExpressionParser.parse_expression_to_polynomial(right_value, bindings, problem)
+            val when is_number(val) ->
+              Polynomial.const(val)
+
+            _ ->
+              Dantzig.Problem.DSL.ExpressionParser.parse_expression_to_polynomial(
+                right_value,
+                bindings,
+                problem
+              )
           end
 
         c = Constraint.new_linear(left_poly, :<=, right_poly, name: description)
         if is_binary(description), do: %{c | description: description}, else: c
 
       {:>=, _, [left_expr, right_value]} ->
-        left_poly = Dantzig.Problem.DSL.ExpressionParser.parse_expression_to_polynomial(left_expr, bindings, problem)
+        left_poly =
+          Dantzig.Problem.DSL.ExpressionParser.parse_expression_to_polynomial(
+            left_expr,
+            bindings,
+            problem
+          )
 
         right_poly =
           case right_value do
-            val when is_number(val) -> Polynomial.const(val)
-            _ -> Dantzig.Problem.DSL.ExpressionParser.parse_expression_to_polynomial(right_value, bindings, problem)
+            val when is_number(val) ->
+              Polynomial.const(val)
+
+            _ ->
+              Dantzig.Problem.DSL.ExpressionParser.parse_expression_to_polynomial(
+                right_value,
+                bindings,
+                problem
+              )
           end
 
         c = Constraint.new_linear(left_poly, :>=, right_poly, name: description)
