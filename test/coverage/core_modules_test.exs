@@ -144,7 +144,7 @@ defmodule Dantzig.Coverage.CoreModulesTest do
     # Add a constraint
     left = Dantzig.Polynomial.new(%{"x" => 1.0})
     right = Dantzig.Polynomial.const(1.0)
-    constraint = Dantzig.Constraint.new(left: left, operator: :<=, right: right)
+    constraint = Constraint.new(left: left, operator: :<=, right: right)
     problem = Dantzig.Problem.add_constraint(problem, constraint)
 
     # Set objective
