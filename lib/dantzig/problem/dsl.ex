@@ -270,14 +270,36 @@ defmodule Dantzig.Problem.DSL do
 
   @doc """
   Public DSL macro for objective - matches nqueens_dsl.exs syntax.
+  
+  Supports two forms:
+  1. `objective(problem, objective_expr, opts)` - external API (when first arg is a variable)
+  2. `objective(objective_expr, opts)` - internal DSL (inside Problem.define/modify blocks)
   """
-  defmacro objective(problem, objective_expr, opts \\ []) do
+  # Pattern match: if first arg is a 3-tuple AST (like {:problem, [], Elixir}), it's external API
+  defmacro objective({problem_var, _, _} = problem, objective_expr, opts)
+           when is_atom(problem_var) do
+    # External API form - call the function directly
     quote do
       unquote(__MODULE__).__set_objective__(
         unquote(problem),
         unquote(objective_expr),
         unquote(opts)
       )
+    end
+  end
+
+  # Pattern match: if first arg is not a 3-tuple, it's the internal DSL form
+  defmacro objective(objective_expr, opts) do
+    # Internal DSL form - capture as AST for Problem.define/modify blocks
+    quote do
+      {:objective, [], [unquote(objective_expr), unquote(opts)]}
+    end
+  end
+
+  defmacro objective(objective_expr) do
+    # Internal DSL form with no opts
+    quote do
+      {:objective, [], [unquote(objective_expr), []]}
     end
   end
 

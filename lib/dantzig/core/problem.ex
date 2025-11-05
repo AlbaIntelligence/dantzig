@@ -396,6 +396,12 @@ defmodule Dantzig.Problem do
         {:sum, meta, args} ->
           {{:., meta, [Dantzig.Problem.DSL, :sum]}, meta, args}
 
+        {:objective, meta, [objective_expr, opts]} ->
+          {:objective, meta, [objective_expr, opts]}
+
+        {:objective, meta, [objective_expr]} ->
+          {:objective, meta, [objective_expr, []]}
+
         list when is_list(list) ->
           case list do
             [{:<-, _, [var, list_expr]}] ->
@@ -419,6 +425,7 @@ defmodule Dantzig.Problem do
       # Ensure macros expand for both fully-qualified and aliased usage
       require Dantzig.Problem.DSL
       require Dantzig.Problem.DSL, as: DSL
+      import Dantzig.Problem.DSL, only: [objective: 1, objective: 2]
 
       unquote(__MODULE__).__modify_with_env__(
         unquote(problem),
@@ -696,10 +703,10 @@ defmodule Dantzig.Problem do
         constraints(acc, generators, constraint_expr, nil)
 
       {:objective, _, [objective_expr, opts]} = _ast, acc ->
-        objective(acc, objective_expr, opts)
+        __MODULE__.objective(acc, objective_expr, opts)
 
       {:objective, _, [[], objective_expr, opts]} = _ast, acc ->
-        objective(acc, objective_expr, opts)
+        __MODULE__.objective(acc, objective_expr, opts)
 
       {:tap, _, [fun_ast]} = _ast, acc ->
         {fun, _} = Code.eval_quoted(fun_ast, [])

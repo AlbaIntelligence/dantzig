@@ -83,13 +83,32 @@ defmodule Dantzig.Constraint do
       when operator in @operators do
     name = Keyword.get(opts, :name)
     description = Keyword.get(opts, :description)
-    # Convert raw numbers into polynomials
-    left = Polynomial.to_polynomial(left)
-    right = Polynomial.to_polynomial(right)
+    
+    # Handle :infinity bounds - constraints with infinity bounds are effectively unbounded
+    # For <= with :infinity right side, skip constraint (always satisfied)
+    # For >= with :infinity right side, should not happen (would be unsatisfiable)
+    cond do
+      operator == :<= and right == :infinity ->
+        # expression <= infinity is always true, create a dummy constraint
+        # In practice, this constraint adds no restriction
+        %__MODULE__{
+          name: name,
+          operator: :<=,
+          left_hand_side: Polynomial.to_polynomial(left),
+          right_hand_side: :infinity,
+          description: description
+        }
+      operator == :>= and right == :infinity ->
+        raise ArgumentError, "Cannot create constraint with >= :infinity (unsatisfiable)"
+      true ->
+        # Convert raw numbers into polynomials
+        left = Polynomial.to_polynomial(left)
+        right = Polynomial.to_polynomial(right)
 
-    difference = Polynomial.subtract(left, right)
-    validate_linear_constraint!(left, right, difference)
-    new_constraint_from_difference(difference, operator, name, description)
+        difference = Polynomial.subtract(left, right)
+        validate_linear_constraint!(left, right, difference)
+        new_constraint_from_difference(difference, operator, name, description)
+    end
   end
 
   defmacro new_linear(comparison, opts \\ []) do

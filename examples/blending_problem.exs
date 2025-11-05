@@ -112,7 +112,7 @@ IO.puts("Solving the blending problem...")
 
 IO.puts("Solution:")
 IO.puts("=========")
-IO.puts("Objective value: #{Float.round(objective_value, 2)}")
+IO.puts("Objective value: #{Float.round(objective_value * 1.0, 2)}")
 IO.puts("")
 
 IO.puts("Blend Composition:")
@@ -127,14 +127,14 @@ Enum.each(materials, fn material ->
   total_cost = total_cost + material_cost
 
   IO.puts(
-    "  #{material}: #{Float.round(fraction * 100, 2)}% (cost: $#{Float.round(material_cost, 2)})"
+    "  #{material}: #{Float.round(fraction * 100.0, 2)}% (cost: $#{Float.round(material_cost * 1.0, 2)})"
   )
 end)
 
 IO.puts("")
 IO.puts("Summary:")
-IO.puts("  Total cost: $#{Float.round(total_cost, 2)}")
-IO.puts("  Total fraction: #{Float.round(objective_value, 2)} (minimized)")
+IO.puts("  Total cost: $#{Float.round(total_cost * 1.0, 2)}")
+IO.puts("  Total fraction: #{Float.round(objective_value * 1.0, 2)} (minimized)")
 IO.puts("  Note: Objective minimizes total material usage")
 
 # Validate blend composition (simplified validation for current constraints)
@@ -195,7 +195,7 @@ Enum.each(materials, fn material ->
   quality2_contrib = fraction * props.quality2
 
   IO.puts(
-    "  #{material}: Q1=#{Float.round(quality1_contrib, 3)}, Q2=#{Float.round(quality2_contrib, 3)}"
+    "  #{material}: Q1=#{Float.round(quality1_contrib * 1.0, 3)}, Q2=#{Float.round(quality2_contrib * 1.0, 3)}"
   )
 end)
 

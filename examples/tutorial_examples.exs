@@ -193,6 +193,7 @@ y_map = Problem.get_variables_nd(problem6, "y")
 IO.puts(
   "✓ Created #{map_size(x_map)} facility variables and #{map_size(y_map)} service variables"
 )
+
 IO.puts("✓ Added facility constraints: #{map_size(problem6.constraints)} total constraints")
 IO.puts("")
 
@@ -237,31 +238,45 @@ IO.puts("SUMMARY")
 IO.puts("=======")
 
 IO.puts(
-  "✓ N-Queens: #{map_size(Problem.get_variables_nd(problem, "x"))} variables, #{map_size(problem.constraints)} constraints"
+  "✓ N-Queens: " <>
+    "#{map_size(Problem.get_variables_nd(problem, "x"))} variables, " <>
+    "#{map_size(problem.constraints)} constraints"
 )
 
 IO.puts(
-  "✓ TSP: #{map_size(Problem.get_variables_nd(problem2, "x"))} variables, #{map_size(problem2.constraints)} constraints"
+  "✓ TSP: " <>
+    "#{map_size(Problem.get_variables_nd(problem2, "x"))} variables, " <>
+    "#{map_size(problem2.constraints)} constraints"
 )
 
 IO.puts(
-  "✓ Timetabling: #{map_size(Problem.get_variables_nd(problem3, "x"))} variables, #{map_size(problem3.constraints)} constraints"
+  "✓ Timetabling: " <>
+    "#{map_size(Problem.get_variables_nd(problem3, "x"))} variables, " <>
+    "#{map_size(problem3.constraints)} constraints"
 )
 
 IO.puts(
-  "✓ Knapsack: #{map_size(Problem.get_variables_nd(problem4, "x"))} variables, #{map_size(problem4.constraints)} constraints"
+  "✓ Knapsack: " <>
+    "#{map_size(Problem.get_variables_nd(problem4, "x"))} variables, " <>
+    "#{map_size(problem4.constraints)} constraints"
 )
 
 IO.puts(
-  "✓ Assignment: #{map_size(Problem.get_variables_nd(problem5, "x"))} variables, #{map_size(problem5.constraints)} constraints"
+  "✓ Assignment: " <>
+    "#{map_size(Problem.get_variables_nd(problem5, "x"))} variables, " <>
+    "#{map_size(problem5.constraints)} constraints"
 )
 
 IO.puts(
-  "✓ Facility Location: #{map_size(Problem.get_variables_nd(problem6, "x")) + map_size(Problem.get_variables_nd(problem6, "y"))} variables, #{map_size(problem6.constraints)} constraints"
+  "✓ Facility Location: " <>
+    "#{map_size(Problem.get_variables_nd(problem6, "x")) + map_size(Problem.get_variables_nd(problem6, "y"))} variables, " <>
+    "#{map_size(problem6.constraints)} constraints"
 )
 
 IO.puts(
-  "✓ 3D Problem: #{map_size(Problem.get_variables_nd(problem7, "x"))} variables, #{map_size(problem7.constraints)} constraints"
+  "✓ 3D Problem: " <>
+    "#{map_size(Problem.get_variables_nd(problem7, "x"))} variables, " <>
+    "#{map_size(problem7.constraints)} constraints"
 )
 
 IO.puts("")

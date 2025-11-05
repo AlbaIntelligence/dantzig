@@ -122,7 +122,14 @@ defmodule Dantzig.Problem.DSL.ConstraintManager do
         right_poly =
           case right_value do
             val when is_number(val) -> Polynomial.const(val)
-            _ -> parse_expression_to_polynomial(right_value, bindings, problem)
+            :infinity -> :infinity  # Pass :infinity directly, not as polynomial
+            _ -> 
+              # Try to evaluate as constant first (might be :infinity or a number)
+              case Dantzig.Problem.DSL.ExpressionParser.try_evaluate_constant(right_value, bindings) do
+                {:ok, :infinity} -> :infinity  # Pass :infinity directly
+                {:ok, val} when is_number(val) -> Polynomial.const(val)
+                _ -> parse_expression_to_polynomial(right_value, bindings, problem)
+              end
           end
 
         Constraint.new_linear(left_poly, :<=, right_poly)
@@ -133,7 +140,14 @@ defmodule Dantzig.Problem.DSL.ConstraintManager do
         right_poly =
           case right_value do
             val when is_number(val) -> Polynomial.const(val)
-            _ -> parse_expression_to_polynomial(right_value, bindings, problem)
+            :infinity -> :infinity  # Pass :infinity directly, not as polynomial
+            _ -> 
+              # Try to evaluate as constant first (might be :infinity or a number)
+              case Dantzig.Problem.DSL.ExpressionParser.try_evaluate_constant(right_value, bindings) do
+                {:ok, :infinity} -> :infinity  # Pass :infinity directly
+                {:ok, val} when is_number(val) -> Polynomial.const(val)
+                _ -> parse_expression_to_polynomial(right_value, bindings, problem)
+              end
           end
 
         Constraint.new_linear(left_poly, :>=, right_poly)

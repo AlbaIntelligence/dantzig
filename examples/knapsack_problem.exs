@@ -40,7 +40,11 @@ IO.puts("")
 
 # Create the optimization problem
 problem =
-  Problem.define do
+  Problem.define model_parameters: %{
+                   items_dict: items_dict,
+                   item_names: item_names,
+                   capacity: capacity
+                 } do
     new(
       name: "Knapsack Problem",
       description: "Select items to maximize value while respecting weight constraint"

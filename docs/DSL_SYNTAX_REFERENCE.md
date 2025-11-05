@@ -715,7 +715,7 @@ The DSL supports several pattern functions that expand expressions with wildcard
 
 - **Pattern sums**: `sum(queen2d(i, :_))` expands to `queen2d_1_1 + queen2d_1_2 + queen2d_1_3 + queen2d_1_4` for each value of `i`
 - **All variables**: `sum(queen2d(:_, :_))` expands to a single sum of all queen2d variables
-- **Generator sums**: `sum(qty(food) for food <- food_names)` expands to `qty_bread + qty_milk`
+- **Generator sums**: `sum(for food <- food_names, do: qty(food))` expands to `qty_bread + qty_milk`
 
 #### Max Function (Future Extension)
 
@@ -883,8 +883,10 @@ problem = Problem.define(model_parameters: %{cost: cost_matrix, workers: workers
 
   constraints(
     sum(
-      for worker <- workers, task <- tasks, do: assign(worker, task) * cost[worker][task]) >= 0,
-      "The overall cost is positive"
+      for worker <- workers,
+          task <- tasks,
+          do: assign(worker, task) * cost[worker][task]) >= 0,
+          "The overall cost is positive"
   )
 
   # Objective: minimize total cost

@@ -35,7 +35,12 @@ limits_dict = for limit_entry <- limits, into: %{}, do: {limit_entry.nutrient, l
 
 # Create the problem
 problem_diet =
-  Problem.define(model_parameters: %{foods_dict: foods_dict, limits_dict: limits_dict, food_names: food_names, limits_names: limits_names}) do
+  Problem.define model_parameters: %{
+                   foods_dict: foods_dict,
+                   limits_dict: limits_dict,
+                   food_names: food_names,
+                   limits_names: limits_names
+                 } do
     new(
       name: "Diet Problem",
       description: "Minimize cost of food while meeting nutritional requirements"
@@ -50,17 +55,17 @@ problem_diet =
       description: "Amount of food to buy"
     )
 
+    # Chained constraint for nutritional limits
+    constraints(
+      [limit <- limits_names],
+      sum(for food <- food_names, do: qty(food) * foods_dict[food][limit]) <=
+        limits_dict[limit].max,
+      "Min and max #{limit}"
+    )
+
     objective(
       sum(for food <- food_names, do: qty(food) * foods_dict[food].cost),
       direction: :minimize
-    )
-
-    # Chained constraint for nutritional limits
-    constraints(
-      [l_name <- limits_names],
-      sum(for food <- food_names, do: qty(food) * foods_dict[food][l_name]) <=
-        limits_dict[l_name].max,
-      "Min and max #{l_name}"
     )
   end
 

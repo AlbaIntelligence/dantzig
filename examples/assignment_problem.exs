@@ -21,10 +21,13 @@ cost_matrix = %{
   "Charlie" => %{"Task1" => 3, "Task2" => 1, "Task3" => 4}
 }
 
-workers = Enum.keys(cost_matrix)
+workers = Map.keys(cost_matrix)
 # Tasks is the set of all possible tasks across all workers
 tasks =
-  MapSet.new(cost_matrix, fn {k, v} -> Enum.key(v) end)
+  cost_matrix
+  |> Enum.flat_map(fn {_k, v} -> Map.keys(v) end)
+  |> Enum.uniq()
+  |> Enum.sort()
 
 IO.puts("==================")
 IO.puts("Workers: #{Enum.join(workers, ", ")}")
@@ -41,7 +44,7 @@ IO.puts("")
 
 # Create the optimization problem with simplified costs (1 unit per task)
 problem =
-  Problem.define model_parameters: [workers, tasks, cost_matrix] do
+  Problem.define model_parameters: %{workers: workers, tasks: tasks, cost_matrix: cost_matrix} do
     new(
       name: "Assignment Problem",
       description: "Assign workers to tasks to minimize total cost"
@@ -125,18 +128,13 @@ IO.puts("  Cost matches objective: #{abs(total_cost - objective_value) < 0.001}"
 #
 # Modify the optimization problem with actual costs
 #
-problem =
-  problem
-  |> Problem.modify model_parameters: [workers, tasks, cost_matrix] do
-    # Update objective to minimize total assignment cost
-    objective(
-      sum(
-        [w <- workers, t <- tasks],
-        assign(w, t) * cost_matrix[w][t]
-      ),
-      direction: :minimize
-    )
-  end
+problem = Problem.modify(problem) do
+  # Update objective to minimize total assignment cost
+  objective(
+    sum(for w <- workers, t <- tasks, do: assign(w, t) * cost_matrix[w][t]),
+    direction: :minimize
+  )
+end
 
 IO.puts("Solving the full assignment problem...")
 {solution, objective_value} = Problem.solve(problem, print_optimizer_input: false)
