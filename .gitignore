@@ -24,8 +24,18 @@ dantzig-*.tar
 
 # Temporary files, for example, from tests.
 /tmp/
+TEMP/
 
 # The solver binary
 /priv/bin/
 
 *.log
+
+# IDE
+.elixir_ls/
+.elixir-tools/
+
+# AI assistants
+.cursor/
+.kilocode/
+.specify/
