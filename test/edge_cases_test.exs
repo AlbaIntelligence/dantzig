@@ -19,12 +19,12 @@ defmodule Dantzig.EdgeCasesTest do
     # x <= 1 and x >= 2 (infeasible)
     left1 = Dantzig.Polynomial.variable("x")
     right1 = Dantzig.Polynomial.const(1.0)
-    constraint1 = Dantzig.Constraint.new(left1, :<=, right1)
+    constraint1 = Constraint.new(left1, :<=, right1)
     problem = Dantzig.Problem.add_constraint(problem, constraint1)
 
     left2 = Dantzig.Polynomial.variable("x")
     right2 = Dantzig.Polynomial.const(2.0)
-    constraint2 = Dantzig.Constraint.new(left2, :>=, right2)
+    constraint2 = Constraint.new(left2, :>=, right2)
     problem = Dantzig.Problem.add_constraint(problem, constraint2)
 
     # The problem should be created successfully
@@ -51,7 +51,7 @@ defmodule Dantzig.EdgeCasesTest do
     # Test that invalid constraint syntax is handled gracefully
     assert_raise ArgumentError, fn ->
       # This should raise an error for invalid syntax
-      Dantzig.Constraint.new("invalid_left", :==, "invalid_right")
+      Constraint.new("invalid_left", :==, "invalid_right")
     end
   end
 
@@ -65,7 +65,7 @@ defmodule Dantzig.EdgeCasesTest do
     # Add a constraint with very small coefficients
     left = Dantzig.Polynomial.variable("x")
     right = Dantzig.Polynomial.const(1.0e-10)
-    constraint = Dantzig.Constraint.new(left, :==, right)
+    constraint = Constraint.new(left, :==, right)
     problem = Dantzig.Problem.add_constraint(problem, constraint)
 
     # The problem should be created successfully
@@ -82,7 +82,7 @@ defmodule Dantzig.EdgeCasesTest do
     # Add a constraint with very large coefficients
     left = Dantzig.Polynomial.variable("x")
     right = Dantzig.Polynomial.const(1.0e10)
-    constraint = Dantzig.Constraint.new(left, :==, right)
+    constraint = Constraint.new(left, :==, right)
     problem = Dantzig.Problem.add_constraint(problem, constraint)
 
     # The problem should be created successfully
@@ -111,7 +111,7 @@ defmodule Dantzig.EdgeCasesTest do
     assert_raise ArgumentError, fn ->
       left = Dantzig.Polynomial.variable("undefined_var")
       right = Dantzig.Polynomial.const(1.0)
-      constraint = Dantzig.Constraint.new(left, :==, right)
+      constraint = Constraint.new(left, :==, right)
       Dantzig.Problem.add_constraint(problem, constraint)
     end
   end
@@ -136,7 +136,7 @@ defmodule Dantzig.EdgeCasesTest do
     # Add a constraint with zero coefficient
     left = Dantzig.Polynomial.const(0.0)
     right = Dantzig.Polynomial.const(0.0)
-    constraint = Dantzig.Constraint.new(left, :==, right)
+    constraint = Constraint.new(left, :==, right)
     problem = Dantzig.Problem.add_constraint(problem, constraint)
 
     # The problem should be created successfully
@@ -153,7 +153,7 @@ defmodule Dantzig.EdgeCasesTest do
     # Add a constraint with negative coefficient
     left = Dantzig.Polynomial.variable("x") |> Dantzig.Polynomial.scale(-1.0)
     right = Dantzig.Polynomial.const(-1.0)
-    constraint = Dantzig.Constraint.new(left, :==, right)
+    constraint = Constraint.new(left, :==, right)
     problem = Dantzig.Problem.add_constraint(problem, constraint)
 
     # The problem should be created successfully
@@ -170,7 +170,7 @@ defmodule Dantzig.EdgeCasesTest do
     # Add a constraint with very large numbers
     left = Dantzig.Polynomial.variable("x")
     right = Dantzig.Polynomial.const(1.0e20)
-    constraint = Dantzig.Constraint.new(left, :==, right)
+    constraint = Constraint.new(left, :==, right)
     problem = Dantzig.Problem.add_constraint(problem, constraint)
 
     # The problem should be created successfully
@@ -187,7 +187,7 @@ defmodule Dantzig.EdgeCasesTest do
     # Add a constraint with very small numbers
     left = Dantzig.Polynomial.variable("x")
     right = Dantzig.Polynomial.const(1.0e-20)
-    constraint = Dantzig.Constraint.new(left, :==, right)
+    constraint = Constraint.new(left, :==, right)
     problem = Dantzig.Problem.add_constraint(problem, constraint)
 
     # The problem should be created successfully
@@ -220,7 +220,7 @@ defmodule Dantzig.EdgeCasesTest do
     problem = Enum.reduce(operators, problem, fn operator, acc_problem ->
       left = Dantzig.Polynomial.variable("x")
       right = Dantzig.Polynomial.const(1.0)
-      constraint = Dantzig.Constraint.new(left, operator, right)
+      constraint = Constraint.new(left, operator, right)
       Dantzig.Problem.add_constraint(acc_problem, constraint)
     end)
 

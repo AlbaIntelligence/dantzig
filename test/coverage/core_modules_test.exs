@@ -172,6 +172,3 @@ defmodule Dantzig.Coverage.CoreModulesTest do
     assert execution_time < 1_000_000_000, "Core module operations should be fast"
   end
 end
-rt execution_time < 1_000_000_000, "Core module operations should be fast"
-  end
-end
