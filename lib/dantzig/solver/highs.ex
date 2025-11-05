@@ -93,7 +93,7 @@ defmodule Dantzig.HiGHS do
       " ",
       operator_to_iodata(constraint.operator),
       " ",
-      to_string(constraint.right_hand_side),
+      format_lp_value(constraint.right_hand_side),
       "\n"
     ]
 
@@ -115,7 +115,7 @@ defmodule Dantzig.HiGHS do
           " ",
           operator_to_iodata(constraint.operator),
           " ",
-          to_string(constraint.right_hand_side),
+          format_lp_value(constraint.right_hand_side),
           "\n"
         ]
     end
@@ -227,20 +227,26 @@ defmodule Dantzig.HiGHS do
             "  #{v.name} free\n"
 
           {nil, max} ->
-            "  #{v.name} <= #{max}\n"
+            "  #{v.name} <= #{format_lp_value(max)}\n"
 
           {min, nil} ->
             min_str =
-              if is_struct(min, Polynomial), do: Polynomial.serialize(min), else: to_string(min)
+              if is_struct(min, Polynomial),
+                do: Polynomial.serialize(min),
+                else: format_lp_value(min)
 
             "  #{min_str} <= #{v.name}\n"
 
           {min, max} ->
             min_str =
-              if is_struct(min, Polynomial), do: Polynomial.serialize(min), else: to_string(min)
+              if is_struct(min, Polynomial),
+                do: Polynomial.serialize(min),
+                else: format_lp_value(min)
 
             max_str =
-              if is_struct(max, Polynomial), do: Polynomial.serialize(max), else: to_string(max)
+              if is_struct(max, Polynomial),
+                do: Polynomial.serialize(max),
+                else: format_lp_value(max)
 
             "  #{min_str} <= #{v.name}\n  #{v.name} <= #{max_str}\n"
         end
@@ -263,4 +269,14 @@ defmodule Dantzig.HiGHS do
       general_vars
     end
   end
+
+  # Format :infinity for LP export - convert to large finite number
+  # LP solvers don't understand the atom :infinity, so we use 1e+30
+  defp format_lp_value(:infinity), do: "1e+30"
+
+  # Handle Polynomial structs specially
+  defp format_lp_value(%Polynomial{} = poly), do: Polynomial.serialize(poly)
+
+  # Convert all other values to string
+  defp format_lp_value(value), do: to_string(value)
 end
