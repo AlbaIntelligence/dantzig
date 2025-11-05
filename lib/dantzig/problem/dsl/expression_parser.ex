@@ -411,12 +411,38 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
 
           {:ok, non_numeric_val} ->
             raise ArgumentError,
-                  "Constant access expression evaluated to non-numeric value: #{inspect(expr_with_field)} => #{inspect(non_numeric_val)}"
+                  """
+                  Constant access expression evaluated to non-numeric value: #{inspect(expr_with_field)} => #{inspect(non_numeric_val)}
+
+                  In constraint/objective expressions, constants from model_parameters must evaluate to numbers.
+                  Got: #{inspect(non_numeric_val)} (#{inspect(__MODULE__).typeof(non_numeric_val)})
+
+                  Common causes:
+                  1. Accessing a non-numeric field from a map/struct (e.g., items_dict[item].name instead of items_dict[item].weight)
+                  2. The constant in model_parameters is not a number (e.g., it's a string or list)
+
+                  Example of correct usage:
+                    # In model_parameters: %{items: [%{weight: 5.0, name: "item1"}]}
+                    constraints([i <- 1..n], x(i) * items[i].weight <= 10)  # ✓ weight is numeric
+                    # NOT: constraints([i <- 1..n], x(i) * items[i].name <= 10)  # ✗ name is string
+                  """
 
           :error ->
             raise ArgumentError,
-                  "Cannot evaluate constant access expression: #{inspect(expr_with_field)}. " <>
-                    "Ensure the constant exists in model_parameters and indices are valid."
+                  """
+                  Cannot evaluate constant access expression: #{inspect(expr_with_field)}
+
+                  Ensure:
+                  1. The constant exists in model_parameters
+                  2. All indices are valid (within range for lists, keys exist for maps)
+                  3. Generator variables used in indices are bound (e.g., i <- 1..n)
+
+                  Example:
+                    Problem.define model_parameters: %{costs: [10, 20, 30]} do
+                      variables("x", [i <- 1..3], :continuous)
+                      constraints([i <- 1..3], x(i) * costs[i] <= 100)  # costs[i] accesses model_parameters
+                    end
+                  """
         end
 
       # Handle Access.get AST nodes (e.g., multiplier[i], cost[worker][task])
