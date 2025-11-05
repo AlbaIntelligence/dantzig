@@ -2,7 +2,7 @@ defmodule Dantzig.ProblemTest do
   use ExUnit.Case, async: true
   use ExUnitProperties
 
-  alias Dantzig.Problem
+  require Dantzig.Problem, as: Problem
   alias Dantzig.Constraint
   alias Dantzig.Polynomial
 

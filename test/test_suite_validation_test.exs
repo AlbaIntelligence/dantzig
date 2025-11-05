@@ -25,7 +25,7 @@ defmodule Dantzig.TestSuiteValidationTest do
   test "DSL basic functionality works" do
     # Test basic DSL functionality
     problem =
-      Dantzig.Problem.define do
+      Problem.define do
         Dantzig.Problem.new(name: "DSL Test")
       end
 
@@ -47,7 +47,7 @@ defmodule Dantzig.TestSuiteValidationTest do
 
     # Create a simple constraint
     constraint =
-      Dantzig.Constraint.new(
+      Constraint.new(
         left: Dantzig.Polynomial.new(%{"x" => 1.0}),
         operator: :==,
         right: Dantzig.Polynomial.new(%{}),

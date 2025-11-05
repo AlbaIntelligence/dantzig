@@ -49,7 +49,7 @@ defmodule Dantzig.ErrorMessageQualityTest do
 
     # This should raise a clear error about constraint creation
     assert_raise ArgumentError, fn ->
-      Dantzig.Constraint.new(
+      Constraint.new(
         left: "invalid_left",
         operator: :==,
         right: "invalid_right",

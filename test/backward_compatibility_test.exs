@@ -28,7 +28,7 @@ defmodule Dantzig.BackwardCompatibilityTest do
   test "Problem.define/1 maintains existing API" do
     # Test that Problem.define/1 works as expected
     problem =
-      Dantzig.Problem.define do
+      Problem.define do
         Dantzig.Problem.new(name: "Define Test")
       end
 

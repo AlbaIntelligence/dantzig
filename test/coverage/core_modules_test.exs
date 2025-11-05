@@ -54,7 +54,7 @@ defmodule Dantzig.Coverage.CoreModulesTest do
     right = Dantzig.Polynomial.new(%{})
 
     constraint =
-      Dantzig.Constraint.new(
+      Constraint.new(
         left: left,
         operator: :==,
         right: right,
@@ -170,5 +170,8 @@ defmodule Dantzig.Coverage.CoreModulesTest do
 
     # Should complete quickly (less than 1 second)
     assert execution_time < 1_000_000_000, "Core module operations should be fast"
+  end
+end
+rt execution_time < 1_000_000_000, "Core module operations should be fast"
   end
 end
