@@ -273,7 +273,7 @@
 ### Tests for Error Handling
 
 - [ ] T095 [P] [EH] Create edge case error handling validation test in test/error_handling/edge_case_handling_test.exs (NOTE: Error message quality test already created in T022; comprehensive error message tests will be added in T035)
-- [ ] T096 [P] [EH] Create edge case handling validation test in test/error_handling/edge_case_handling_test.exs
+- [ ] T096 [P] [EH] Create edge case scenario test suite in test/error_handling/edge_case_scenarios_test.exs (NOTE: Focuses on testing edge case handling across different problem types)
 
 ### Implementation for Error Handling
 
