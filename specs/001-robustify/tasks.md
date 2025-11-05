@@ -144,7 +144,7 @@
 - [x] T044 [P] [US2] Add integration tests for HiGHS solver in test/dantzig/solver/highs_integration_test.exs
 - [x] T045 [P] [US2] Add edge case tests for infeasible problems in test/edge_cases/infeasible_problems_test.exs
 - [x] T046 [P] [US2] Add edge case tests for unbounded objectives in test/edge_cases/unbounded_objectives_test.exs
-- [ ] T047 [P] [US2] Add edge case tests for invalid constraint syntax in test/edge_cases/invalid_syntax_test.exs
+- [x] T047 [P] [US2] Add edge case tests for invalid constraint syntax in test/edge_cases/invalid_syntax_test.exs
 - [ ] T048 [P] [US2] Add edge case tests for numerical precision in test/edge_cases/numerical_precision_test.exs
 - [ ] T049 [P] [US2] Add edge case tests for solver failures in test/edge_cases/solver_failures_test.exs
 - [ ] T050 [P] [US2] Add edge case tests for large variable sets in test/edge_cases/large_problems_test.exs
