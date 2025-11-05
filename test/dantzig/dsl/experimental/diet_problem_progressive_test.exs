@@ -360,7 +360,10 @@ defmodule Dantzig.DSL.DietProblemProgressiveTest do
       }
 
       problem =
-        Problem.define model_parameters: %{food_names: food_names, foods_dict: foods_dict} do
+        Problem.define model_parameters: %{
+                         food_names: food_names,
+                         incomplete_foods: incomplete_foods
+                       } do
           new(name: "Incomplete Diet", description: "Test with incomplete food data")
 
           variables("qty", [food <- ["bread", "milk"]], :continuous, "Amount of food")
