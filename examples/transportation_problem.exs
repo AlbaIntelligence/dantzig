@@ -1,12 +1,60 @@
 #!/usr/bin/env elixir
 
 # Transportation Problem Example
+# ==============================
 #
-# Problem: A company needs to ship goods from 3 suppliers to 4 customers
-# while minimizing total shipping costs. Each supplier has a limited capacity,
-# and each customer has a specific demand that must be met.
+# This example demonstrates the classic Transportation Problem using the Dantzig DSL.
+# Transportation problems are fundamental to supply chain optimization and logistics,
+# with applications in distribution, resource allocation, and network flow.
 #
-# This is a classic transportation problem with supply and demand constraints.
+# BUSINESS CONTEXT:
+# A logistics company needs to ship goods from multiple suppliers to multiple customers
+# while minimizing total transportation costs. Each supplier has limited capacity,
+# and each customer has specific demand that must be met exactly.
+#
+# Real-world applications:
+# - Distribution center optimization
+# - Supply chain management
+# - Network flow problems
+# - Resource allocation across locations
+# - Delivery route optimization
+# - Inventory management across warehouses
+#
+# MATHEMATICAL FORMULATION:
+# Variables: x[s,c] = amount shipped from supplier s to customer c
+# Parameters:
+#   - supply[s] = available supply at supplier s
+#   - demand[c] = required demand at customer c
+#   - cost[s,c] = cost per unit to ship from s to c
+#   - S = set of suppliers
+#   - C = set of customers
+#
+# Constraints:
+#   - Supply limits: Σc x[s,c] <= supply[s] for all suppliers s
+#   - Demand requirements: Σs x[s,c] = demand[c] for all customers c
+#   - Non-negativity: x[s,c] >= 0 for all s,c
+#
+# Objective: Minimize total shipping cost: minimize Σs Σc cost[s,c] * x[s,c]
+#
+# This is a special case of the minimum cost flow problem where all
+# supplies and demands are concentrated at specific nodes.
+#
+# DSL SYNTAX EXPLANATION:
+# - variables("ship", [s <- suppliers, c <- customers], :continuous, min: 0.0, max: :infinity)
+#   Creates continuous variables for all supplier-customer pairs
+# - sum(for c <- customers, do: ship("Supplier1", c)) <= 20
+#   Enforces supply capacity constraints
+# - sum(for s <- suppliers, do: ship(s, "Customer1")) == 15
+#   Enforces demand satisfaction
+#
+# COMMON GOTCHAS:
+# 1. **Supply-Demand Balance**: Total supply must equal total demand for feasible solution
+# 2. **Variable Bounds**: Use min: 0.0 for non-negativity (no negative shipments)
+# 3. **Cost Matrix Structure**: Ensure cost_matrix has entries for all supplier-customer pairs
+# 4. **Model Parameters**: Currently hardcoded - model parameters not yet supported
+# 5. **Demand Requirements**: Use == for exact demand satisfaction, not <=
+# 6. **Supply Constraints**: Use <= for capacity limits, not == (to allow unused capacity)
+# 7. **Unbalanced Problems**: Add dummy suppliers/customers for unbalanced problems
 
 require Dantzig.Problem, as: Problem
 require Dantzig.Problem.DSL, as: DSL
@@ -76,7 +124,13 @@ end
 
 # Create the optimization problem
 problem =
-  Problem.define model_parameters: %{supply: supply, demand: demand, suppliers: suppliers, customers: customers, cost_matrix: cost_matrix} do
+  Problem.define model_parameters: %{
+                   supply: supply,
+                   demand: demand,
+                   suppliers: suppliers,
+                   customers: customers,
+                   cost_matrix: cost_matrix
+                 } do
     new(
       name: "Transportation Problem",
       description: "Minimize shipping costs from suppliers to customers"
@@ -95,13 +149,15 @@ problem =
     # Constraint: supply limits - each supplier cannot ship more than their capacity
     # Model parameters not yet supported for variable access, so hardcode values
     constraints(
-    sum(for c <- customers, do: ship("Supplier1", c)) <= 20,
-    "Supplier capacity limit"
+      sum(for c <- customers, do: ship("Supplier1", c)) <= 20,
+      "Supplier capacity limit"
     )
+
     constraints(
       sum(for c <- customers, do: ship("Supplier2", c)) <= 25,
       "Supplier capacity limit"
     )
+
     constraints(
       sum(for c <- customers, do: ship("Supplier3", c)) <= 15,
       "Supplier capacity limit"
@@ -110,17 +166,20 @@ problem =
     # Constraint: demand requirements - each customer must receive exactly their demand
     # Model parameters not yet supported for variable access, so hardcode values
     constraints(
-    sum(for s <- suppliers, do: ship(s, "Customer1")) == 15,
-    "Customer demand requirement"
+      sum(for s <- suppliers, do: ship(s, "Customer1")) == 15,
+      "Customer demand requirement"
     )
+
     constraints(
       sum(for s <- suppliers, do: ship(s, "Customer2")) == 20,
       "Customer demand requirement"
     )
+
     constraints(
       sum(for s <- suppliers, do: ship(s, "Customer3")) == 15,
       "Customer demand requirement"
     )
+
     constraints(
       sum(for s <- suppliers, do: ship(s, "Customer4")) == 10,
       "Customer demand requirement"
@@ -129,9 +188,12 @@ problem =
     # Objective: minimize total shipping cost
     # Model parameters not yet supported for variable access, so hardcode costs
     objective(
-    ship("Supplier1", "Customer1") * 2 + ship("Supplier1", "Customer2") * 3 + ship("Supplier1", "Customer3") * 1 + ship("Supplier1", "Customer4") * 4 +
-      ship("Supplier2", "Customer1") * 3 + ship("Supplier2", "Customer2") * 2 + ship("Supplier2", "Customer3") * 4 + ship("Supplier2", "Customer4") * 1 +
-      ship("Supplier3", "Customer1") * 1 + ship("Supplier3", "Customer2") * 4 + ship("Supplier3", "Customer3") * 3 + ship("Supplier3", "Customer4") * 2,
+      ship("Supplier1", "Customer1") * 2 + ship("Supplier1", "Customer2") * 3 +
+        ship("Supplier1", "Customer3") * 1 + ship("Supplier1", "Customer4") * 4 +
+        ship("Supplier2", "Customer1") * 3 + ship("Supplier2", "Customer2") * 2 +
+        ship("Supplier2", "Customer3") * 4 + ship("Supplier2", "Customer4") * 1 +
+        ship("Supplier3", "Customer1") * 1 + ship("Supplier3", "Customer2") * 4 +
+        ship("Supplier3", "Customer3") * 3 + ship("Supplier3", "Customer4") * 2,
       direction: :minimize
     )
   end
@@ -145,7 +207,10 @@ IO.puts("Constraints: #{map_size(problem.constraints)}")
 # Debug: Show constraints
 IO.puts("")
 IO.puts("Constraints:")
-problem.constraints |> Map.values() |> Enum.each(fn c ->
+
+problem.constraints
+|> Map.values()
+|> Enum.each(fn c ->
   IO.puts("  #{c.name}: #{inspect(c.left_hand_side)} #{c.operator} #{inspect(c.right_hand_side)}")
 end)
 
@@ -175,8 +240,8 @@ Enum.each(suppliers, fn supplier ->
   IO.puts("#{supplier}:")
 
   Enum.each(customers, fn customer ->
-  var_name = "ship(#{supplier},#{customer})"
-  units_shipped = Map.get(solution.variables, var_name, 0)
+    var_name = "ship(#{supplier},#{customer})"
+    units_shipped = Map.get(solution.variables, var_name, 0)
 
     # Only show non-zero shipments
     if units_shipped > 0.001 do
@@ -207,10 +272,10 @@ end
 supplier_validation =
   Enum.map(suppliers, fn supplier ->
     total_shipped =
-    Enum.reduce(customers, 0, fn customer, acc ->
-    var_name = "ship(#{supplier},#{customer})"
-    acc + Map.get(solution.variables, var_name, 0)
-    end)
+      Enum.reduce(customers, 0, fn customer, acc ->
+        var_name = "ship(#{supplier},#{customer})"
+        acc + Map.get(solution.variables, var_name, 0)
+      end)
 
     {supplier, total_shipped, supply[supplier]}
   end)
@@ -233,10 +298,10 @@ end)
 customer_validation =
   Enum.map(customers, fn customer ->
     total_received =
-    Enum.reduce(suppliers, 0, fn supplier, acc ->
-    var_name = "ship(#{supplier},#{customer})"
-    acc + Map.get(solution.variables, var_name, 0)
-    end)
+      Enum.reduce(suppliers, 0, fn supplier, acc ->
+        var_name = "ship(#{supplier},#{customer})"
+        acc + Map.get(solution.variables, var_name, 0)
+      end)
 
     {customer, total_received, demand[customer]}
   end)
@@ -268,6 +333,17 @@ if validation_errors != [] do
   IO.puts("ERROR: Validation failed!")
   System.halt(1)
 end
+
+IO.puts("")
+IO.puts("LEARNING INSIGHTS:")
+IO.puts("==================")
+IO.puts("• Transportation problems optimize distribution across supply-demand networks")
+IO.puts("• Linear programming naturally handles capacity and demand constraints")
+IO.puts("• Model parameters enable clean separation of data from optimization logic")
+IO.puts("• Continuous variables naturally model fractional shipment quantities")
+IO.puts("• Network flow problems demonstrate balanced supply-demand relationships")
+IO.puts("• Real-world applications: logistics, supply chain, distribution networks")
+IO.puts("• The DSL shows pattern-based constraint generation for multiple suppliers/customers")
 
 IO.puts("")
 IO.puts("✅ Transportation problem solved successfully!")
