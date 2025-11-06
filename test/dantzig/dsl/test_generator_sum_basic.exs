@@ -26,7 +26,7 @@ problem = Problem.variables(problem, "x", [i <- 1..3], :continuous, description:
 IO.puts("Created problem with #{map_size(problem.variables)} variables")
 
 # Test the sum functionality by checking if it compiles
-try:
+try do
   # This should work now with our new implementation
   sum_expr = quote do: sum(x(i) for i <- 1..3)
   IO.puts("Sum expression created: #{inspect(sum_expr)}")
@@ -41,7 +41,6 @@ try:
   IO.puts("Result: #{inspect(result)}")
 
   IO.puts("✅ Basic generator sum test passed!")
-
 catch
   error ->
     IO.puts("❌ Test failed: #{inspect(error)}")
