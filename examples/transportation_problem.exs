@@ -101,7 +101,7 @@ problem =
 
     # Constraint: demand requirements - each customer must receive exactly their demand
     constraints(
-      [c <- customers],
+    [c <- customers],
       sum(for s <- suppliers, do: ship(s, c)) == demand[c],
       "Customer demand requirement"
     )
@@ -112,6 +112,19 @@ problem =
       direction: :minimize
     )
   end
+
+# Debug: Show problem structure
+IO.puts("")
+IO.puts("Problem structure:")
+IO.puts("Variables: #{map_size(problem.variables)}")
+IO.puts("Constraints: #{map_size(problem.constraints)}")
+
+# Debug: Show constraints
+IO.puts("")
+IO.puts("Constraints:")
+problem.constraints |> Map.values() |> Enum.each(fn c ->
+  IO.puts("  #{c.name}: #{inspect(c.left_hand_side)} #{c.operator} #{inspect(c.right_hand_side)}")
+end)
 
 # Debug: Show variable names
 IO.puts("")
