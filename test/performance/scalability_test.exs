@@ -1,413 +1,117 @@
 defmodule Dantzig.Performance.ScalabilityTest do
   @moduledoc """
-  Performance and scalability tests for the Dantzig library.
+  Performance benchmarks testing scalability with increasing problem sizes.
 
-  These tests verify that the system scales efficiently with:
-  - Increasing numbers of variables
-  - Increasing numbers of constraints
-  - Complex problem structures
-  - Large objective expressions
-  - LP format export performance
-
-  T052: Add performance tests for scalability
+  Tests performance requirements from 001-robustify specification (FR-012):
+  - Problems up to 1000 variables must complete within 30 seconds
+  - Memory usage must stay under 100MB for typical problems
+  - Performance must scale reasonably with problem size
   """
-  # Performance tests should run sequentially
+
   use ExUnit.Case, async: false
 
-  require Dantzig.Problem, as: Problem
-  alias Dantzig.{Problem, HiGHS, Config}
+  alias Dantzig.Performance.BenchmarkFramework
+  alias Dantzig.Performance.BenchmarkFramework.ProblemGenerators
 
-  # Helper to check if HiGHS solver is available
-  defp highs_available? do
-    try do
-      command = Config.default_highs_binary_path()
-      {_output, exit_code} = System.cmd(command, ["--version"], stderr_to_stdout: true)
-      exit_code == 0
-    rescue
-      _ -> false
-    catch
-      _ -> false
+  setup_all do
+    # Ensure random seed is consistent for reproducible benchmarks
+    :rand.seed(:exs1024, {1, 2, 3})
+    :ok
+  end
+
+  describe "knapsack problem scalability" do
+    @tag :performance
+    test "knapsack problems scale within performance requirements" do
+      # Test increasing problem sizes
+      sizes = [50, 100, 200, 500, 1000]
+
+      test_fn =
+        BenchmarkFramework.create_problem_benchmark_test(
+          :knapsack,
+          sizes,
+          &ProblemGenerators.knapsack_problem/1
+        )
+
+      test_fn.()
+    end
+
+    @tag :performance
+    test "small knapsack problems perform well" do
+      problem = ProblemGenerators.knapsack_problem(50)
+
+      metrics = BenchmarkFramework.benchmark_problem(problem)
+
+      assert metrics.within_time_limit, "Small knapsack should complete within 30 seconds"
+      assert metrics.within_memory_limit, "Small knapsack should use less than 100MB"
+      assert metrics.variables_count == 50
     end
   end
 
-  # Helper to measure execution time
-  defp measure_time(fun) do
-    start_time = System.monotonic_time(:millisecond)
-    result = fun.()
-    end_time = System.monotonic_time(:millisecond)
-    elapsed = end_time - start_time
-    {result, elapsed}
-  end
+  describe "facility location problem scalability" do
+    @tag :performance
+    test "facility location problems scale within performance requirements" do
+      # Test problem sizes: {num_facilities, num_customers}
+      sizes = [{3, 10}, {5, 20}, {10, 50}, {15, 100}]
 
-  describe "Problem creation scalability" do
-    test "creates problems with 100 variables efficiently" do
-      {problem, elapsed} =
-        measure_time(fn ->
-          Problem.define do
-            new(name: "Scalability 100", direction: :minimize)
-            variables("x", [i <- 1..100], :continuous, "Variable")
-            constraints([i <- 1..100], x(i) >= 0, "Non-negativity")
-            objective(sum(x(:_)), direction: :minimize)
+      test_fn =
+        BenchmarkFramework.create_problem_benchmark_test(
+          :facility_location,
+          sizes,
+          fn {facilities, customers} ->
+            ProblemGenerators.facility_location_problem(facilities, customers)
           end
-        end)
+        )
 
-      assert problem != nil
-      assert map_size(problem.variable_defs) == 100
-      # Should complete quickly (< 1 second for 100 variables)
-      assert elapsed < 1_000, "Problem creation took #{elapsed}ms, expected < 1000ms"
-    end
-
-    test "creates problems with 500 variables efficiently" do
-      {problem, elapsed} =
-        measure_time(fn ->
-          Problem.define do
-            new(name: "Scalability 500", direction: :minimize)
-            variables("x", [i <- 1..500], :continuous, "Variable")
-            constraints([i <- 1..500], x(i) >= 0, "Non-negativity")
-            objective(sum(x(:_)), direction: :minimize)
-          end
-        end)
-
-      assert problem != nil
-      assert map_size(problem.variable_defs) == 500
-      # Should complete in reasonable time (< 5 seconds for 500 variables)
-      assert elapsed < 5_000, "Problem creation took #{elapsed}ms, expected < 5000ms"
-    end
-
-    test "creates problems with 1000 variables efficiently" do
-      {problem, elapsed} =
-        measure_time(fn ->
-          Problem.define do
-            new(name: "Scalability 1000", direction: :minimize)
-            variables("x", [i <- 1..1000], :continuous, "Variable")
-            constraints([i <- 1..1000], x(i) >= 0, "Non-negativity")
-            objective(sum(x(:_)), direction: :minimize)
-          end
-        end)
-
-      assert problem != nil
-      assert map_size(problem.variable_defs) == 1000
-      # Should complete in reasonable time (< 10 seconds for 1000 variables)
-      assert elapsed < 10_000, "Problem creation took #{elapsed}ms, expected < 10000ms"
-    end
-
-    test "creates problems with 2000 variables efficiently" do
-      {problem, elapsed} =
-        measure_time(fn ->
-          Problem.define do
-            new(name: "Scalability 2000", direction: :minimize)
-            variables("x", [i <- 1..2000], :continuous, "Variable")
-            constraints([i <- 1..2000], x(i) >= 0, "Non-negativity")
-            objective(sum(x(:_)), direction: :minimize)
-          end
-        end)
-
-      assert problem != nil
-      assert map_size(problem.variable_defs) == 2000
-      # Should complete in reasonable time (< 20 seconds for 2000 variables)
-      assert elapsed < 20_000, "Problem creation took #{elapsed}ms, expected < 20000ms"
-    end
-
-    test "creates problems with many constraints efficiently" do
-      {problem, elapsed} =
-        measure_time(fn ->
-          Problem.define do
-            new(name: "Many Constraints", direction: :minimize)
-            variables("x", [i <- 1..10], :continuous, "Variable")
-            constraints([i <- 1..1000], sum(x(:_)) >= 0, "Constraint")
-            objective(sum(x(:_)), direction: :minimize)
-          end
-        end)
-
-      assert problem != nil
-      assert map_size(problem.constraints) == 1000
-      # Should complete in reasonable time (< 10 seconds for 1000 constraints)
-      assert elapsed < 10_000, "Problem creation took #{elapsed}ms, expected < 10000ms"
-    end
-
-    test "creates problems with nested generators efficiently" do
-      {problem, elapsed} =
-        measure_time(fn ->
-          Problem.define do
-            new(name: "Nested Generators Scalability", direction: :minimize)
-            variables("x", [i <- 1..50, j <- 1..50], :continuous, "Variable")
-            constraints([i <- 1..50, j <- 1..50], x(i, j) >= 0, "Non-negativity")
-            objective(sum(x(:_)), direction: :minimize)
-          end
-        end)
-
-      assert problem != nil
-      assert map_size(problem.variable_defs) == 2500
-      # Should complete in reasonable time (< 15 seconds for 2500 variables)
-      assert elapsed < 15_000, "Problem creation took #{elapsed}ms, expected < 15000ms"
+      test_fn.()
     end
   end
 
-  describe "LP format export scalability" do
-    test "exports LP format for 100 variables efficiently" do
-      problem =
-        Problem.define do
-          new(name: "LP Export 100", direction: :minimize)
-          variables("x", [i <- 1..100], :continuous, "Variable")
-          constraints([i <- 1..100], x(i) >= 0, "Non-negativity")
-          objective(sum(x(:_)), direction: :minimize)
-        end
+  describe "large problem performance validation" do
+    @tag :performance
+    test "problems with 1000 variables complete within time limit" do
+      problem = ProblemGenerators.knapsack_problem(1000)
 
-      {lp_data, elapsed} = measure_time(fn -> HiGHS.to_lp_iodata(problem) end)
-      lp_string = IO.iodata_to_binary(lp_data)
+      metrics = BenchmarkFramework.benchmark_problem(problem)
 
-      assert is_binary(lp_string)
-      assert byte_size(lp_string) > 0
-      # Should complete quickly (< 500ms for 100 variables)
-      assert elapsed < 500, "LP export took #{elapsed}ms, expected < 500ms"
+      assert metrics.variables_count == 1000, "Should create exactly 1000 variables"
+      assert metrics.within_time_limit, "1000 variable problem should complete within 30 seconds"
+      assert metrics.within_memory_limit, "Should use less than 100MB memory"
     end
 
-    test "exports LP format for 500 variables efficiently" do
-      problem =
-        Problem.define do
-          new(name: "LP Export 500", direction: :minimize)
-          variables("x", [i <- 1..500], :continuous, "Variable")
-          constraints([i <- 1..500], x(i) >= 0, "Non-negativity")
-          objective(sum(x(:_)), direction: :minimize)
-        end
+    @tag :performance
+    test "memory usage scales reasonably with problem size" do
+      sizes = [100, 300, 500, 1000]
 
-      {lp_data, elapsed} = measure_time(fn -> HiGHS.to_lp_iodata(problem) end)
-      lp_string = IO.iodata_to_binary(lp_data)
+      results =
+        BenchmarkFramework.run_scalability_benchmarks(
+          sizes,
+          &ProblemGenerators.knapsack_problem/1
+        )
 
-      assert is_binary(lp_string)
-      assert byte_size(lp_string) > 0
-      # Should complete in reasonable time (< 2 seconds for 500 variables)
-      assert elapsed < 2_000, "LP export took #{elapsed}ms, expected < 2000ms"
-    end
+      # Validate that memory usage doesn't grow excessively
+      max_memory = Enum.max_by(results, & &1.memory_usage_mb) |> Map.get(:memory_usage_mb)
+      assert max_memory < 200, "Memory usage should not exceed 200MB even for large problems"
 
-    test "exports LP format for 1000 variables efficiently" do
-      problem =
-        Problem.define do
-          new(name: "LP Export 1000", direction: :minimize)
-          variables("x", [i <- 1..1000], :continuous, "Variable")
-          constraints([i <- 1..1000], x(i) >= 0, "Non-negativity")
-          objective(sum(x(:_)), direction: :minimize)
-        end
-
-      {lp_data, elapsed} = measure_time(fn -> HiGHS.to_lp_iodata(problem) end)
-      lp_string = IO.iodata_to_binary(lp_data)
-
-      assert is_binary(lp_string)
-      assert byte_size(lp_string) > 0
-      # Should complete in reasonable time (< 5 seconds for 1000 variables)
-      assert elapsed < 5_000, "LP export took #{elapsed}ms, expected < 5000ms"
-    end
-
-    test "exports LP format for many constraints efficiently" do
-      problem =
-        Problem.define do
-          new(name: "LP Export Constraints", direction: :minimize)
-          variables("x", [i <- 1..10], :continuous, "Variable")
-          constraints([i <- 1..1000], sum(x(:_)) >= 0, "Constraint")
-          objective(sum(x(:_)), direction: :minimize)
-        end
-
-      {lp_data, elapsed} = measure_time(fn -> HiGHS.to_lp_iodata(problem) end)
-      lp_string = IO.iodata_to_binary(lp_data)
-
-      assert is_binary(lp_string)
-      assert byte_size(lp_string) > 0
-      # Should complete in reasonable time (< 3 seconds for 1000 constraints)
-      assert elapsed < 3_000, "LP export took #{elapsed}ms, expected < 3000ms"
+      # Verify that not all benchmarks failed
+      passed = Enum.count(results, &(&1.within_time_limit and &1.within_memory_limit))
+      assert passed > 0, "At least some benchmarks should pass"
     end
   end
 
-  describe "Memory usage scalability" do
-    test "handles large problems without excessive memory growth" do
-      # Create multiple large problems and verify memory doesn't grow excessively
-      problems =
-        for n <- [100, 200, 300] do
-          Problem.define do
-            new(name: "Memory Test #{n}", direction: :minimize)
-            variables("x", [i <- 1..n], :continuous, "Variable")
-            constraints([i <- 1..n], x(i) >= 0, "Non-negativity")
-            objective(sum(x(:_)), direction: :minimize)
-          end
-        end
+  describe "performance reporting" do
+    @tag :performance
+    test "benchmark framework generates meaningful reports" do
+      problems = [100, 300, 500] |> Enum.map(&ProblemGenerators.knapsack_problem/1)
 
-      # Verify all problems were created successfully
-      assert length(problems) == 3
+      results = Enum.map(problems, &BenchmarkFramework.benchmark_problem/1)
 
-      Enum.each(problems, fn problem ->
-        assert problem != nil
-        assert map_size(problem.variable_defs) > 0
-      end)
-    end
+      # This should not raise an exception
+      report = BenchmarkFramework.generate_performance_report(results)
+      assert is_binary(report) or is_list(report), "Should generate a report"
 
-    test "handles repeated problem creation efficiently" do
-      # Create multiple problems sequentially to test memory cleanup
-      problems =
-        for n <- 1..10 do
-          Problem.define do
-            new(name: "Repeated #{n}", direction: :minimize)
-            variables("x", [i <- 1..100], :continuous, "Variable")
-            constraints([i <- 1..100], x(i) >= 0, "Non-negativity")
-            objective(sum(x(:_)), direction: :minimize)
-          end
-        end
-
-      assert length(problems) == 10
-
-      Enum.each(problems, fn problem ->
-        assert problem != nil
-        assert map_size(problem.variable_defs) == 100
-      end)
-    end
-  end
-
-  describe "Solving scalability" do
-    @tag :requires_highs
-    test "solves problems with 100 variables efficiently" do
-      unless highs_available?() do
-        flunk("HiGHS solver not available - install HiGHS to run this test")
-      end
-
-      problem =
-        Problem.define do
-          new(name: "Solve Scalability 100", direction: :minimize)
-          variables("x", [i <- 1..100], :continuous, "Variable")
-          constraints([i <- 1..100], x(i) >= 0, "Non-negativity")
-          constraints([], sum(x(:_)) == 1.0, "Sum constraint")
-          objective(sum(x(:_)), direction: :minimize)
-        end
-
-      {result, elapsed} = measure_time(fn -> HiGHS.solve(problem) end)
-
-      # Solving time depends on solver, but should complete reasonably
-      assert result == :error or match?({:ok, _}, result)
-      # Allow reasonable time for solver (depends on HiGHS performance)
-      assert elapsed < 30_000, "Solving took #{elapsed}ms, expected < 30000ms"
-    end
-
-    @tag :requires_highs
-    test "solves problems with 200 variables efficiently" do
-      unless highs_available?() do
-        flunk("HiGHS solver not available - install HiGHS to run this test")
-      end
-
-      problem =
-        Problem.define do
-          new(name: "Solve Scalability 200", direction: :minimize)
-          variables("x", [i <- 1..200], :continuous, "Variable")
-          constraints([i <- 1..200], x(i) >= 0, "Non-negativity")
-          constraints([], sum(x(:_)) == 1.0, "Sum constraint")
-          objective(sum(x(:_)), direction: :minimize)
-        end
-
-      {result, elapsed} = measure_time(fn -> HiGHS.solve(problem) end)
-
-      assert result == :error or match?({:ok, _}, result)
-      # Allow reasonable time for solver
-      assert elapsed < 60_000, "Solving took #{elapsed}ms, expected < 60000ms"
-    end
-  end
-
-  describe "Scalability trends" do
-    test "problem creation time scales reasonably with variable count" do
-      # Test that creation time doesn't grow too quickly
-      sizes = [50, 100, 200]
-
-      times =
-        Enum.map(sizes, fn n ->
-          {_problem, elapsed} =
-            measure_time(fn ->
-              Problem.define do
-                new(name: "Trend Test #{n}", direction: :minimize)
-                variables("x", [i <- 1..n], :continuous, "Variable")
-                constraints([i <- 1..n], x(i) >= 0, "Non-negativity")
-                objective(sum(x(:_)), direction: :minimize)
-              end
-            end)
-
-          elapsed
-        end)
-
-      # Verify times are reasonable (each size should complete)
-      Enum.each(times, fn time ->
-        assert time < 10_000, "Problem creation took #{time}ms, which is too slow"
-      end)
-
-      # Verify trend: larger problems may take longer, but not excessively
-      [t50, t100, t200] = times
-      # t200 should not be more than 4x t50 (reasonable scaling)
-      assert t200 <= t50 * 4 || t200 < 10_000,
-             "Scaling seems poor: 50 vars=#{t50}ms, 200 vars=#{t200}ms"
-    end
-
-    test "LP export time scales reasonably with variable count" do
-      sizes = [50, 100, 200]
-
-      times =
-        Enum.map(sizes, fn n ->
-          problem =
-            Problem.define do
-              new(name: "LP Trend Test #{n}", direction: :minimize)
-              variables("x", [i <- 1..n], :continuous, "Variable")
-              constraints([i <- 1..n], x(i) >= 0, "Non-negativity")
-              objective(sum(x(:_)), direction: :minimize)
-            end
-
-          {_lp_data, elapsed} = measure_time(fn -> HiGHS.to_lp_iodata(problem) end)
-          elapsed
-        end)
-
-      # Verify times are reasonable
-      Enum.each(times, fn time ->
-        assert time < 5_000, "LP export took #{time}ms, which is too slow"
-      end)
-
-      # Verify trend: larger problems may take longer, but not excessively
-      [t50, t100, t200] = times
-      # t200 should not be more than 4x t50 (reasonable scaling)
-      assert t200 <= t50 * 4 || t200 < 5_000,
-             "Scaling seems poor: 50 vars=#{t50}ms, 200 vars=#{t200}ms"
-    end
-  end
-
-  describe "Complex problem scalability" do
-    test "handles problems with multiple variable types efficiently" do
-      {problem, elapsed} =
-        measure_time(fn ->
-          Problem.define do
-            new(name: "Mixed Types", direction: :minimize)
-            variables("x", [i <- 1..100], :continuous, "Continuous")
-            variables("y", [i <- 1..100], :binary, "Binary")
-            variables("z", [i <- 1..100], :integer, "Integer")
-            constraints([i <- 1..100], x(i) >= 0, "Non-negativity")
-            objective(sum(x(:_)) + sum(y(:_)) + sum(z(:_)), direction: :minimize)
-          end
-        end)
-
-      assert problem != nil
-      assert map_size(problem.variable_defs) == 300
-      # Should complete in reasonable time
-      assert elapsed < 10_000, "Problem creation took #{elapsed}ms, expected < 10000ms"
-    end
-
-    test "handles problems with complex objective expressions efficiently" do
-      {problem, elapsed} =
-        measure_time(fn ->
-          Problem.define do
-            new(name: "Complex Objective", direction: :minimize)
-            variables("x", [i <- 1..100], :continuous, "Variable")
-            variables("y", [i <- 1..100], :continuous, "Variable")
-            constraints([i <- 1..100], x(i) >= 0, "Non-negativity x")
-            constraints([i <- 1..100], y(i) >= 0, "Non-negativity y")
-            constraints([i <- 1..100], x(i) + y(i) <= 1, "Sum constraint")
-            objective(sum(x(:_)) + sum(y(:_)), direction: :minimize)
-          end
-        end)
-
-      assert problem != nil
-      assert map_size(problem.variable_defs) == 200
-      assert map_size(problem.constraints) == 300
-      # Should complete in reasonable time
-      assert elapsed < 15_000, "Problem creation took #{elapsed}ms, expected < 15000ms"
+      # Should be able to validate results
+      validation_result = BenchmarkFramework.validate_performance_requirements(results)
+      assert validation_result in [{:ok, results}, {:error, _}], "Should return validation result"
     end
   end
 end

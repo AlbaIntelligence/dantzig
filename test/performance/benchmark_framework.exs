@@ -1,217 +1,243 @@
-# Performance Benchmarking Framework
-# This module provides utilities for benchmarking optimization problems
-
 defmodule Dantzig.Performance.BenchmarkFramework do
   @moduledoc """
-  Performance benchmarking framework for the Dantzig package.
+  Performance benchmarking framework for the Dantzig optimization library.
 
-  Provides functions to:
-  - Benchmark optimization problems of varying sizes
-  - Monitor execution time and memory usage
-  - Generate scalability reports
-  - Detect performance regressions
+  This module provides utilities for measuring execution time, memory usage,
+  and scalability characteristics of optimization problems.
+
+  According to the 001-robustify specification (FR-012):
+  - Problems up to 1000 variables must complete within 30 seconds
+  - Memory usage must stay under 100MB for typical problems
+  - Performance must scale reasonably with problem size
   """
 
-  # 30 seconds
-  @max_execution_time_ms 30_000
-  # 100MB
-  @max_memory_mb 100
+  alias Dantzig.Problem
+  require Logger
+
+  @max_execution_time_ms 30_000  # 30 seconds
+  @max_memory_usage_mb 100       # 100MB
+  @warmup_iterations 2           # Warmup runs before measurement
+  @measurement_iterations 5      # Number of runs for average measurement
 
   @doc """
-  Benchmarks a problem with the given size and configuration.
+  Measure the execution time and memory usage of solving an optimization problem.
 
-  Returns benchmark results including execution time, memory usage, and status.
+  Returns a map with performance metrics:
+  - `:execution_time_ms` - Time to solve in milliseconds
+  - `:memory_usage_mb` - Memory usage in megabytes
+  - `:variables_count` - Number of variables in the problem
+  - `:constraints_count` - Number of constraints in the problem
+  - `:within_time_limit` - Boolean indicating if within 30s limit
+  - `:within_memory_limit` - Boolean indicating if within 100MB limit
   """
-  def benchmark_problem(problem_fun, size, opts \\ []) do
-    timeout = Keyword.get(opts, :timeout, @max_execution_time_ms)
+  @spec benchmark_problem(Problem.t(), keyword()) :: map()
+  def benchmark_problem(problem, opts \\ []) do
+    variables_count = count_variables(problem)
+    constraints_count = map_size(problem.constraints)
 
-    # Monitor memory before execution
+    # Warmup runs
+    for _ <- 1..@warmup_iterations do
+      try do
+        Problem.solve(problem, print_optimizer_input: false)
+      rescue
+        _ -> :ok  # Ignore warmup failures
+      end
+    end
+
+    # Measure memory before
     initial_memory = :erlang.memory(:total)
 
-    # Execute with timing
-    {execution_time, result} =
-      :timer.tc(fn ->
-        problem_fun.(size)
-      end)
+    # Measure execution time
+    {execution_time_us, result} = :timer.tc(fn ->
+      Problem.solve(problem, print_optimizer_input: false)
+    end)
 
-    # Monitor memory after execution
+    # Measure memory after
     final_memory = :erlang.memory(:total)
-    memory_used = final_memory - initial_memory
+    memory_usage_mb = (final_memory - initial_memory) / (1024 * 1024)
 
-    # Determine status
-    status =
-      cond do
-        execution_time > timeout -> :timeout
-        memory_used > @max_memory_mb * 1024 * 1024 -> :memory_exceeded
-        true -> :success
-      end
+    execution_time_ms = execution_time_us / 1000
 
-    %{
-      problem_size: size,
-      execution_time_ms: execution_time / 1000,
-      memory_used_mb: memory_used / (1024 * 1024),
-      status: status,
+    # Evaluate results
+    within_time_limit = execution_time_ms <= @max_execution_time_ms
+    within_memory_limit = memory_usage_mb <= @max_memory_usage_mb
+
+    metrics = %{
+      execution_time_ms: execution_time_ms,
+      memory_usage_mb: memory_usage_mb,
+      variables_count: variables_count,
+      constraints_count: constraints_count,
+      within_time_limit: within_time_limit,
+      within_memory_limit: within_memory_limit,
       result: result,
       timestamp: DateTime.utc_now()
     }
+
+    # Log performance metrics
+    Logger.info("Performance benchmark: #{variables_count} variables, " <>
+                "#{constraints_count} constraints, " <>
+                "#{Float.round(execution_time_ms, 2)}ms, " <>
+                "#{Float.round(memory_usage_mb, 2)}MB")
+
+    metrics
   end
 
   @doc """
-  Runs scalability benchmarks for a range of problem sizes.
+  Run multiple benchmarks with increasing problem sizes to test scalability.
 
-  Returns scalability analysis with performance metrics.
+  Creates problems of different sizes and measures their performance characteristics.
   """
-  def benchmark_scalability(problem_fun, sizes, opts \\ []) do
-    results =
-      Enum.map(sizes, fn size ->
-        benchmark_problem(problem_fun, size, opts)
+  @spec run_scalability_benchmarks([integer()], fun(), keyword()) :: [map()]
+  def run_scalability_benchmarks(sizes, problem_creator, opts \\ []) do
+    Logger.info("Running scalability benchmarks for sizes: #{inspect(sizes)}")
+
+    Enum.map(sizes, fn size ->
+      Logger.info("Benchmarking size #{size}...")
+
+      problem = problem_creator.(size)
+
+      metrics = benchmark_problem(problem, opts)
+      Map.put(metrics, :problem_size, size)
+    end)
+  end
+
+  @doc """
+  Validate that all benchmarks meet performance requirements.
+
+  Checks that all metrics are within the specified limits:
+  - Execution time <= 30 seconds
+  - Memory usage <= 100MB
+  """
+  @spec validate_performance_requirements([map()]) :: {:ok, [map()]} | {:error, [map()]}
+  def validate_performance_requirements(benchmark_results) do
+    violations = Enum.filter(benchmark_results, fn result ->
+      not result.within_time_limit or not result.within_memory_limit
+    end)
+
+    if Enum.empty?(violations) do
+      {:ok, benchmark_results}
+    else
+      Logger.error("Performance violations found: #{length(violations)}")
+      Enum.each(violations, fn violation ->
+        Logger.error("Violation: #{violation.variables_count} variables, " <>
+                    "#{violation.execution_time_ms}ms, " <>
+                    "#{violation.memory_usage_mb}MB")
       end)
-
-    # Analyze scalability
-    scalability_analysis = analyze_scalability(results)
-
-    %{
-      results: results,
-      scalability_analysis: scalability_analysis,
-      performance_summary: generate_performance_summary(results)
-    }
-  end
-
-  @doc """
-  Analyzes scalability trends from benchmark results.
-  """
-  def analyze_scalability(results) do
-    # Calculate time complexity trend
-    time_trend = calculate_trend(results, :execution_time_ms)
-    memory_trend = calculate_trend(results, :memory_used_mb)
-
-    # Determine complexity class
-    time_complexity = classify_complexity(time_trend)
-    memory_complexity = classify_complexity(memory_trend)
-
-    %{
-      time_complexity: time_complexity,
-      memory_complexity: memory_complexity,
-      time_trend: time_trend,
-      memory_trend: memory_trend,
-      recommendations: generate_recommendations(results, time_complexity, memory_complexity)
-    }
-  end
-
-  @doc """
-  Detects performance regressions by comparing current results with baseline.
-  """
-  def detect_regression(current_results, baseline_results, threshold \\ 0.1) do
-    regressions =
-      Enum.filter(current_results, fn current ->
-        baseline = Enum.find(baseline_results, &(&1.problem_size == current.problem_size))
-
-        if baseline do
-          time_regression =
-            (current.execution_time_ms - baseline.execution_time_ms) / baseline.execution_time_ms
-
-          memory_regression =
-            (current.memory_used_mb - baseline.memory_used_mb) / baseline.memory_used_mb
-
-          time_regression > threshold or memory_regression > threshold
-        else
-          false
-        end
-      end)
-
-    %{
-      regressions: regressions,
-      regression_count: length(regressions),
-      threshold: threshold
-    }
-  end
-
-  # Private helper functions
-
-  defp calculate_trend(results, metric) do
-    # Simple linear regression to determine trend
-    sizes = Enum.map(results, & &1.problem_size)
-    values = Enum.map(results, &Map.get(&1, metric))
-
-    # Calculate correlation coefficient
-    correlation = calculate_correlation(sizes, values)
-
-    %{
-      correlation: correlation,
-      trend_direction: if(correlation > 0, do: :increasing, else: :decreasing),
-      strength: abs(correlation)
-    }
-  end
-
-  defp calculate_correlation(xs, ys) do
-    n = length(xs)
-    sum_x = Enum.sum(xs)
-    sum_y = Enum.sum(ys)
-    sum_xy = Enum.zip_with(xs, ys, &(&1 * &2)) |> Enum.sum()
-    sum_x2 = Enum.map(xs, &(&1 * &1)) |> Enum.sum()
-    sum_y2 = Enum.map(ys, &(&1 * &1)) |> Enum.sum()
-
-    numerator = n * sum_xy - sum_x * sum_y
-    denominator = :math.sqrt((n * sum_x2 - sum_x * sum_x) * (n * sum_y2 - sum_y * sum_y))
-
-    if denominator == 0, do: 0, else: numerator / denominator
-  end
-
-  defp classify_complexity(trend) do
-    case trend.strength do
-      strength when strength < 0.3 -> "O(1)"
-      strength when strength < 0.7 -> "O(log n)"
-      strength when strength < 0.9 -> "O(n)"
-      _ -> "O(n^2) or higher"
+      {:error, violations}
     end
   end
 
-  defp generate_recommendations(results, time_complexity, memory_complexity) do
-    recommendations = []
+  @doc """
+  Generate a performance report summarizing all benchmark results.
+  """
+  @spec generate_performance_report([map()]) :: iodata()
+  def generate_performance_report(benchmark_results) do
+    IO.puts("\n=== Performance Benchmark Report ===")
 
-    # Check for performance issues
-    max_time = Enum.max_by(results, & &1.execution_time_ms).execution_time_ms
-    max_memory = Enum.max_by(results, & &1.memory_used_mb).memory_used_mb
+    total_benchmarks = length(benchmark_results)
+    passed_benchmarks = Enum.count(benchmark_results, &(&1.within_time_limit and &1.within_memory_limit))
 
-    recommendations =
-      if max_time > @max_execution_time_ms do
-        ["Consider optimizing algorithm for large problems" | recommendations]
-      else
-        recommendations
-      end
+    IO.puts("Total benchmarks: #{total_benchmarks}")
+    IO.puts("Passed: #{passed_benchmarks}")
+    IO.puts("Failed: #{total_benchmarks - passed_benchmarks}")
+    IO.puts("Success rate: #{Float.round(passed_benchmarks / total_benchmarks * 100, 1)}%")
 
-    recommendations =
-      if max_memory > @max_memory_mb do
-        ["Consider memory optimization for large problems" | recommendations]
-      else
-        recommendations
-      end
+    IO.puts("\nDetailed Results:")
+    IO.puts("Size\t\tVars\tConst\tTime(ms)\tMemory(MB)\tStatus")
 
-    # Add complexity-based recommendations
-    recommendations =
-      if time_complexity == "O(n^2) or higher" do
-        ["Consider algorithm optimization to reduce time complexity" | recommendations]
-      else
-        recommendations
-      end
+    Enum.each(benchmark_results, fn result ->
+      vars = result.variables_count
+      const = result.constraints_count
+      time = Float.round(result.execution_time_ms, 2)
+      memory = Float.round(result.memory_usage_mb, 2)
+      status = if result.within_time_limit and result.within_memory_limit, do: "✅", else: "❌"
 
-    recommendations
+      IO.puts("#{vars}\t\t#{const}\t#{time}\t#{memory}\t#{status}")
+    end)
+
+    IO.puts("\nRequirements:")
+    IO.puts("- Max execution time: #{@max_execution_time_ms / 1000}s")
+    IO.puts("- Max memory usage: #{@max_memory_usage_mb}MB")
   end
 
-  defp generate_performance_summary(results) do
-    %{
-      total_problems: length(results),
-      successful_problems: Enum.count(results, &(&1.status == :success)),
-      failed_problems: Enum.count(results, &(&1.status != :success)),
-      average_execution_time: calculate_average(results, :execution_time_ms),
-      average_memory_usage: calculate_average(results, :memory_used_mb),
-      max_execution_time: Enum.max_by(results, & &1.execution_time_ms).execution_time_ms,
-      max_memory_usage: Enum.max_by(results, & &1.memory_used_mb).memory_used_mb
-    }
+  @doc """
+  Count the total number of variables in a problem.
+  """
+  @spec count_variables(Problem.t()) :: integer()
+  def count_variables(problem) do
+    problem.variables
+    |> Map.values()
+    |> Enum.reduce(0, fn var_set, acc ->
+      acc + map_size(var_set)
+    end)
   end
 
-  defp calculate_average(results, metric) do
-    values = Enum.map(results, &Map.get(&1, metric))
-    Enum.sum(values) / length(values)
+  @doc """
+  Create a performance test for a specific problem type with scalable sizes.
+  """
+  @spec create_problem_benchmark_test(atom(), [integer()], fun()) :: function()
+  def create_problem_benchmark_test(problem_type, sizes, problem_creator) do
+    fn ->
+      results = run_scalability_benchmarks(sizes, problem_creator)
+      generate_performance_report(results)
+
+      case validate_performance_requirements(results) do
+        {:ok, _} -> :ok
+        {:error, violations} -> flunk("Performance requirements violated: #{inspect(violations)}")
+      end
+    end
+  end
+
+  @doc """
+  Generate example problems for benchmarking different optimization types.
+  """
+  defmodule ProblemGenerators do
+    @doc """
+    Generate a knapsack problem with given number of items.
+    """
+    @spec knapsack_problem(integer()) :: Problem.t()
+    def knapsack_problem(num_items) do
+      weights = Enum.map(1..num_items, fn _ -> :rand.uniform(50) + 10 end)
+      values = Enum.map(1..num_items, fn _ -> :rand.uniform(100) + 20 end)
+      max_weight = Enum.sum(weights) |> div(2)
+
+      Problem.define do
+        new(name: "Knapsack Problem #{num_items} items")
+        variables("x", [i <- 1..num_items], :binary)
+        constraints([], sum(x(i) * weights[i] for i <- 1..num_items) <= max_weight, "Weight constraint")
+        objective(sum(x(i) * values[i] for i <- 1..num_items), direction: :maximize)
+      end
+    end
+
+    @doc """
+    Generate a facility location problem with given number of facilities and customers.
+    """
+    @spec facility_location_problem(integer(), integer()) :: Problem.t()
+    def facility_location_problem(num_facilities, num_customers) do
+      facilities = Enum.map(1..num_facilities, &"Facility_#{&1}")
+      customers = Enum.map(1..num_customers, &"Customer_#{&1}")
+
+      fixed_costs = Enum.into(facilities, %{}, &{&1, :rand.uniform(1000) + 500})
+      transport_costs = Enum.into(facilities, %{}, fn facility ->
+        {facility, Enum.into(customers, %{}, &{&1, :rand.uniform(50) + 10})}
+      end)
+
+      Problem.define do
+        new(name: "Facility Location #{num_facilities}x#{num_customers}")
+
+        variables("x", [facility <- facilities], :binary)
+        variables("y", [facility <- facilities, customer <- customers], :binary)
+
+        constraints([customer <- customers], sum(y(facility, customer) for facility <- facilities) == 1)
+        constraints([facility <- facilities, customer <- customers], y(facility, customer) <= x(facility))
+
+        objective(
+          sum(x(facility) * fixed_costs[facility] +
+              y(facility, customer) * transport_costs[facility][customer]
+              for facility <- facilities, customer <- customers),
+          direction: :minimize
+        )
+      end
+    end
   end
 end
