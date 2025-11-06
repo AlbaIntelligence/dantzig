@@ -462,7 +462,7 @@
 - [ ] T159 [BC] [MODIFY] Implement `Problem.modify` macro in `lib/dantzig/core/problem.ex` or `lib/dantzig/problem/dsl.ex`
 - [ ] T160 [BC] [MODIFY] Support adding variables/constraints/objective updates without rebuild
 - [ ] T161 [BC] [MODIFY] Add/port tests under `test/dantzig/dsl/experimental/problem_modify_test.exs` to reflect `Problem.modify` behavior; remove `test/macro_approach/*`
-- [ ] T162 [DOC] Document parameters and modify in `docs/DSL_SYNTAX_REFERENCE.md`
+- [x] T162 [DOC] Document parameters and modify in `docs/DSL_SYNTAX_REFERENCE.md`
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
 
