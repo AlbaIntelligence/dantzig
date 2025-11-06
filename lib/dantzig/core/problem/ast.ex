@@ -300,7 +300,8 @@ defmodule Dantzig.Problem.AST do
         end
 
       # Handle multi-index variable access like ship("Supplier1", "Customer1")
-      {var_name, _meta, indices} when is_atom(var_name) and is_list(indices) and length(indices) > 1 ->
+      {var_name, _meta, indices} when is_atom(var_name) and is_list(indices) and length(indices) > 1 and
+                                      var_name not in [:+, :-, :*, :/, :==, :<=, :>=, :!=, :<, :>, :., :|>, :..] ->
         var_name_str = to_string(var_name)
 
         # Construct the indexed variable name with comma-separated indices
@@ -490,6 +491,10 @@ defmodule Dantzig.Problem.AST do
                 "If #{inspect(atom)} is meant to be a variable, ensure it was created with variables() first."
           end
         end
+
+      # Handle plain numbers
+      val when is_number(val) ->
+        Polynomial.const(val)
     end
   end
 
