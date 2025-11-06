@@ -51,8 +51,8 @@ problem =
     new(name: "1992 UG Exam - Technological Constraints")
 
     # Decision variables
-    variables("xA", :continuous, min: 0, description: "Units of product A to produce")
-    variables("xB", :continuous, min: 0, description: "Units of product B to produce")
+    variables("xA", :continuous, min_bound: 0, description: "Units of product A to produce")
+    variables("xB", :continuous, min_bound: 0, description: "Units of product B to produce")
 
     # Assembly time constraint
     constraints(time_a * xA + time_b * xB <= available_minutes, "Assembly time limit")

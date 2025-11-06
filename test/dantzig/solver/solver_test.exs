@@ -67,7 +67,10 @@ defmodule Dantzig.SolverTest do
 
     test "includes variable bounds in LP format" do
       problem = Problem.new()
-      {problem, x_poly} = Problem.new_variable(problem, "x", type: :continuous, min: 0, max: 10)
+
+      {problem, x_poly} =
+        Problem.new_variable(problem, "x", type: :continuous, min_bound: 0, max_bound: 10)
+
       problem = Problem.minimize(problem, x_poly)
 
       iodata = HiGHS.to_lp_iodata(problem)
@@ -167,7 +170,10 @@ defmodule Dantzig.SolverTest do
 
     test "handles :infinity bounds by converting to 1e+30" do
       problem = Problem.new()
-      {problem, x_poly} = Problem.new_variable(problem, "x", type: :continuous, max: :infinity)
+
+      {problem, x_poly} =
+        Problem.new_variable(problem, "x", type: :continuous, max_bound: :infinity)
+
       problem = Problem.minimize(problem, x_poly)
 
       iodata = HiGHS.to_lp_iodata(problem)
@@ -446,7 +452,7 @@ defmodule Dantzig.SolverTest do
       problem = Problem.new()
 
       {problem, x_poly} =
-        Problem.new_variable(problem, "x", type: :continuous, min: 5.0, max: 15.0)
+        Problem.new_variable(problem, "x", type: :continuous, min_bound: 5.0, max_bound: 15.0)
 
       problem = Problem.minimize(problem, x_poly)
 

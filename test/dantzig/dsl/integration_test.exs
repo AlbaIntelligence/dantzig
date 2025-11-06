@@ -295,7 +295,7 @@ defmodule Dantzig.DSL.IntegrationTest do
     end
 
     test "uses nested model parameters" do
-      data = %{bounds: %{min: 0, max: 10}}
+      data = %{bounds: %{min_bound: 0, max_bound: 10}}
 
       problem =
         Problem.define model_parameters: %{data: data} do

@@ -38,8 +38,8 @@ problem =
     new(name: "1988 UG Exam - Minimization")
 
     # Decision variables (c is substituted as a + b)
-    variables("a", :continuous, min: 0, description: "Variable a")
-    variables("b", :continuous, min: 0, description: "Variable b")
+    variables("a", :continuous, min_bound: 0, description: "Variable a")
+    variables("b", :continuous, min_bound: 0, description: "Variable b")
 
     # Constraints (using substitution c = a + b)
     constraints(a + b >= 11, "a + b >= 11")

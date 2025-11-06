@@ -31,8 +31,8 @@ problem =
     new(name: "1987 UG Exam - Maximization")
 
     # Decision variables
-    variables("x1", :continuous, min: 0, description: "Variable x1")
-    variables("x2", :continuous, min: 0, description: "Variable x2")
+    variables("x1", :continuous, min_bound: 0, description: "Variable x1")
+    variables("x2", :continuous, min_bound: 0, description: "Variable x2")
 
     # Constraints
     constraints(x1 + x2 <= 10, "x1 + x2 <= 10")

@@ -82,8 +82,8 @@ problem =
     new(name: "1995 UG Exam - Production with Penalties")
 
     # Decision variables (production quantities)
-    variables("x1", :continuous, min: 0, max: 37, description: "Units of Product 1 to produce")
-    variables("x2", :continuous, min: 0, max: 14, description: "Units of Product 2 to produce")
+    variables("x1", :continuous, min_bound: 0, max_bound: 37, description: "Units of Product 1 to produce")
+    variables("x2", :continuous, min_bound: 0, max_bound: 14, description: "Units of Product 2 to produce")
 
     # Machine time constraints
     constraints(p1_machine_x * x1 + p2_machine_x * x2 <= machine_x_minutes, "Machine X time")

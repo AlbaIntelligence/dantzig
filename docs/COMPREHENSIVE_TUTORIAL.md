@@ -62,7 +62,7 @@ problem =
     new(direction: :maximize)  # or :minimize
 
     # Variables
-    variables("x", :continuous, min: 0, max: 10)
+    variables("x", :continuous, min_bound: 0, max_bound: 10)
     variables("y", :binary, description: "Binary decision")
 
     # Constraints
@@ -85,13 +85,13 @@ Dantzig supports several variable types:
 
 ```elixir
 # Continuous variables (default)
-variables("x", :continuous, min: 0, max: 100)
+variables("x", :continuous, min_bound: 0, max_bound: 100)
 
 # Binary variables (0 or 1)
 variables("y", :binary, description: "Yes/no decision")
 
 # Integer variables
-variables("z", :integer, min: 0, max: 50)
+variables("z", :integer, min_bound: 0, max_bound: 50)
 ```
 
 ### Variable Options
@@ -100,8 +100,8 @@ variables("z", :integer, min: 0, max: 50)
 variables("product",
   [p <- products],           # Pattern-based creation
   :integer,                  # Variable type
-  min: 0,                    # Lower bound
-  max: 100,                  # Upper bound
+  min_bound: 0,                    # Lower bound
+  max_bound: 100,                  # Upper bound
   description: "Production quantity"
 )
 ```
@@ -112,8 +112,8 @@ For individual variables:
 
 ```elixir
 # Simple named variables
-variables("cost", :continuous, min: 0)
-variables("profit", :continuous, max: 1000)
+variables("cost", :continuous, min_bound: 0)
+variables("profit", :continuous, max_bound: 1000)
 variables("selected", :binary, description: "Selection flag")
 ```
 
@@ -308,8 +308,8 @@ problem =
   Problem.define do
     new(direction: :minimize)
 
-    variables("produce", [t <- periods], :continuous, min: 0, max: 250)
-    variables("inventory", [t <- periods], :continuous, min: 0)
+    variables("produce", [t <- periods], :continuous, min_bound: 0, max_bound: 250)
+    variables("inventory", [t <- periods], :continuous, min_bound: 0)
 
     # Inventory balance constraints
     constraints([t <- [1]], produce(t) - demand[1] == -initial_inventory)
@@ -347,8 +347,8 @@ constraints([j <- 1..m], sum(x(:_, j)) == 1, "Column coverage")
 
 ```elixir
 # Set appropriate bounds to improve solver performance
-variables("quantity", :integer, min: 0, max: 1000)
-variables("percentage", :continuous, min: 0, max: 1)
+variables("quantity", :integer, min_bound: 0, max_bound: 1000)
+variables("percentage", :continuous, min_bound: 0, max_bound: 1)
 ```
 
 ### 4. Expression Simplification

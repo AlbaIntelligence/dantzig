@@ -83,8 +83,8 @@ defmodule Dantzig.Problem.DSL.VariableManager do
         # Create variable with bounds
         variable_opts = [
           type: var_type,
-          min: min_bound,
-          max: max_bound,
+          min_bound: min_bound,
+          max_bound: max_bound,
           description: description
         ]
 

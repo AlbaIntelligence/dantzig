@@ -95,8 +95,8 @@ defmodule Dantzig.Problem do
     variable = %ProblemVariable{
       name: name,
       type: type,
-      min: final_min,
-      max: final_max,
+      min_bound: final_min,
+      max_bound: final_max,
       description: description
     }
 
@@ -498,7 +498,7 @@ defmodule Dantzig.Problem do
   ## Examples
 
       # Single variable
-      problem = Problem.variable(problem, "x", :continuous, min: 0, max: 10)
+      problem = Problem.variable(problem, "x", :continuous, min_bound: 0, max_bound: 10)
 
       # Multiple variables with generators
       problem = Problem.variables(problem, "x", [i <- 1..4, j <- 1..4], :binary, "Queen position")
@@ -520,7 +520,7 @@ defmodule Dantzig.Problem do
 
   ## Examples
 
-      problem = Problem.variable(problem, "x", :continuous, min: 0, max: 10)
+      problem = Problem.variable(problem, "x", :continuous, min_bound: 0, max_bound: 10)
   """
   @spec variable(t(), String.t(), atom(), keyword()) :: {t(), Polynomial.t()}
   def variable(problem, var_name, var_type, opts \\ []) do
@@ -528,7 +528,7 @@ defmodule Dantzig.Problem do
     max_bound = Keyword.get(opts, :max)
     _description = Keyword.get(opts, :description)
 
-    new_variable(problem, var_name, type: var_type, min: min_bound, max: max_bound)
+    new_variable(problem, var_name, type: var_type, min_bound: min_bound, max_bound: max_bound)
   end
 
   # Public: Add constraints with JuMP-like syntax.

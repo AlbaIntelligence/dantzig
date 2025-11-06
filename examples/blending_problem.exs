@@ -20,7 +20,7 @@
 # Objective: Minimize Σ (fraction_m × cost_m)
 #
 # DSL SYNTAX HIGHLIGHTS:
-# - Variable creation with bounds: variables(name, generators, type, min: val, max: val)
+# - Variable creation with bounds: variables(name, generators, type, min_bound: val, max_bound: val)
 # - Sum expressions in constraints: sum(for m <- materials, do: expr)
 # - Weighted sum constraints for quality requirements
 # - Case expressions for conditional data access (until model parameters are implemented)

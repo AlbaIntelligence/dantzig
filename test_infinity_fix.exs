@@ -16,8 +16,8 @@ problem = %Problem{
   variable_defs: %{
     "x" => %ProblemVariable{
       name: "x",
-      min: 0,
-      max: :infinity,
+      min_bound: 0,
+      max_bound: :infinity,
       type: :continuous,
       description: "Variable with infinity bound"
     }

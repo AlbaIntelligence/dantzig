@@ -67,8 +67,8 @@ problem =
     new(name: "1994 UG Exam - Cost Optimization")
 
     # Decision variables
-    variables("x", :continuous, min: 10, description: "Number of items X to produce")
-    variables("y", :continuous, min: 0, description: "Number of items Y to produce")
+    variables("x", :continuous, min_bound: 10, description: "Number of items X to produce")
+    variables("y", :continuous, min_bound: 0, description: "Number of items Y to produce")
 
     # Time constraints
     constraints(machine_time_x * x + machine_time_y * y <= machine_minutes, "Machine time limit")

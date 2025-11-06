@@ -36,6 +36,7 @@ mix compile --warnings-as-errors
 **Common Issues and Solutions**:
 
 1. **Undefined Variables in Tests**
+
    ```elixir
    # Problem: undefined variable "i" in test
    # Solution: Fix variable scope in test generators
@@ -46,6 +47,7 @@ mix compile --warnings-as-errors
    ```
 
 2. **Missing Imports**
+
    ```elixir
    # Problem: undefined function x/1
    # Solution: Add proper imports
@@ -119,6 +121,7 @@ mix coveralls --module Dantzig.Problem
 ### Step 4: Add Missing Tests
 
 **Target Coverage Requirements**:
+
 - Overall: 80%+
 - Core modules: 85%+
   - `Dantzig.Problem`
@@ -129,6 +132,7 @@ mix coveralls --module Dantzig.Problem
 **Test Categories to Add**:
 
 1. **Unit Tests**
+
    ```elixir
    # test/dantzig/problem_test.exs
    describe "Problem creation" do
@@ -140,6 +144,7 @@ mix coveralls --module Dantzig.Problem
    ```
 
 2. **Integration Tests**
+
    ```elixir
    # test/dantzig/dsl/integration_test.exs
    describe "DSL integration" do
@@ -169,12 +174,14 @@ mix coveralls --module Dantzig.Problem
 ### Step 1: Document Existing Examples
 
 **Documentation Requirements**:
+
 - Business context explanation
 - Mathematical formulation
 - DSL syntax explanation
 - Common gotchas and pitfalls
 
 **Example Structure**:
+
 ```elixir
 # examples/diet_problem.exs
 
@@ -217,8 +224,8 @@ foods = [
 
 # Nutritional requirements
 requirements = [
-  %{nutrient: "calories", min: 1800, max: 2200},
-  %{nutrient: "protein", min: 91, max: :infinity},
+  %{nutrient: "calories", min_bound: 1800, max_bound: 2200},
+  %{nutrient: "protein", min_bound: 91, max_bound: :infinity},
   # ... more requirements
 ]
 
@@ -227,7 +234,7 @@ problem = Problem.define do
   new(direction: :minimize)
 
   # Create variables for each food (amount to buy)
-  variables("food", [food <- foods], :continuous, min: 0,
+  variables("food", [food <- foods], :continuous, min_bound: 0,
     description: "Amount of each food to buy"
   )
 
@@ -263,6 +270,7 @@ end
 5. **Facility Location** - Strategic optimization
 
 **Example Template**:
+
 ```elixir
 # examples/[problem_name].exs
 
@@ -334,16 +342,19 @@ end
 ## Validation Checklist
 
 ### Compilation Issues ✅
+
 - [ ] All tests compile without errors
 - [ ] No compilation warnings
 - [ ] All imports resolved correctly
 
 ### Test Coverage ✅
+
 - [ ] Overall coverage >= 80%
 - [ ] Core module coverage >= 85%
 - [ ] All test categories included (unit, integration, performance)
 
 ### Documentation Quality ✅
+
 - [ ] All examples execute successfully
 - [ ] Business context explained for each example
 - [ ] Mathematical formulation documented
@@ -351,6 +362,7 @@ end
 - [ ] 5+ optimization problem types covered
 
 ### Performance ✅
+
 - [ ] Problems up to 1000 variables complete within 30 seconds
 - [ ] Memory usage < 100MB for typical problems
 - [ ] Scalability benchmarks demonstrate reasonable growth
@@ -370,21 +382,25 @@ After completing the robustification:
 ### Common Issues
 
 **Compilation Errors**:
+
 - Check variable scope in test generators
 - Verify all imports are present
 - Fix unused variable warnings
 
 **Coverage Issues**:
+
 - Add tests for uncovered functions
 - Include edge case testing
 - Test error conditions
 
 **Documentation Issues**:
+
 - Ensure business context is clear
 - Explain mathematical concepts
 - Document common pitfalls
 
 **Performance Issues**:
+
 - Optimize constraint generation
 - Consider problem size limits
 - Monitor memory usage patterns

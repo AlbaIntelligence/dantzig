@@ -1,8 +1,8 @@
 defmodule Dantzig.ProblemVariable do
   @moduledoc false
   defstruct name: nil,
-            min: nil,
-            max: nil,
+            min_bound: nil,
+            max_bound: nil,
             type: :real,
             description: nil
 
@@ -19,6 +19,6 @@ defmodule Dantzig.ProblemVariable do
     min = Keyword.get(opts, :min)
     max = Keyword.get(opts, :max)
 
-    %__MODULE__{name: name, type: type, description: description, min: min, max: max}
+    %__MODULE__{name: name, type: type, description: description, min_bound: min, max_bound: max}
   end
 end

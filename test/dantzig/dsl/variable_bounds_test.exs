@@ -291,7 +291,7 @@ defmodule Dantzig.DSL.VariableBoundsTest do
         end
 
       {modified_problem, _} =
-        {problem, _} = new_variable(problem, "x", type: :continuous, min: 10, max: 90)
+        {problem, _} = new_variable(problem, "x", type: :continuous, min_bound: 10, max_bound: 90)
 
       assert modified_problem.variable_defs["x"] != nil
       x_var = modified_problem.variable_defs["x"]
@@ -313,8 +313,8 @@ defmodule Dantzig.DSL.VariableBoundsTest do
           {new_problem, _} =
             new_variable(acc, "qty(#{food})",
               type: :continuous,
-              min: 0,
-              max: 100,
+              min_bound: 0,
+              max_bound: 100,
               description: "Quantity of #{food}"
             )
 

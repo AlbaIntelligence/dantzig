@@ -22,8 +22,8 @@ defmodule HelloLP do
     problem = Problem.define do
       new(name: "Hello LP", description: "Simple linear programming example", direction: :maximize)
 
-      variables("x", :continuous, min: 0, description: "Variable x")
-      variables("y", :continuous, min: 0, description: "Variable y")
+      variables("x", :continuous, min_bound: 0, description: "Variable x")
+      variables("y", :continuous, min_bound: 0, description: "Variable y")
 
       constraints(x + 2*y <= 14, "Resource constraint")
       constraints(3*x - y <= 0, "Linear constraint")
@@ -57,8 +57,8 @@ defmodule QuadraticExample do
     problem = Problem.define do
       new(name: "Quadratic Example", description: "Quadratic programming example", direction: :minimize)
 
-      variables("x", :continuous, min: 0, max: 10, description: "Variable x")
-      variables("y", :continuous, min: 0, max: 10, description: "Variable y")
+      variables("x", :continuous, min_bound: 0, max_bound: 10, description: "Variable x")
+      variables("y", :continuous, min_bound: 0, max_bound: 10, description: "Variable y")
 
       objective((x - 5) * (x - 5) + (y - 2) * (y - 2), direction: :minimize)
     end
@@ -111,7 +111,7 @@ The following old syntax is **deprecated** and should not be used in new code:
 ```elixir
 # ❌ DEPRECATED: Old imperative syntax
 problem = Problem.new(direction: :maximize)
-{problem, x} = Problem.new_variable(problem, "x", min: 0)
+{problem, x} = Problem.new_variable(problem, "x", min_bound: 0)
 problem = Problem.add_constraint(problem, Constraint.new_linear(x + 2*y, :<=, 14))
 problem = Problem.maximize(problem, 3*x + 4*y)
 
@@ -133,13 +133,13 @@ use Dantzig.Polynomial.Operators
 total_width = 300.0
 
 Problem.with_implicit_problem problem do
-  v!(left_margin, min: 0.0)
-  v!(center, min: 0.0)
-  v!(right_margin, min: 0.0)
+  v!(left_margin, min_bound: 0.0)
+  v!(center, min_bound: 0.0)
+  v!(right_margin, min_bound: 0.0)
 
-  v!(canvas1, min: 0.0)
-  v!(canvas2, min: 0.0)
-  v!(canvas3, min: 0.0)
+  v!(canvas1, min_bound: 0.0)
+  v!(canvas2, min_bound: 0.0)
+  v!(canvas3, min_bound: 0.0)
 
   constraint!(canvas1 + canvas2 + canvas3 == center)
   constraint!(canvas1 == 2*canvas2)
@@ -239,7 +239,7 @@ def new_board(problem, n) do
   Enum.reduce(1..n, {problem, %{}}, fn i, {p_acc, x} ->
     Enum.reduce(1..n, {p_acc, x}, fn j, {p2, x_map} ->
       name = "x_#{i}_#{j}"
-      {p3, var} = Problem.new_unmangled_variable(p2, name, min: 0.0, max: 1.0)
+      {p3, var} = Problem.new_unmangled_variable(p2, name, min_bound: 0.0, max_bound: 1.0)
       {p3, Map.put(x_map, {i, j}, var)}
     end)
   end)

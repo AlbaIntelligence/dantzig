@@ -54,8 +54,8 @@ problem =
     new(name: "1986 UG Exam - Carpenter Production")
 
     # Decision variables
-    variables("xT", :continuous, min: 0, max: max_tables, description: "Number of tables to make")
-    variables("xC", :continuous, min: 0, description: "Number of chairs to make")
+    variables("xT", :continuous, min_bound: 0, max_bound: max_tables, description: "Number of tables to make")
+    variables("xC", :continuous, min_bound: 0, description: "Number of chairs to make")
 
     # Time constraint
     constraints(time_table * xT + time_chair * xC <= max_hours, "Total working hours <= #{max_hours}")

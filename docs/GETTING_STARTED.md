@@ -33,8 +33,8 @@ problem = Problem.define do
 new(direction: :maximize)
 
   # Decision variables: how much of each product to produce
-  variables("A", :continuous, min: 0, description: "Units of Product A")
-  variables("B", :continuous, min: 0, description: "Units of Product B")
+  variables("A", :continuous, min_bound: 0, description: "Units of Product A")
+  variables("B", :continuous, min_bound: 0, description: "Units of Product B")
 
   # Constraints: limited resources
   constraints(2*A + B <= 10, "Material constraint")
@@ -52,6 +52,7 @@ IO.puts("Product B: #{solution.variables["B"]} units")
 ```
 
 **Output:**
+
 ```
 Optimal profit: $22.0
 Product A: 1.0 units
@@ -68,7 +69,7 @@ problem = Problem.define do
   new(direction: :maximize)
 
   # Variables: production[product][time_period]
-  variables("production", [product <- ["A", "B"], time <- 1..4], :continuous, min: 0)
+  variables("production", [product <- ["A", "B"], time <- 1..4], :continuous, min_bound: 0)
 
   # Constraints: capacity limits by time period
   constraints([time <- 1..4],
@@ -106,7 +107,7 @@ problem = Problem.define(model_parameters: product_data) do
   new(direction: :maximize)
 
   # Variables: production quantity for each product
-  variables("qty", [product <- products], :integer, min: 0)
+  variables("qty", [product <- products], :integer, min_bound: 0)
 
   # Constraints using model parameters directly
   constraints(sum(materials[i] * qty(products[i]) for i <- 0..2) <= material_limit, "Material")
@@ -128,7 +129,7 @@ Start simple and build up your optimization problems incrementally:
 # Start with basic production variables
 base_problem = Problem.define do
   new(direction: :maximize)
-  variables("production", [i <- 1..3], :continuous, min: 0)
+  variables("production", [i <- 1..3], :continuous, min_bound: 0)
 end
 
 # Add capacity constraints
@@ -158,7 +159,7 @@ problem = Problem.define do
 
   variables("x", :binary)
   variables("y", :binary)
-  variables("z", :continuous, min: 0, max: 10)
+  variables("z", :continuous, min_bound: 0, max_bound: 10)
 
   # Logical AND constraint
   constraints(x AND y, "Both required")
@@ -180,7 +181,7 @@ problem = Problem.define do
   new(direction: :minimize)
 
   # Integer variables (counts, quantities)
-  variables("num_workers", :integer, min: 1, max: 20)
+  variables("num_workers", :integer, min_bound: 1, max_bound: 20)
 
   # Binary variables (decisions: yes/no, on/off)
   variables("use_machine", [i <- 1..5], :binary)
@@ -237,11 +238,13 @@ end
 🎯 **Build your first model** using the examples above
 
 📚 **Deepen your knowledge:**
+
 - **[DSL Syntax Reference](DSL_SYNTAX_REFERENCE.md)** - Complete syntax guide
 - **[Comprehensive Tutorial](COMPREHENSIVE_TUTORIAL.md)** - Step-by-step modeling guide
 - **[Examples Directory](../examples/)** - Runnable examples for common problems
 
 🔧 **Advanced topics:**
+
 - **[Modeling Guide](MODELING_GUIDE.md)** - Best practices and patterns
 - **[Advanced AST](ADVANCED_AST.md)** - Automatic linearization internals
 

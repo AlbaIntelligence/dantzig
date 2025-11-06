@@ -11,9 +11,9 @@ defmodule Danztig.Instances.LayoutExampleTest do
       total_width = 300.0
 
       problem = Problem.new()
-      {problem, left_margin} = Problem.new_variable(problem, "left_margin", min: 0.0)
-      {problem, center} = Problem.new_variable(problem, "center", min: 0.0)
-      {problem, right_margin} = Problem.new_variable(problem, "right_margin", min: 0.0)
+      {problem, left_margin} = Problem.new_variable(problem, "left_margin", min_bound: 0.0)
+      {problem, center} = Problem.new_variable(problem, "center", min_bound: 0.0)
+      {problem, right_margin} = Problem.new_variable(problem, "right_margin", min_bound: 0.0)
 
       problem =
         problem

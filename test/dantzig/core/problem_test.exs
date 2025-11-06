@@ -932,8 +932,8 @@ defmodule Dantzig.Core.ProblemTest do
       {updated_problem, _poly} =
         Dantzig.Problem.new_variable(problem, "x",
           type: :continuous,
-          min: 5.0,
-          max: 10.0
+          min_bound: 5.0,
+          max_bound: 10.0
         )
 
       var_def = updated_problem.variable_defs["x"]
@@ -960,7 +960,7 @@ defmodule Dantzig.Core.ProblemTest do
       {updated_problem, _poly} =
         Dantzig.Problem.new_variable(problem, "x",
           type: :binary,
-          max: 2
+          max_bound: 2
         )
 
       var_def = updated_problem.variable_defs["x"]
@@ -974,7 +974,7 @@ defmodule Dantzig.Core.ProblemTest do
       {updated_problem, _poly} =
         Dantzig.Problem.new_variable(problem, "x",
           type: :binary,
-          min: -1
+          min_bound: -1
         )
 
       var_def = updated_problem.variable_defs["x"]
@@ -1167,8 +1167,8 @@ defmodule Dantzig.Core.ProblemTest do
       {updated_problem, _polys} =
         Dantzig.Problem.new_variables(problem, ["x", "y"],
           type: :binary,
-          min: 0,
-          max: 1
+          min_bound: 0,
+          max_bound: 1
         )
 
       x_def = updated_problem.variable_defs["x"]

@@ -106,7 +106,7 @@ defmodule Dantzig.Problem.DSL.NestedAccessBindingsTest do
                          food_names: food_names
                        } do
           new(name: "Test Problem")
-          variables("qty", [food <- food_names], :continuous, min: 0.0, max: :infinity)
+          variables("qty", [food <- food_names], :continuous, min_bound: 0.0, max_bound: :infinity)
 
           # This constraint should parse successfully
           # Use struct field access syntax
@@ -132,8 +132,8 @@ defmodule Dantzig.Problem.DSL.NestedAccessBindingsTest do
       foods_dict = for food_entry <- foods, into: %{}, do: {food_entry.name, food_entry}
 
       limits = [
-        %{nutrient: "calories", min: 1800, max: 2200},
-        %{nutrient: "protein", min: 91, max: :infinity}
+        %{nutrient: "calories", min_bound: 1800, max_bound: 2200},
+        %{nutrient: "protein", min_bound: 91, max_bound: :infinity}
       ]
 
       limits_names = Enum.map(limits, & &1.nutrient)
@@ -149,7 +149,7 @@ defmodule Dantzig.Problem.DSL.NestedAccessBindingsTest do
                          nutrient_to_atom: nutrient_to_atom
                        } do
           new(name: "Diet Problem")
-          variables("qty", [food <- food_names], :continuous, min: 0.0, max: :infinity)
+          variables("qty", [food <- food_names], :continuous, min_bound: 0.0, max_bound: :infinity)
         end
 
       # This is the exact constraint that was failing
@@ -187,8 +187,8 @@ defmodule Dantzig.Problem.DSL.NestedAccessBindingsTest do
       foods_dict = for food_entry <- foods, into: %{}, do: {food_entry.name, food_entry}
 
       limits = [
-        %{nutrient: "calories", min: 1800, max: 2200},
-        %{nutrient: "protein", min: 91, max: :infinity}
+        %{nutrient: "calories", min_bound: 1800, max_bound: 2200},
+        %{nutrient: "protein", min_bound: 91, max_bound: :infinity}
       ]
 
       limits_names = Enum.map(limits, & &1.nutrient)
@@ -206,7 +206,7 @@ defmodule Dantzig.Problem.DSL.NestedAccessBindingsTest do
                        } do
           new(name: "Diet Problem")
 
-          variables("qty", [food <- food_names], :continuous, min: 0.0, max: :infinity)
+          variables("qty", [food <- food_names], :continuous, min_bound: 0.0, max_bound: :infinity)
 
           constraints(
             [limit <- limits_names],
@@ -244,7 +244,7 @@ defmodule Dantzig.Problem.DSL.NestedAccessBindingsTest do
                          food_names: food_names
                        } do
           new(name: "Test Problem")
-          variables("qty", [food <- food_names], :continuous, min: 0.0, max: :infinity)
+          variables("qty", [food <- food_names], :continuous, min_bound: 0.0, max_bound: :infinity)
 
           # Sum expression where body uses 'food' from generator
           constraints(

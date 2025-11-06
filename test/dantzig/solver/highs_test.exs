@@ -99,8 +99,12 @@ defmodule Dantzig.Solver.HiGHSTest do
 
     test "generates LP format with variable bounds" do
       problem = Problem.new(name: Test)
-      {problem, x} = Problem.new_variable(problem, "x", type: :continuous, min: 0.0, max: 10.0)
-      {problem, y} = Problem.new_variable(problem, "y", type: :continuous, min: -5.0, max: 5.0)
+
+      {problem, x} =
+        Problem.new_variable(problem, "x", type: :continuous, min_bound: 0.0, max_bound: 10.0)
+
+      {problem, y} =
+        Problem.new_variable(problem, "y", type: :continuous, min_bound: -5.0, max_bound: 5.0)
 
       # Objective: minimize x + y
       problem = Problem.increment_objective(problem, x)
@@ -449,8 +453,8 @@ defmodule Dantzig.Solver.HiGHSTest do
       var_def = %Dantzig.ProblemVariable{
         name: "x",
         type: :continuous,
-        min: 0.0,
-        max: 10.0
+        min_bound: 0.0,
+        max_bound: 10.0
       }
 
       iodata = HiGHS.variable_bounds(var_def)
@@ -463,8 +467,8 @@ defmodule Dantzig.Solver.HiGHSTest do
       var_def = %Dantzig.ProblemVariable{
         name: "x",
         type: :continuous,
-        min: 0.0,
-        max: nil
+        min_bound: 0.0,
+        max_bound: nil
       }
 
       iodata = HiGHS.variable_bounds(var_def)
@@ -477,8 +481,8 @@ defmodule Dantzig.Solver.HiGHSTest do
       var_def = %Dantzig.ProblemVariable{
         name: "x",
         type: :continuous,
-        min: nil,
-        max: 10.0
+        min_bound: nil,
+        max_bound: 10.0
       }
 
       iodata = HiGHS.variable_bounds(var_def)
@@ -491,8 +495,8 @@ defmodule Dantzig.Solver.HiGHSTest do
       var_def = %Dantzig.ProblemVariable{
         name: "x",
         type: :continuous,
-        min: nil,
-        max: nil
+        min_bound: nil,
+        max_bound: nil
       }
 
       iodata = HiGHS.variable_bounds(var_def)
@@ -505,8 +509,8 @@ defmodule Dantzig.Solver.HiGHSTest do
       var_def = %Dantzig.ProblemVariable{
         name: "x",
         type: :continuous,
-        min: -5.0,
-        max: 5.0
+        min_bound: -5.0,
+        max_bound: 5.0
       }
 
       iodata = HiGHS.variable_bounds(var_def)
@@ -519,8 +523,8 @@ defmodule Dantzig.Solver.HiGHSTest do
       var_def = %Dantzig.ProblemVariable{
         name: "x",
         type: :binary,
-        min: nil,
-        max: nil
+        min_bound: nil,
+        max_bound: nil
       }
 
       iodata = HiGHS.variable_bounds(var_def)
@@ -533,8 +537,8 @@ defmodule Dantzig.Solver.HiGHSTest do
       var_def = %Dantzig.ProblemVariable{
         name: "x",
         type: :integer,
-        min: nil,
-        max: nil
+        min_bound: nil,
+        max_bound: nil
       }
 
       iodata = HiGHS.variable_bounds(var_def)
@@ -547,8 +551,8 @@ defmodule Dantzig.Solver.HiGHSTest do
       var_def = %Dantzig.ProblemVariable{
         name: "x",
         type: :integer,
-        min: 0.0,
-        max: 100.0
+        min_bound: 0.0,
+        max_bound: 100.0
       }
 
       iodata = HiGHS.variable_bounds(var_def)
@@ -571,8 +575,8 @@ defmodule Dantzig.Solver.HiGHSTest do
       var_def = %Dantzig.ProblemVariable{
         name: "x",
         type: :invalid,
-        min: nil,
-        max: nil
+        min_bound: nil,
+        max_bound: nil
       }
 
       assert_raise ArgumentError, fn ->

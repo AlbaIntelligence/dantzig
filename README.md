@@ -59,7 +59,7 @@ constraints(a AND b AND c, "Logical AND constraint")
 params = %{costs: [10, 20, 30], capacity: 100}
 
 problem = Problem.define(model_parameters: params) do
-  variables("x", [i <- 1..3], :integer, min: 0)
+  variables("x", [i <- 1..3], :integer, min_bound: 0)
 
   # Access parameters directly by name
   constraints(sum(for i <- 1..3, do: costs[i] * x(i)) <= capacity, "Budget")
@@ -116,8 +116,8 @@ problem =
   Problem.define do
     new(direction: :maximize)
 
-    variables("x", :continuous, min: 0, description: "Items to produce")
-    variables("y", :continuous, min: 0, description: "Items to sell")
+    variables("x", :continuous, min_bound: 0, description: "Items to produce")
+    variables("y", :continuous, min_bound: 0, description: "Items to sell")
 
     constraints(x + 2*y <= 14, "Resource constraint")
     constraints(3*x - y <= 0, "Quality constraint")
@@ -131,8 +131,8 @@ IO.inspect({solution.objective, solution.variables})
 
 ## 📖 Documentation & Learning
 
-| Level              | Guide                                          | Description                     |
-| ------------------ | ---------------------------------------------- | ------------------------------- |
+| Level               | Guide                                          | Description                     |
+| ------------------- | ---------------------------------------------- | ------------------------------- |
 | 🏃 **Beginner**     | [Getting Started](docs/GETTING_STARTED.md)     | Your first optimization problem |
 | 📚 **Intermediate** | [DSL Tutorial](docs/COMPREHENSIVE_TUTORIAL.md) | Complete guide with examples    |
 | 🏗️ **Advanced**     | [Architecture](docs/ARCHITECTURE.md)           | System design deep dive         |
@@ -152,10 +152,10 @@ Create complex variable structures with simple generators:
 
 ```elixir
 # 2D transportation problem: supply[i] to demand[j]
-variables("transport", [i <- 1..3, j <- 1..4], :continuous, min: 0)
+variables("transport", [i <- 1..3, j <- 1..4], :continuous, min_bound: 0)
 
 # 3D production planning: product[p] in period[t] at plant[f]
-variables("produce", [p <- products, t <- 1..12, f <- facilities], :integer, min: 0)
+variables("produce", [p <- products, t <- 1..12, f <- facilities], :integer, min_bound: 0)
 
 # 4D chess tournament: player[a] vs player[b] in round[r] at table[t]
 variables("game", [a <- 1..8, b <- 1..8, r <- 1..7, t <- 1..4], :binary)
@@ -254,8 +254,8 @@ config :dantzig, :highs_version, "1.9.0"
 
 ## 📊 Current Capabilities
 
-| Feature                     | Status     | Notes                                   |
-| --------------------------- | ---------- | --------------------------------------- |
+| Feature                     | Status      | Notes                                   |
+| --------------------------- | ----------- | --------------------------------------- |
 | **Linear Programming**      | ✅ Complete | Full support                            |
 | **Quadratic Programming**   | ✅ Complete | Degree ≤ 2 expressions                  |
 | **Pattern-based Modeling**  | ✅ Complete | N-dimensional variables                 |

@@ -156,7 +156,7 @@ Direct manipulation of `Dantzig.Problem` with explicit variable and constraint c
 
 ```elixir
 problem = Problem.new(direction: :maximize)
-{problem, x} = Problem.new_variable(problem, "x", min: 0.0, max: 10.0)
+{problem, x} = Problem.new_variable(problem, "x", min_bound: 0.0, max_bound: 10.0)
 problem = Problem.add_constraint(problem, Constraint.new(x <= 5))
 ```
 
@@ -175,7 +175,7 @@ Monadic-style syntax with automatic variable creation:
 
 ```elixir
 Problem.with_implicit_problem problem do
-  v!(x, min: 0.0, max: 10.0)
+  v!(x, min_bound: 0.0, max_bound: 10.0)
   constraint!(x <= 5)
   increment_objective!(x)
 end

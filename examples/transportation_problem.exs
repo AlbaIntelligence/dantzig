@@ -87,8 +87,8 @@ problem =
       "ship",
       [s <- suppliers, c <- customers],
       :continuous,
-      min: 0.0,
-      max: :infinity,
+      min_bound: 0.0,
+      max_bound: :infinity,
       description: "Units shipped from supplier to customer"
     )
 

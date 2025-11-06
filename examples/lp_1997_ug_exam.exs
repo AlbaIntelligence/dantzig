@@ -55,8 +55,8 @@ problem =
     new(name: "1997 UG Exam - Stock Maximization")
 
     # Decision variables
-    variables("x", :continuous, min: 0, description: "Units of X to produce")
-    variables("y", :continuous, min: 0, description: "Units of Y to produce")
+    variables("x", :continuous, min_bound: 0, description: "Units of X to produce")
+    variables("y", :continuous, min_bound: 0, description: "Units of Y to produce")
 
     # Machine time constraints (minutes)
     constraints(50 * x + 24 * y <= time_a_minutes, "Machine A time limit")

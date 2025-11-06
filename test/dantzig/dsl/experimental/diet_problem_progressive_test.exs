@@ -207,8 +207,8 @@ defmodule Dantzig.DSL.DietProblemProgressiveTest do
           )
 
           variables("qty", [food <- food_names], :continuous,
-            min: 0.0,
-            max: :infinity,
+            min_bound: 0.0,
+            max_bound: :infinity,
             description: "Amount of food to buy"
           )
 
@@ -271,8 +271,8 @@ defmodule Dantzig.DSL.DietProblemProgressiveTest do
           )
 
           variables("qty", [food <- food_names], :continuous,
-            min: 0.0,
-            max: :infinity,
+            min_bound: 0.0,
+            max_bound: :infinity,
             description: "Amount of food to buy"
           )
 

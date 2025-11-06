@@ -173,7 +173,7 @@ defmodule Dantzig.BackwardCompatibilityTest do
 
     # Add variable
     {problem, var_ref} =
-      Dantzig.Problem.new_variable(problem, "x", type: :continuous, min: 0.0, max: 10.0)
+      Dantzig.Problem.new_variable(problem, "x", type: :continuous, min_bound: 0.0, max_bound: 10.0)
 
     assert is_map(problem.variables)
     assert Map.has_key?(problem.variables, "x")
@@ -198,7 +198,7 @@ defmodule Dantzig.BackwardCompatibilityTest do
     problem =
       Problem.define do
         new(name: "Define Test Without Params")
-        variables("x", [i <- 1..3], :continuous, min: 0)
+        variables("x", [i <- 1..3], :continuous, min_bound: 0)
         constraints([i <- 1..3], x(i) <= 10, "Upper bound")
         objective(sum(x(:_)), direction: :maximize)
       end
@@ -218,7 +218,7 @@ defmodule Dantzig.BackwardCompatibilityTest do
     problem =
       Problem.define model_parameters: %{n: n, max_val: max_val} do
         new(name: "Define Test With Params")
-        variables("x", [i <- 1..n], :continuous, min: 0)
+        variables("x", [i <- 1..n], :continuous, min_bound: 0)
         constraints([i <- 1..n], x(i) <= max_val, "Upper bound")
         objective(sum(x(:_)), direction: :maximize)
       end

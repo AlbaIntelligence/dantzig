@@ -74,7 +74,7 @@ require Dantzig.Problem, as: Problem
 problem =
   Problem.define do
     new(direction: :maximize)
-    variables("x", :continuous, min: 0)
+    variables("x", :continuous, min_bound: 0)
     constraints(x <= 10)
     objective(x)
   end
@@ -94,7 +94,7 @@ require Dantzig.Problem, as: Problem
 problem =
   Problem.define do
     new(direction: :maximize)  # 🚀 So easy!
-    variables("x", :continuous, min: 0)
+    variables("x", :continuous, min_bound: 0)
     constraints(x <= 10)       # ✨ Magic!
     objective(x)              # 🎯 Profit!
   end

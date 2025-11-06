@@ -29,8 +29,8 @@ defmodule Dantzig.LPExamplesTest do
         Problem.define do
           new(name: "1997 UG Exam - Stock Maximization")
 
-          variables("x", :continuous, min: 0)
-          variables("y", :continuous, min: 0)
+          variables("x", :continuous, min_bound: 0)
+          variables("y", :continuous, min_bound: 0)
 
           constraints(50 * x + 24 * y <= time_a_minutes)
           constraints(30 * x + 33 * y <= time_b_minutes)
@@ -73,8 +73,8 @@ defmodule Dantzig.LPExamplesTest do
         Problem.define do
           new(name: "1995 UG Exam - Production with Penalties")
 
-          variables("x1", :continuous, min: 0, max: forecast_p1)
-          variables("x2", :continuous, min: 0, max: forecast_p2)
+          variables("x1", :continuous, min_bound: 0, max_bound: forecast_p1)
+          variables("x2", :continuous, min_bound: 0, max_bound: forecast_p2)
 
           constraints(15 * x1 + 7 * x2 <= 20 * 60)
           constraints(25 * x1 + 45 * x2 <= 15 * 60)
@@ -111,8 +111,8 @@ defmodule Dantzig.LPExamplesTest do
         Problem.define do
           new(name: "1994 UG Exam - Cost Optimization")
 
-          variables("x", :continuous, min: 10)
-          variables("y", :continuous, min: 0)
+          variables("x", :continuous, min_bound: 10)
+          variables("y", :continuous, min_bound: 0)
 
           constraints(13 * x + 19 * y <= 2400)
           constraints(20 * x + 29 * y <= 2100)
@@ -136,8 +136,8 @@ defmodule Dantzig.LPExamplesTest do
         Problem.define do
           new(name: "1992 UG Exam - Technological Constraints")
 
-          variables("xA", :continuous, min: 0)
-          variables("xB", :continuous, min: 0)
+          variables("xA", :continuous, min_bound: 0)
+          variables("xB", :continuous, min_bound: 0)
 
           constraints(12 * xA + 25 * xB <= 1800)
           constraints(2 * xB <= 5 * xA)
@@ -161,8 +161,8 @@ defmodule Dantzig.LPExamplesTest do
         Problem.define do
           new(name: "1988 UG Exam - Minimization")
 
-          variables("a", :continuous, min: 0)
-          variables("b", :continuous, min: 0)
+          variables("a", :continuous, min_bound: 0)
+          variables("b", :continuous, min_bound: 0)
 
           constraints(a + b >= 11)
           constraints(a - b <= 5)
@@ -186,8 +186,8 @@ defmodule Dantzig.LPExamplesTest do
         Problem.define do
           new(name: "1987 UG Exam - Maximization")
 
-          variables("x1", :continuous, min: 0)
-          variables("x2", :continuous, min: 0)
+          variables("x1", :continuous, min_bound: 0)
+          variables("x2", :continuous, min_bound: 0)
 
           constraints(x1 + x2 <= 10)
           constraints(x1 - x2 >= 3)
@@ -211,8 +211,8 @@ defmodule Dantzig.LPExamplesTest do
         Problem.define do
           new(name: "1986 UG Exam - Carpenter Production")
 
-          variables("xT", :continuous, min: 0, max: 4)
-          variables("xC", :continuous, min: 0)
+          variables("xT", :continuous, min_bound: 0, max_bound: 4)
+          variables("xC", :continuous, min_bound: 0)
 
           constraints(6 * xT + 3 * xC <= 40)
           constraints(xC >= 3 * xT)

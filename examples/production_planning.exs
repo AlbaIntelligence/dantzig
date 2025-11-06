@@ -92,8 +92,8 @@ problem =
       "produce",
       [t <- time_periods],
       :continuous,
-      min: 0.0,
-      max: max_production,
+      min_bound: 0.0,
+      max_bound: max_production,
       description: "Units produced in period"
     )
 
@@ -102,8 +102,8 @@ problem =
       "inventory",
       [t <- time_periods],
       :continuous,
-      min: 0.0,
-      max: :infinity,
+      min_bound: 0.0,
+      max_bound: :infinity,
       description: "Units in inventory at end of period"
     )
 
