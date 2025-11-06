@@ -77,7 +77,7 @@
 - [x] T141i [P] [BC] Add failing test for `Problem.modify` macro in `test/dantzig/dsl/problem_modify_test.exs` (precursor to T156)
 - [x] T149 [P] [BC] Implement or improve `Problem.modify` macro; update related tests in `test/macro_approach/*`
 - [x] T150 [P] [US2] Fix macro availability and unskip imperative chained‑constraints tests in `test/dantzig/dsl/experimental/integration_test.exs`
-- [ ] T151 [P] [US2] Fix variable access macro generation and unskip tests in `test/dantzig/dsl/experimental/simple_integration_test.exs`
+- [x] T151 [P] [US2] Fix variable access macro generation and unskip tests in `test/dantzig/dsl/experimental/simple_integration_test.exs`
 - [ ] T152 [P] [US2] Deprecate `test/macro_approach/*`; migrate relevant cases into `test/dantzig/dsl/experimental/*` and remove obsolete tests
 - [ ] T153 [P] [DOC] Update DSL docs to reflect description interpolation and single‑constraint syntax in `docs/DSL_SYNTAX_REFERENCE.md`
 
