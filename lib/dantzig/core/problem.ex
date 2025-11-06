@@ -667,6 +667,7 @@ defmodule Dantzig.Problem do
 
   defp check_for_complex({:sum, _, _}, _found), do: true
   defp check_for_complex({{:., _, [_, :sum]}, _, _}, _found), do: true
+  defp check_for_complex({:sum, {:for, _, _}}, _found), do: true
   defp check_for_complex({:for, _, _}, _found), do: true
   defp check_for_complex({{:., _, [Access, :get]}, _, _}, _found), do: true
 

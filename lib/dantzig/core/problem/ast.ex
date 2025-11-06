@@ -189,8 +189,8 @@ defmodule Dantzig.Problem.AST do
     end
   end
 
-  # Internal: rewrite a simple generator sum into a pattern sum
-  defp rewrite_generator_sum(inner_expr, generators) do
+  # Rewrite a simple generator sum into a pattern sum
+  def rewrite_generator_sum(inner_expr, generators) do
     case {inner_expr, generators} do
       # sum(qty(food) for food <- food_names) => sum(qty(:_))
       {{var_fun, meta, [arg]}, [{:<-, _gmeta, [gen_var, _domain]}]}
@@ -293,6 +293,30 @@ defmodule Dantzig.Problem.AST do
           else
             raise ArgumentError,
               "Variable #{inspect(var_name)}(#{index}) not found. Ensure it was created with variables() first."
+          end
+        else
+          # No problem context - construct indexed name
+          Polynomial.variable(indexed_name)
+        end
+
+      # Handle multi-index variable access like ship("Supplier1", "Customer1")
+      {var_name, _meta, indices} when is_atom(var_name) and is_list(indices) and length(indices) > 1 ->
+        var_name_str = to_string(var_name)
+
+        # Construct the indexed variable name with comma-separated indices
+        indices_str = Enum.map(indices, &to_string/1) |> Enum.join(",")
+        indexed_name = "#{var_name_str}(#{indices_str})"
+
+        # Check if this corresponds to a variable name with indices
+        if not is_nil(problem) do
+          var_def = Dantzig.Problem.get_variable(problem, indexed_name)
+
+          if var_def do
+            # This is a variable access - use the indexed variable name
+            Polynomial.variable(indexed_name)
+          else
+            raise ArgumentError,
+              "Variable #{inspect(var_name)}(#{indices_str}) not found. Ensure it was created with variables() first."
           end
         else
           # No problem context - construct indexed name

@@ -23,6 +23,12 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
       {:sum, [], [sum_expr]} ->
         parse_sum_expression(sum_expr, bindings, problem)
 
+      # Handle sum(for ... ) syntax: sum(for var <- list, do: expr)
+      {:sum, {:for, inner_expr, generators}} ->
+        # Reconstruct the proper for-comprehension AST
+        for_parts = generators ++ [[do: inner_expr]]
+        parse_sum_expression({:for, [], for_parts}, bindings, problem)
+
       {:sum, sum_expr} ->
         parse_sum_expression(sum_expr, bindings, problem)
 
