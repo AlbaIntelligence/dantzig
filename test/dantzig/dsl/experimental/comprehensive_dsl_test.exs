@@ -147,7 +147,14 @@ defmodule Dantzig.DSL.ComprehensiveDSLTest do
       problem =
         Problem.define model_parameters: %{food_names: food_names} do
           new(name: "Complex Arithmetic", description: "Test complex arithmetic")
-          variables("qty", Dantzig.Problem.DSL.generators([food <- food_names]), :continuous, "Amount of food")
+
+          variables(
+            "qty",
+            Dantzig.Problem.DSL.generators([food <- food_names]),
+            :continuous,
+            "Amount of food"
+          )
+
           objective(sum(for food <- food_names, do: qty(food) * 2.0 + 1.0), direction: :minimize)
         end
 
@@ -183,7 +190,13 @@ defmodule Dantzig.DSL.ComprehensiveDSLTest do
       assert_raise CompileError, fn ->
         Problem.define do
           new(name: "Map Access Test", description: "Test map access")
-          variables("qty", Dantzig.Problem.DSL.generators([food <- food_names]), :continuous, "Amount of food")
+
+          variables(
+            "qty",
+            Dantzig.Problem.DSL.generators([food <- food_names]),
+            :continuous,
+            "Amount of food"
+          )
 
           objective(sum(for food <- food_names, do: qty(food) * foods[food]["cost"]),
             direction: :minimize

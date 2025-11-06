@@ -17,4 +17,3 @@ defmodule Dantzig.Problem.Vars do
     end
   end
 end
-

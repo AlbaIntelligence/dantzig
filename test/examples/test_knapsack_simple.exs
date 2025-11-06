@@ -11,21 +11,23 @@ capacity = 5
 
 IO.puts("Simple Knapsack Test")
 
-problem = Problem.define do
-  new(name: "Simple Knapsack")
+problem =
+  Problem.define do
+    new(name: "Simple Knapsack")
 
-  variables("select", [i <- items], :binary, "Select item")
+    variables("select", [i <- items], :binary, "Select item")
 
-  constraints(
-    sum(for i <- items, do: select(i) * Enum.at(weights, Enum.find_index(items, &(&1 == i)))) <= capacity,
-    "Weight constraint"
-  )
+    constraints(
+      sum(for i <- items, do: select(i) * Enum.at(weights, Enum.find_index(items, &(&1 == i)))) <=
+        capacity,
+      "Weight constraint"
+    )
 
-  objective(
-    sum(for i <- items, do: select(i) * Enum.at(values, Enum.find_index(items, &(&1 == i)))),
-    direction: :maximize
-  )
-end
+    objective(
+      sum(for i <- items, do: select(i) * Enum.at(values, Enum.find_index(items, &(&1 == i)))),
+      direction: :maximize
+    )
+  end
 
 IO.puts("Problem created successfully!")
 IO.puts("Variables: #{inspect(Problem.get_variables(problem))}")

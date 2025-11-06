@@ -56,14 +56,16 @@ defmodule Dantzig.DSL.SimpleGeneratorTest do
     constraint_exprs = problem.constraints |> Map.values() |> Enum.map(& &1.left_hand_side)
     # Each constraint should reference x_1, x_2, or x_3
     assert Enum.any?(constraint_exprs, fn expr ->
-      Dantzig.Polynomial.variables(expr) |> Enum.member?("x_1")
-    end)
+             Dantzig.Polynomial.variables(expr) |> Enum.member?("x_1")
+           end)
+
     assert Enum.any?(constraint_exprs, fn expr ->
-      Dantzig.Polynomial.variables(expr) |> Enum.member?("x_2")
-    end)
+             Dantzig.Polynomial.variables(expr) |> Enum.member?("x_2")
+           end)
+
     assert Enum.any?(constraint_exprs, fn expr ->
-      Dantzig.Polynomial.variables(expr) |> Enum.member?("x_3")
-    end)
+             Dantzig.Polynomial.variables(expr) |> Enum.member?("x_3")
+           end)
   end
 
   test "variable refs in constraints with 2D variables" do
@@ -83,18 +85,20 @@ defmodule Dantzig.DSL.SimpleGeneratorTest do
     # First constraint should reference queen2d_1_1 and queen2d_1_2
     # Second constraint should reference queen2d_2_1 and queen2d_2_2
     constraint_exprs = problem.constraints |> Map.values() |> Enum.map(& &1.left_hand_side)
-    
+
     # Check that we have constraints referencing queen2d_1_* and queen2d_2_*
-    has_row1 = Enum.any?(constraint_exprs, fn expr ->
-      vars = Dantzig.Polynomial.variables(expr)
-      Enum.member?(vars, "queen2d_1_1") and Enum.member?(vars, "queen2d_1_2")
-    end)
-    
-    has_row2 = Enum.any?(constraint_exprs, fn expr ->
-      vars = Dantzig.Polynomial.variables(expr)
-      Enum.member?(vars, "queen2d_2_1") and Enum.member?(vars, "queen2d_2_2")
-    end)
-    
+    has_row1 =
+      Enum.any?(constraint_exprs, fn expr ->
+        vars = Dantzig.Polynomial.variables(expr)
+        Enum.member?(vars, "queen2d_1_1") and Enum.member?(vars, "queen2d_1_2")
+      end)
+
+    has_row2 =
+      Enum.any?(constraint_exprs, fn expr ->
+        vars = Dantzig.Polynomial.variables(expr)
+        Enum.member?(vars, "queen2d_2_1") and Enum.member?(vars, "queen2d_2_2")
+      end)
+
     assert has_row1, "Should have constraint for row 1"
     assert has_row2, "Should have constraint for row 2"
   end
@@ -115,20 +119,26 @@ defmodule Dantzig.DSL.SimpleGeneratorTest do
     # Verify constraints reference correct variables
     # Each constraint should reference two variables (queen3d_i_j_k for j=1,2)
     constraint_exprs = problem.constraints |> Map.values() |> Enum.map(& &1.left_hand_side)
-    
+
     # Check that we have constraints for all combinations
     expected_combinations = [
-      {"queen3d_1_1_1", "queen3d_1_2_1"},  # i=1, k=1
-      {"queen3d_1_1_2", "queen3d_1_2_2"},  # i=1, k=2
-      {"queen3d_2_1_1", "queen3d_2_2_1"},  # i=2, k=1
-      {"queen3d_2_1_2", "queen3d_2_2_2"}   # i=2, k=2
+      # i=1, k=1
+      {"queen3d_1_1_1", "queen3d_1_2_1"},
+      # i=1, k=2
+      {"queen3d_1_1_2", "queen3d_1_2_2"},
+      # i=2, k=1
+      {"queen3d_2_1_1", "queen3d_2_2_1"},
+      # i=2, k=2
+      {"queen3d_2_1_2", "queen3d_2_2_2"}
     ]
-    
+
     for {var1, var2} <- expected_combinations do
-      has_constraint = Enum.any?(constraint_exprs, fn expr ->
-        vars = Dantzig.Polynomial.variables(expr)
-        MapSet.member?(vars, var1) and MapSet.member?(vars, var2)
-      end)
+      has_constraint =
+        Enum.any?(constraint_exprs, fn expr ->
+          vars = Dantzig.Polynomial.variables(expr)
+          MapSet.member?(vars, var1) and MapSet.member?(vars, var2)
+        end)
+
       assert has_constraint, "Should have constraint for #{var1} and #{var2}"
     end
   end
@@ -136,7 +146,7 @@ defmodule Dantzig.DSL.SimpleGeneratorTest do
   test "variable refs in objectives with generator variable" do
     # Test variable references like qty(food) in objectives where food comes from generator
     food_names = ["bread", "milk"]
-    
+
     problem =
       Problem.define do
         new(name: "Variable Ref Objective Test")
@@ -190,19 +200,21 @@ defmodule Dantzig.DSL.SimpleGeneratorTest do
 
     # Verify constraints reference correct variables
     constraint_exprs = problem.constraints |> Map.values() |> Enum.map(& &1.left_hand_side)
-    
+
     # First constraint should reference queen2d_1_1 and queen2d_2_1 (j=1)
     # Second constraint should reference queen2d_1_2 and queen2d_2_2 (j=2)
-    has_col1 = Enum.any?(constraint_exprs, fn expr ->
-      vars = Dantzig.Polynomial.variables(expr)
-      MapSet.member?(vars, "queen2d_1_1") and MapSet.member?(vars, "queen2d_2_1")
-    end)
-    
-    has_col2 = Enum.any?(constraint_exprs, fn expr ->
-      vars = Dantzig.Polynomial.variables(expr)
-      MapSet.member?(vars, "queen2d_1_2") and MapSet.member?(vars, "queen2d_2_2")
-    end)
-    
+    has_col1 =
+      Enum.any?(constraint_exprs, fn expr ->
+        vars = Dantzig.Polynomial.variables(expr)
+        MapSet.member?(vars, "queen2d_1_1") and MapSet.member?(vars, "queen2d_2_1")
+      end)
+
+    has_col2 =
+      Enum.any?(constraint_exprs, fn expr ->
+        vars = Dantzig.Polynomial.variables(expr)
+        MapSet.member?(vars, "queen2d_1_2") and MapSet.member?(vars, "queen2d_2_2")
+      end)
+
     assert has_col1, "Should have constraint for column 1"
     assert has_col2, "Should have constraint for column 2"
   end
@@ -222,13 +234,14 @@ defmodule Dantzig.DSL.SimpleGeneratorTest do
 
     # Verify at least one constraint references expected variables
     constraint_exprs = problem.constraints |> Map.values() |> Enum.map(& &1.left_hand_side)
-    
+
     # Should have constraint for queen3d_1_1_1 + queen3d_1_2_1
-    has_expected = Enum.any?(constraint_exprs, fn expr ->
-      vars = Dantzig.Polynomial.variables(expr)
-      Enum.member?(vars, "queen3d_1_1_1") and Enum.member?(vars, "queen3d_1_2_1")
-    end)
-    
+    has_expected =
+      Enum.any?(constraint_exprs, fn expr ->
+        vars = Dantzig.Polynomial.variables(expr)
+        Enum.member?(vars, "queen3d_1_1_1") and Enum.member?(vars, "queen3d_1_2_1")
+      end)
+
     assert has_expected, "Should have constraint with expected variable pattern"
   end
 end

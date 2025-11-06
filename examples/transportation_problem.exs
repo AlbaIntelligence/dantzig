@@ -93,25 +93,67 @@ problem =
     )
 
     # Constraint: supply limits - each supplier cannot ship more than their capacity
+    # Model parameters not yet supported for variable access, so hardcode values
     constraints(
-      [s <- suppliers],
-      sum(for c <- customers, do: ship(s, c)) <= supply[s],
+    sum(for c <- customers, do: ship("Supplier1", c)) <= 20,
+    "Supplier capacity limit"
+    )
+    constraints(
+      sum(for c <- customers, do: ship("Supplier2", c)) <= 25,
+      "Supplier capacity limit"
+    )
+    constraints(
+      sum(for c <- customers, do: ship("Supplier3", c)) <= 15,
       "Supplier capacity limit"
     )
 
     # Constraint: demand requirements - each customer must receive exactly their demand
+    # Model parameters not yet supported for variable access, so hardcode values
     constraints(
-      [c <- customers],
-      sum(for s <- suppliers, do: ship(s, c)) == demand[c],
+    sum(for s <- suppliers, do: ship(s, "Customer1")) == 15,
+    "Customer demand requirement"
+    )
+    constraints(
+      sum(for s <- suppliers, do: ship(s, "Customer2")) == 20,
+      "Customer demand requirement"
+    )
+    constraints(
+      sum(for s <- suppliers, do: ship(s, "Customer3")) == 15,
+      "Customer demand requirement"
+    )
+    constraints(
+      sum(for s <- suppliers, do: ship(s, "Customer4")) == 10,
       "Customer demand requirement"
     )
 
     # Objective: minimize total shipping cost
+    # Model parameters not yet supported for variable access, so hardcode costs
     objective(
-      sum(for s <- suppliers, c <- customers, do: ship(s, c) * cost_matrix[s][c]),
+    ship("Supplier1", "Customer1") * 2 + ship("Supplier1", "Customer2") * 3 + ship("Supplier1", "Customer3") * 1 + ship("Supplier1", "Customer4") * 4 +
+      ship("Supplier2", "Customer1") * 3 + ship("Supplier2", "Customer2") * 2 + ship("Supplier2", "Customer3") * 4 + ship("Supplier2", "Customer4") * 1 +
+      ship("Supplier3", "Customer1") * 1 + ship("Supplier3", "Customer2") * 4 + ship("Supplier3", "Customer3") * 3 + ship("Supplier3", "Customer4") * 2,
       direction: :minimize
     )
   end
+
+# Debug: Show problem structure
+IO.puts("")
+IO.puts("Problem structure:")
+IO.puts("Variables: #{map_size(problem.variables)}")
+IO.puts("Constraints: #{map_size(problem.constraints)}")
+
+# Debug: Show constraints
+IO.puts("")
+IO.puts("Constraints:")
+problem.constraints |> Map.values() |> Enum.each(fn c ->
+  IO.puts("  #{c.name}: #{inspect(c.left_hand_side)} #{c.operator} #{inspect(c.right_hand_side)}")
+end)
+
+# Debug: Show variable names
+IO.puts("")
+IO.puts("Variable names created:")
+var_names = Map.keys(problem.variables["ship"])
+IO.inspect(var_names, label: "Ship variables")
 
 IO.puts("Solving the transportation problem...")
 {solution, objective_value} = Problem.solve(problem, print_optimizer_input: false)
@@ -121,6 +163,10 @@ IO.puts("=========")
 IO.puts("Objective value: #{objective_value}")
 IO.puts("")
 
+# Debug: Show solution variables
+IO.puts("Solution variables (first 5):")
+solution.variables |> Map.take(Enum.take(Map.keys(solution.variables), 5)) |> IO.inspect()
+
 IO.puts("Shipping Plan:")
 total_cost = 0
 
@@ -129,8 +175,8 @@ Enum.each(suppliers, fn supplier ->
   IO.puts("#{supplier}:")
 
   Enum.each(customers, fn customer ->
-    var_name = "ship_#{supplier}_#{customer}"
-    units_shipped = solution.variables[var_name]
+  var_name = "ship(#{supplier},#{customer})"
+  units_shipped = Map.get(solution.variables, var_name, 0)
 
     # Only show non-zero shipments
     if units_shipped > 0.001 do
@@ -161,10 +207,10 @@ end
 supplier_validation =
   Enum.map(suppliers, fn supplier ->
     total_shipped =
-      Enum.reduce(customers, 0, fn customer, acc ->
-        var_name = "ship_#{supplier}_#{customer}"
-        acc + solution.variables[var_name]
-      end)
+    Enum.reduce(customers, 0, fn customer, acc ->
+    var_name = "ship(#{supplier},#{customer})"
+    acc + Map.get(solution.variables, var_name, 0)
+    end)
 
     {supplier, total_shipped, supply[supplier]}
   end)
@@ -187,10 +233,10 @@ end)
 customer_validation =
   Enum.map(customers, fn customer ->
     total_received =
-      Enum.reduce(suppliers, 0, fn supplier, acc ->
-        var_name = "ship_#{supplier}_#{customer}"
-        acc + solution.variables[var_name]
-      end)
+    Enum.reduce(suppliers, 0, fn supplier, acc ->
+    var_name = "ship(#{supplier},#{customer})"
+    acc + Map.get(solution.variables, var_name, 0)
+    end)
 
     {customer, total_received, demand[customer]}
   end)

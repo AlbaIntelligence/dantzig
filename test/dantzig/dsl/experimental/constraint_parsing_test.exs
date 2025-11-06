@@ -1,7 +1,7 @@
 defmodule Dantzig.DSL.Experimental.ConstraintParsingTest do
   @moduledoc """
   Experimental tests for constraint parsing functionality
-  
+
   This module uses the older imperative API for testing purposes.
   """
   use ExUnit.Case, async: true

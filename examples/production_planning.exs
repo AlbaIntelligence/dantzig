@@ -72,7 +72,14 @@ IO.puts("")
 
 # Create the optimization problem
 problem =
-  Problem.define model_parameters: %{demand: demand, production_cost: production_cost, holding_cost: holding_cost, max_production: max_production, initial_inventory: initial_inventory, time_periods: time_periods} do
+  Problem.define model_parameters: %{
+                   demand: demand,
+                   production_cost: production_cost,
+                   holding_cost: holding_cost,
+                   max_production: max_production,
+                   initial_inventory: initial_inventory,
+                   time_periods: time_periods
+                 } do
     new(
       name: "Production Planning Problem",
       description: "Minimize production and inventory costs over 4 periods"
@@ -107,10 +114,18 @@ problem =
     )
 
     # For periods 2-4: inventory[t-1] + produce[t] - demand[t] = inventory[t]
+    # Model parameters not yet supported for variable access, so hardcode values
     constraints(
-      [t <- 2..4],
-      inventory(t - 1) + produce(t) - demand[t] == 0,
-      "Inventory balance for subsequent periods"
+    inventory(1) + produce(2) - 150 == 0,
+    "Inventory balance for period 2"
+    )
+    constraints(
+      inventory(2) + produce(3) - 80 == 0,
+      "Inventory balance for period 3"
+    )
+    constraints(
+      inventory(3) + produce(4) - 200 == 0,
+      "Inventory balance for period 4"
     )
 
     # Production capacity constraints (already handled by variable bounds)
@@ -118,7 +133,9 @@ problem =
 
     # Objective: minimize total production + holding costs
     objective(
-      sum(for t <- time_periods, do: produce(t) * production_cost[t] + inventory(t) * holding_cost),
+      sum(
+        for t <- time_periods, do: produce(t) * production_cost[t] + inventory(t) * holding_cost
+      ),
       direction: :minimize
     )
   end

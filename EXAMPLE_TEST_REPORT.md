@@ -76,22 +76,19 @@ This report documents the syntax alignment with DSL specs and execution status f
    - Issue: `for food <- food_names` in objective expression may be causing issues
    - **Status**: Needs investigation - for-comprehension in objective expression
 
-### ❌ Compilation Errors:
+### ✅ Fixed - Now Working:
 
 1. **variadic_operations_example.exs**:
-   - ❌ **COMPILATION ERROR**: `undefined function <-/2`
-   - Issue: Uses deprecated `Problem.new()` API with generator syntax `[i <- 1..3]`
-   - **Status**: Needs update to use `Problem.define` syntax
+- ✅ **FIXED**: Added missing `require Dantzig.Problem.DSL, as: DSL`
+- Now compiles and executes successfully
 
 2. **pattern_based_operations_example.exs**:
-   - ❌ **COMPILATION ERROR**: `undefined function <-/2`
-   - Issue: Uses deprecated `Problem.new()` API with generator syntax
-   - **Status**: Needs update to use `Problem.define` syntax
+    - ✅ **FIXED**: Added missing `require Dantzig.Problem.DSL, as: DSL`
+- Now compiles and executes successfully
 
 3. **tutorial_examples.exs**:
-   - ❌ **COMPILATION ERROR**: `undefined function <-/2`
-   - Issue: Uses deprecated `Problem.new()` API with generator syntax
-   - **Status**: Needs update to use `Problem.define` syntax
+    - ✅ **FIXED**: Added missing `require Dantzig.Problem.DSL, as: DSL`
+    - Now compiles and executes successfully
 
 ## Recent Fixes Applied
 
@@ -113,17 +110,16 @@ This report documents the syntax alignment with DSL specs and execution status f
 ## Current Status Summary
 
 - **Total Examples**: 17
-- **✅ Working**: 6 examples (35%)
-- **⚠️ Runtime Errors**: 8 examples (47%)
-- **❌ Compilation Errors**: 3 examples (18%)
+- **✅ Working**: 10 examples (59%)
+- **⚠️ Runtime Errors**: 7 examples (41%)
+- **❌ Compilation Errors**: 0 examples (0%)
 
 ### Breakdown by Error Type:
 
-**Access.get / Map Access Issues (4 files)**:
-- `transportation_problem.exs` - `supply[s]`
+**Access.get / Map Access Issues (2 files remaining)**:
 - `production_planning.exs` - `demand[period]`
 - `school_timetabling.exs` - `teacher_skills[t][s]` (nested)
-- All need support for map access syntax in DSL expressions
+- Map access syntax now supported in DSL expressions (transportation_problem.exs fixed)
 
 **List Comprehension in sum() (2 files)**:
 - `knapsack_problem.exs` - `sum(for item <- item_names, do: ...)`
@@ -145,24 +141,27 @@ This report documents the syntax alignment with DSL specs and execution status f
 
 ## Detailed Findings by Category
 
-### Working Examples (6):
+### Working Examples (10):
 1. **simple_working_example.exs** - Basic DSL examples
 2. **working_example.exs** - Similar to simple_working_example
 3. **new_dsl_example.exs** - Modern DSL demonstration
 4. **nqueens_dsl.exs** - **FIXED** - N-Queens problems with variable recognition
 5. **test_basic_dsl.exs** - **FIXED** - Basic DSL functionality tests
 6. **generate_timetable_svg.exs** - SVG generation (no DSL, standalone)
+7. **variadic_operations_example.exs** - **FIXED** - Variadic operations demonstration
+8. **pattern_based_operations_example.exs** - **FIXED** - Pattern-based operations demonstration
+9. **tutorial_examples.exs** - **FIXED** - Comprehensive tutorial examples
+10. **transportation_problem.exs** - **FIXED** - Access.get expressions now work, problem solves correctly
 
-### Runtime Errors (8):
+### Runtime Errors (7):
 
 1. **assignment_problem.exs** - Objective calculation mismatch
-2. **knapsack_problem.exs** - Timeout/hanging
-3. **transportation_problem.exs** - Timeout/hanging
-4. **blending_problem.exs** - Timeout/hanging
-5. **production_planning.exs** - Nested Access.get not supported
-6. **network_flow.exs** - Timeout/hanging
-7. **school_timetabling.exs** - Nested Access.get not supported
-8. **diet_problem.exs** - Enumerable protocol error
+2. **knapsack_problem.exs** - `sum(for ...)` syntax not supported
+3. **blending_problem.exs** - Timeout/hanging
+4. **production_planning.exs** - Nested Access.get not supported
+5. **network_flow.exs** - Timeout/hanging
+6. **school_timetabling.exs** - Nested Access.get not supported
+7. **diet_problem.exs** - `sum(for ...)` syntax not supported
 
 ### Compilation Errors (3):
 

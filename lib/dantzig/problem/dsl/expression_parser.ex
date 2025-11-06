@@ -23,6 +23,12 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
       {:sum, [], [sum_expr]} ->
         parse_sum_expression(sum_expr, bindings, problem)
 
+      # Handle sum(for ... ) syntax: sum(for var <- list, do: expr)
+      {:sum, {:for, inner_expr, generators}} ->
+        # Reconstruct the proper for-comprehension AST
+        for_parts = generators ++ [[do: inner_expr]]
+        parse_sum_expression({:for, [], for_parts}, bindings, problem)
+
       {:sum, sum_expr} ->
         parse_sum_expression(sum_expr, bindings, problem)
 
@@ -72,7 +78,22 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
 
                 other ->
                   raise ArgumentError,
-                        "Cannot use non-numeric value in arithmetic: #{inspect(other)}"
+                        """
+                        Cannot use non-numeric value in arithmetic expression: #{inspect(other)}
+
+                        Arithmetic operations (+, -, *, /) require numeric values or polynomials.
+                        Got: #{inspect(other)}
+
+                        Common causes:
+                        1. Using a string or atom where a number is expected
+                        2. Accessing an undefined variable or constant
+                        3. Using a generator variable outside its scope
+
+                        Example of correct usage:
+                          x(i) + y(j)        # Adding variables
+                          x(i) * 2.5         # Multiplying by a number
+                          cost[i] * x(i)     # Using constants from model_parameters
+                        """
               end
           end
 
@@ -143,10 +164,12 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
 
           {:/, %Polynomial{} = p, v} when is_number(v) ->
             # Guard ensures v is a number - convert to float explicitly
-            v_float = case v do
-              n when is_integer(n) -> :erlang.float(n)
-              n when is_float(n) -> n
-            end
+            v_float =
+              case v do
+                n when is_integer(n) -> :erlang.float(n)
+                n when is_float(n) -> n
+              end
+
             Polynomial.scale(p, 1.0 / v_float)
 
           {:/, %Polynomial{} = p1, %Polynomial{} = p2} ->
@@ -161,7 +184,27 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
             end
 
           _ ->
-            raise ArgumentError, "Unsupported arithmetic: #{inspect({op, left, right})}"
+            raise ArgumentError,
+                  """
+                  Unsupported arithmetic operation: #{op}
+
+                  Operation: #{op}
+                  Left operand: #{inspect(left)}
+                  Right operand: #{inspect(right)}
+
+                  Supported arithmetic operations in DSL expressions:
+                  - Addition (+): x(i) + y(j), x(i) + 5.0
+                  - Subtraction (-): x(i) - y(j), x(i) - 5.0
+                  - Multiplication (*): x(i) * 2.0, cost[i] * x(i)
+                  - Division (/): x(i) / 2.0
+
+                  Note: Division by variables is not supported in linear programming.
+                  Only division by constants (numbers) is allowed.
+
+                  Example of correct usage:
+                    constraints([i <- 1..n], x(i) + y(i) <= 10)
+                    constraints([i <- 1..n], cost[i] * x(i) <= budget)
+                  """
         end
 
       # Simple variable access: {var_name, _, nil} (no indices)
@@ -189,7 +232,21 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
           if var_def do
             Polynomial.variable(var_name_str)
           else
-            raise ArgumentError, "Undefined variable: #{var_name_str}"
+            raise ArgumentError,
+                  """
+                  Undefined variable: #{var_name_str}
+
+                  To fix this:
+                  1. Make sure you've defined the variable using `variables("#{var_name_str}", ...)` in your Problem.define block
+                  2. Check for typos in the variable name
+                  3. If using indexed variables (e.g., x(i)), ensure the indices match your generator variables
+
+                  Example:
+                    Problem.define do
+                      variables("#{var_name_str}", [i <- 1..n], :continuous)
+                      constraints([i <- 1..n], #{var_name_str}(i) <= 10)
+                    end
+                  """
           end
         end
 
@@ -278,13 +335,51 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
 
             {:ok, _other} ->
               raise ArgumentError,
-                    "Unsupported expression: #{inspect(expr)}. " <>
-                      "If #{inspect(atom)} is meant to be a variable, ensure it was created with variables() first."
+                    """
+                    Unsupported expression in constraint/objective: #{inspect(expr)}
+
+                    The expression #{inspect(atom)} was evaluated as a constant from model_parameters,
+                    but it cannot be used directly in a constraint or objective expression.
+
+                    If #{inspect(atom)} is meant to be a variable:
+                      1. Define it using `variables("#{atom}", ...)` in your Problem.define block
+                      2. Use it with proper indexing: #{atom}(i) or #{atom}(i, j)
+
+                    If #{inspect(atom)} is meant to be a constant:
+                      1. Access it directly by name in expressions: #{atom}
+                      2. Use it in arithmetic: cost[i] * x(i) where cost is from model_parameters
+
+                    Example:
+                      Problem.define model_parameters: %{max_val: 10} do
+                        variables("x", [i <- 1..n], :continuous)
+                        constraints([i <- 1..n], x(i) <= max_val)  # max_val from model_parameters
+                      end
+                    """
 
             :error ->
               raise ArgumentError,
-                    "Unsupported expression: #{inspect(expr)}. " <>
-                      "If #{inspect(atom)} is meant to be a variable, ensure it was created with variables() first."
+                    """
+                    Cannot evaluate expression: #{inspect(expr)}
+
+                    The expression #{inspect(atom)} could not be evaluated as:
+                    - A variable (not found in problem variables)
+                    - A constant from model_parameters (not found in model_parameters map)
+
+                    To fix this:
+                    1. If #{inspect(atom)} should be a variable:
+                       - Define it using `variables("#{atom}", ...)` before using it
+                       - Check for typos in the variable name
+
+                    2. If #{inspect(atom)} should be a constant:
+                       - Add it to model_parameters: `Problem.define model_parameters: %{#{atom}: value} do`
+                       - Or use a literal value instead
+
+                    Example:
+                      Problem.define model_parameters: %{n: 10} do
+                        variables("x", [i <- 1..n], :continuous)
+                        constraints([i <- 1..n], x(i) <= 10)
+                      end
+                    """
           end
         end
 
@@ -309,13 +404,51 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
 
               {:ok, _other} ->
                 raise ArgumentError,
-                      "Unsupported expression: #{inspect(expr)}. " <>
-                        "If #{inspect(var_name)} is meant to be a variable, ensure it was created with variables() first."
+                      """
+                      Unsupported expression in constraint/objective: #{inspect(expr)}
+
+                      The expression #{inspect(var_name)} was evaluated as a constant from model_parameters,
+                      but it cannot be used directly in a constraint or objective expression.
+
+                      If #{inspect(var_name)} is meant to be a variable:
+                        1. Define it using `variables("#{var_name}", ...)` in your Problem.define block
+                        2. Use it with proper indexing: #{var_name}(i) or #{var_name}(i, j)
+
+                      If #{inspect(var_name)} is meant to be a constant:
+                        1. Access it directly by name in expressions: #{var_name}
+                        2. Use it in arithmetic: cost[i] * x(i) where cost is from model_parameters
+
+                      Example:
+                        Problem.define model_parameters: %{max_val: 10} do
+                          variables("x", [i <- 1..n], :continuous)
+                          constraints([i <- 1..n], x(i) <= max_val)  # max_val from model_parameters
+                        end
+                      """
 
               :error ->
                 raise ArgumentError,
-                      "Unsupported expression: #{inspect(expr)}. " <>
-                        "If #{inspect(var_name)} is meant to be a variable, ensure it was created with variables() first."
+                      """
+                      Cannot evaluate expression: #{inspect(expr)}
+
+                      The expression #{inspect(var_name)} could not be evaluated as:
+                      - A variable (not found in problem variables)
+                      - A constant from model_parameters (not found in model_parameters map)
+
+                      To fix this:
+                      1. If #{inspect(var_name)} should be a variable:
+                         - Define it using `variables("#{var_name}", ...)` before using it
+                         - Check for typos in the variable name
+
+                      2. If #{inspect(var_name)} should be a constant:
+                         - Add it to model_parameters: `Problem.define model_parameters: %{#{var_name}: value} do`
+                         - Or use a literal value instead
+
+                      Example:
+                        Problem.define model_parameters: %{n: 10} do
+                          variables("x", [i <- 1..n], :continuous)
+                          constraints([i <- 1..n], x(i) <= 10)
+                        end
+                      """
             end
           end
         else
@@ -339,12 +472,38 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
 
           {:ok, non_numeric_val} ->
             raise ArgumentError,
-                  "Constant access expression evaluated to non-numeric value: #{inspect(expr_with_field)} => #{inspect(non_numeric_val)}"
+                  """
+                  Constant access expression evaluated to non-numeric value: #{inspect(expr_with_field)} => #{inspect(non_numeric_val)}
+
+                  In constraint/objective expressions, constants from model_parameters must evaluate to numbers.
+                  Got: #{inspect(non_numeric_val)}
+
+                  Common causes:
+                  1. Accessing a non-numeric field from a map/struct (e.g., items_dict[item].name instead of items_dict[item].weight)
+                  2. The constant in model_parameters is not a number (e.g., it's a string or list)
+
+                  Example of correct usage:
+                    # In model_parameters: %{items: [%{weight: 5.0, name: "item1"}]}
+                    constraints([i <- 1..n], x(i) * items[i].weight <= 10)  # ✓ weight is numeric
+                    # NOT: constraints([i <- 1..n], x(i) * items[i].name <= 10)  # ✗ name is string
+                  """
 
           :error ->
             raise ArgumentError,
-                  "Cannot evaluate constant access expression: #{inspect(expr_with_field)}. " <>
-                    "Ensure the constant exists in model_parameters and indices are valid."
+                  """
+                  Cannot evaluate constant access expression: #{inspect(expr_with_field)}
+
+                  Ensure:
+                  1. The constant exists in model_parameters
+                  2. All indices are valid (within range for lists, keys exist for maps)
+                  3. Generator variables used in indices are bound (e.g., i <- 1..n)
+
+                  Example:
+                    Problem.define model_parameters: %{costs: [10, 20, 30]} do
+                      variables("x", [i <- 1..3], :continuous)
+                      constraints([i <- 1..3], x(i) * costs[i] <= 100)  # costs[i] accesses model_parameters
+                    end
+                  """
         end
 
       # Handle Access.get AST nodes (e.g., multiplier[i], cost[worker][task])

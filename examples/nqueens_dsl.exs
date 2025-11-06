@@ -1,4 +1,34 @@
-# N-Queens problem using the new DSL
+# N-Queens Problem Example
+#
+# BUSINESS CONTEXT:
+# The N-Queens problem is a classic combinatorial optimization challenge that originated
+# as a chess puzzle: place N queens on an N×N chessboard so that no two queens
+# threaten each other. This problem demonstrates constraint satisfaction and
+# combinatorial optimization techniques used in scheduling, resource allocation,
+# and puzzle solving.
+#
+# MATHEMATICAL FORMULATION:
+# Variables: x_{i,j} = 1 if queen placed at row i, column j, 0 otherwise (binary)
+# Constraints:
+#   Σ_j x_{i,j} = 1 for each row i (one queen per row)
+#   Σ_i x_{i,j} = 1 for each column j (one queen per column)
+#   Additional constraints for diagonals (not implemented in this basic version)
+# Objective: Maximize Σ_{i,j} x_{i,j} (place as many queens as possible)
+#
+# DSL SYNTAX HIGHLIGHTS:
+# - Generator variables: variables(name, [i <- range, j <- range], :binary)
+# - Pattern sums: sum(queen2d(i, :_)) sums over all j for fixed i
+# - Wildcard patterns: queen2d(:_, :_) for all variables
+# - Constraint generators: constraints([i <- range], expr, description)
+# - Binary variables for combinatorial problems
+#
+# GOTCHAS:
+# - Binary variables automatically constrain to 0 or 1
+# - Generator indices create variable names like queen2d_1_2
+# - Pattern matching uses :_ for "all values of this index"
+# - Diagonal constraints are omitted in this basic version
+# - N-Queens is NP-complete, so large N may be slow
+
 require Dantzig.Problem, as: Problem
 require Dantzig.Problem.DSL, as: DSL
 
@@ -120,6 +150,15 @@ IO.puts("\nProblem summary:")
 IO.puts("Solution: #{inspect(solution)}")
 IO.puts("Objective: #{objective}")
 
-IO.puts("\n=== N-Queens problem created with DSL! ===")
-IO.puts("Note: This example demonstrates the DSL structure.")
-IO.puts("Full constraint parsing with patterns is still being implemented.")
+IO.puts("")
+IO.puts("LEARNING INSIGHTS:")
+IO.puts("==================")
+IO.puts("• N-Queens demonstrates combinatorial constraint satisfaction")
+IO.puts("• Binary variables model yes/no placement decisions")
+IO.puts("• Generator syntax creates variables and constraints systematically")
+IO.puts("• Pattern sums aggregate over wildcard dimensions")
+IO.puts("• Real-world applications: scheduling, resource placement, puzzle solving")
+IO.puts("• This basic version omits diagonal constraints for simplicity")
+
+IO.puts("")
+IO.puts("✅ N-Queens problem examples completed!")

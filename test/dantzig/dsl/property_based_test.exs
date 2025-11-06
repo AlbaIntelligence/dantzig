@@ -87,7 +87,7 @@ defmodule Dantzig.DSL.PropertyBasedTest do
 
         # Test that components integrate properly
         assert length(parsed) == 1
-        assert length(combinations) == (range_end - range_start + 1)
+        assert length(combinations) == range_end - range_start + 1
       end
     end
   end

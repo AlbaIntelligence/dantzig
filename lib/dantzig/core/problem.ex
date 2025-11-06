@@ -633,7 +633,26 @@ defmodule Dantzig.Problem do
 
         _ ->
           raise ArgumentError,
-                "Unsupported simple constraint expression: #{inspect(constraint_expr)}"
+                """
+                Unsupported constraint expression: #{inspect(constraint_expr)}
+
+                Constraint expressions must be comparison operations (==, <=, >=) between:
+                - Variables (e.g., x(i))
+                - Polynomial expressions (e.g., x(i) + y(j))
+                - Constants (e.g., 10, cost[i])
+
+                Valid constraint formats:
+                  1. Variable comparison: x(i) <= 10
+                  2. Expression comparison: x(i) + y(j) <= capacity[i]
+                  3. Sum comparison: sum(x(:_)) <= total
+
+                Examples:
+                  constraints([i <- 1..n], x(i) <= 10, "Upper bound")
+                  constraints([i <- 1..n], x(i) + y(i) <= capacity[i], "Capacity constraint")
+                  constraints(sum(x(:_)) <= 100, "Total constraint")
+
+                Got: #{inspect(constraint_expr)}
+                """
       end
     end
   end
@@ -647,6 +666,8 @@ defmodule Dantzig.Problem do
     do: false
 
   defp check_for_complex({:sum, _, _}, _found), do: true
+  defp check_for_complex({{:., _, [_, :sum]}, _, _}, _found), do: true
+  defp check_for_complex({:sum, {:for, _, _}}, _found), do: true
   defp check_for_complex({:for, _, _}, _found), do: true
   defp check_for_complex({{:., _, [Access, :get]}, _, _}, _found), do: true
 

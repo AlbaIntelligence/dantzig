@@ -33,6 +33,12 @@ defmodule Dantzig.Problem.DSLReducer do
     end
   end
 
+  #
+  # TODO: __define_reduce__ and __modify_reduce__ are essentially the same thing.
+  #       In a sense `define` modifies for the first time.
+  #       There is an enormous amount of code duplication that should be refactored into a single code set.
+  #
+
   # Helper used by the macro to reduce the block at compile-time into runtime calls
   def __define_reduce__(exprs) when is_list(exprs) do
     {initial_problem, rest} =
@@ -42,6 +48,8 @@ defmodule Dantzig.Problem.DSLReducer do
         _ -> raise ArgumentError, "First expression inside define must be new/1"
       end
 
+    # TODO: I think the following would be easire to read if there was a first case/switch on `:for`, `variables`, `constraints`,
+    #       ans then within each case, pattern matching on signature. More logical.
     Enum.reduce(rest, initial_problem, fn
       # Support simple for-comprehension inside define for variables expansion
       # Example: for food <- food_names, do: variables("qty", [food], :continuous, "desc")
@@ -241,35 +249,25 @@ defmodule Dantzig.Problem.DSLReducer do
             Problem.variables(acc, name, generators, type, opts)
         end
 
-      # Simple constraints: constraints(expr, desc) - no generators
-      {:constraints, _, [constraint_expr, desc]} = _ast, acc
-      when is_tuple(constraint_expr) and is_binary(desc) ->
-        # For simple constraints, parse the expression directly without generators
-        transformed = transform_constraint_expression_to_ast(constraint_expr)
-        constraint = parse_simple_constraint_expression(acc, transformed, desc)
-        Problem.add_constraint(acc, constraint)
-
-      # Simple constraints: constraints(expr) - no generators, no description
-      {:constraints, _, [constraint_expr]} = _ast, acc when is_tuple(constraint_expr) ->
-        # For simple constraints, parse the expression directly without generators
-        transformed = transform_constraint_expression_to_ast(constraint_expr)
-        constraint = parse_simple_constraint_expression(acc, transformed, nil)
-        Problem.add_constraint(acc, constraint)
+      # Generator syntax without description: variables("name", [generators], :type)
+      {:variables, _, [name, generators, type]} = _ast, acc
+      when is_binary(name) and is_list(generators) and is_atom(type) ->
+        Problem.variables(acc, name, generators, type, [])
 
       # Generator-based constraints: constraints(generators, expr, desc)
-      {:constraints, _, [generators, constraint_expr, desc]} = _ast, acc ->
+      {:constraints, _, [generators, constraint_expr, desc]} = _ast, acc when is_list(generators) ->
         Problem.constraints(acc, generators, constraint_expr, desc)
 
       # Generator-based constraints: constraints(generators, expr)
-      {:constraints, _, [generators, constraint_expr]} = _ast, acc ->
+      {:constraints, _, [generators, constraint_expr]} = _ast, acc when is_list(generators) ->
         Problem.constraints(acc, generators, constraint_expr, nil)
 
-      # No-generator constraints forms
+      # No-generator constraints forms - use single constraint function
       {:constraints, _, [constraint_expr, desc]} = _ast, acc ->
-        Problem.constraints(acc, [], constraint_expr, desc)
+        Problem.constraint(acc, constraint_expr, desc)
 
       {:constraints, _, [constraint_expr]} = _ast, acc ->
-        Problem.constraints(acc, [], constraint_expr, nil)
+        Problem.constraint(acc, constraint_expr, nil)
 
       {:objective, _, [objective_expr, opts]} = _ast, acc ->
         transformed = transform_objective_expression_to_ast(objective_expr)
@@ -393,6 +391,11 @@ defmodule Dantzig.Problem.DSLReducer do
           opts when is_list(opts) ->
             Problem.variables(acc, name, generators, type, opts)
         end
+
+      # Generator syntax without description: variables("name", [generators], :type)
+      {:variables, _, [name, generators, type]} = _ast, acc
+      when is_binary(name) and is_list(generators) and is_atom(type) ->
+        Problem.variables(acc, name, generators, type, [])
 
       {:constraints, _, [constraint_expr, desc]} = _ast, acc
       when is_tuple(constraint_expr) and is_binary(desc) ->

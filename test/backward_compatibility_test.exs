@@ -3,7 +3,7 @@ defmodule Dantzig.BackwardCompatibilityTest do
   Backward compatibility validation test for the Dantzig package.
 
   This test ensures that existing API contracts are maintained.
-  
+
   Tests cover:
   - Imperative API (Problem.new, Problem.add_variable, Problem.add_constraint, Problem.set_objective)
   - DSL API (Problem.define)
@@ -13,7 +13,7 @@ defmodule Dantzig.BackwardCompatibilityTest do
   - Solution structures
   - AST structures
   - Solver integration
-  
+
   Ensures FR-009: System MUST maintain backward compatibility with existing API usage patterns
   """
   use ExUnit.Case, async: true
@@ -75,14 +75,8 @@ defmodule Dantzig.BackwardCompatibilityTest do
     left = Dantzig.Polynomial.new(%{"x" => 1.0})
     right = Dantzig.Polynomial.new(%{})
 
-    # Test keyword list API
-    constraint =
-      Constraint.new(
-        left: left,
-        operator: :==,
-        right: right,
-        description: "Test constraint"
-      )
+    # Test macro API with comparison expression
+    constraint = Constraint.new(left == right, description: "Test constraint")
 
     assert is_struct(constraint, Dantzig.Constraint)
     assert constraint.left == left
@@ -178,7 +172,9 @@ defmodule Dantzig.BackwardCompatibilityTest do
     problem = Dantzig.Problem.new(name: "Imperative Test")
 
     # Add variable
-    {problem, var_ref} = Dantzig.Problem.new_variable(problem, "x", type: :continuous, min: 0.0, max: 10.0)
+    {problem, var_ref} =
+      Dantzig.Problem.new_variable(problem, "x", type: :continuous, min: 0.0, max: 10.0)
+
     assert is_map(problem.variables)
     assert Map.has_key?(problem.variables, "x")
 
