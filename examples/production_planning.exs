@@ -13,6 +13,7 @@ require Dantzig.Problem.DSL, as: DSL
 
 # Define the problem data
 time_periods = [1, 2, 3, 4]
+max_periods = Enum.at(time_periods, -1)
 
 # Demand for each time period
 demand = %{
@@ -78,7 +79,8 @@ problem =
                    holding_cost: holding_cost,
                    max_production: max_production,
                    initial_inventory: initial_inventory,
-                   time_periods: time_periods
+                   time_periods: time_periods,
+                   max_periods: max_periods
                  } do
     new(
       name: "Production Planning Problem",
@@ -115,14 +117,24 @@ problem =
 
     # For periods 2-4: inventory[t-1] + produce[t] - demand[t] = inventory[t]
     # Model parameters not yet supported for variable access, so hardcode values
+
+    # TODO: Improve Parser to write:
+    # constraints(
+    #   [t <- [1..max_periods-1]] # or [t <- [1..(max_periods-1)]]
+    #   inventory(t) + produce(t+1) - 150 == 0,
+    #   "Inventory balance for period #{t}"
+    # )
+
     constraints(
-    inventory(1) + produce(2) - 150 == 0,
-    "Inventory balance for period 2"
+      inventory(1) + produce(2) - 150 == 0,
+      "Inventory balance for period 2"
     )
+
     constraints(
       inventory(2) + produce(3) - 80 == 0,
       "Inventory balance for period 3"
     )
+
     constraints(
       inventory(3) + produce(4) - 200 == 0,
       "Inventory balance for period 4"
@@ -141,123 +153,135 @@ problem =
   end
 
 IO.puts("Solving the production planning problem...")
-{solution, objective_value} = Problem.solve(problem, print_optimizer_input: false)
+result = Problem.solve(problem, print_optimizer_input: false)
 
-IO.puts("Solution:")
-IO.puts("=========")
-IO.puts("Objective value: #{objective_value}")
-IO.puts("")
+case result do
+  {solution, objective_value} ->
+    IO.puts("Solution:")
+    IO.puts("=========")
+    IO.puts("Objective value: #{objective_value}")
+    IO.puts("")
 
-IO.puts("Production Plan:")
-total_production_cost = 0
-total_holding_cost = 0
+    IO.puts("Production Plan:")
+    total_production_cost = 0
+    total_holding_cost = 0
 
-# Display production and inventory for each period
-Enum.each(time_periods, fn period ->
-  produce_var = "produce_#{period}"
-  inventory_var = "inventory_#{period}"
+    # Display production and inventory for each period
+    Enum.each(time_periods, fn period ->
+      produce_var = "produce_#{period}"
+      inventory_var = "inventory_#{period}"
 
-  produced = solution.variables[produce_var]
-  inventory = solution.variables[inventory_var]
+      produced = solution.variables[produce_var]
+      inventory = solution.variables[inventory_var]
 
-  production_cost = produced * production_cost[period]
-  holding_cost_period = inventory * holding_cost
+      production_cost = produced * production_cost[period]
+      holding_cost_period = inventory * holding_cost
 
-  total_production_cost = total_production_cost + production_cost
-  total_holding_cost = total_holding_cost + holding_cost_period
+      total_production_cost = total_production_cost + production_cost
+      total_holding_cost = total_holding_cost + holding_cost_period
 
-  IO.puts("Period #{period}:")
+      IO.puts("Period #{period}:")
 
-  IO.puts(
-    "  Production: #{Float.round(produced * 1.0, 2)} units (cost: $#{Float.round(production_cost * 1.0, 2)})"
-  )
+      IO.puts(
+        "  Production: #{Float.round(produced * 1.0, 2)} units (cost: $#{Float.round(production_cost * 1.0, 2)})"
+      )
 
-  IO.puts(
-    "  Ending Inventory: #{Float.round(inventory * 1.0, 2)} units (holding cost: $#{Float.round(holding_cost_period * 1.0, 2)})"
-  )
+      IO.puts(
+        "  Ending Inventory: #{Float.round(inventory * 1.0, 2)} units (holding cost: $#{Float.round(holding_cost_period * 1.0, 2)})"
+      )
 
-  IO.puts("  Demand: #{demand[period]} units")
-  IO.puts("")
-end)
+      IO.puts("  Demand: #{demand[period]} units")
+      IO.puts("")
+    end)
 
-total_cost = total_production_cost + total_holding_cost
+    total_cost = total_production_cost + total_holding_cost
 
-IO.puts("Summary:")
-IO.puts("  Total production cost: $#{Float.round(total_production_cost * 1.0, 2)}")
-IO.puts("  Total holding cost: $#{Float.round(total_holding_cost * 1.0, 2)}")
-IO.puts("  Total cost: $#{Float.round(total_cost * 1.0, 2)}")
-IO.puts("  Reported objective: #{objective_value}")
-IO.puts("  Cost matches objective: #{abs(total_cost - objective_value) < 0.001}")
+    IO.puts("Summary:")
+    IO.puts("  Total production cost: $#{Float.round(total_production_cost * 1.0, 2)}")
+    IO.puts("  Total holding cost: $#{Float.round(total_holding_cost * 1.0, 2)}")
+    IO.puts("  Total cost: $#{Float.round(total_cost * 1.0, 2)}")
+    IO.puts("  Reported objective: #{objective_value}")
+    IO.puts("  Cost matches objective: #{abs(total_cost - objective_value) < 0.001}")
 
-# Validation
-if abs(total_cost - objective_value) > 0.001 do
-  IO.puts("ERROR: Objective value mismatch!")
-  System.halt(1)
-end
-
-# Validate inventory balance for each period
-IO.puts("")
-IO.puts("Inventory Balance Validation:")
-
-# Period 1: initial + produced - demand should equal ending inventory
-period1_balance = initial_inventory + solution.variables["produce_1"] - demand[1]
-period1_valid = abs(period1_balance - solution.variables["inventory_1"]) < 0.001
-
-IO.puts(
-  "  Period 1: #{initial_inventory} + #{Float.round(solution.variables["produce_1"], 2)} - #{demand[1]} = #{Float.round(period1_balance, 2)} (inventory: #{Float.round(solution.variables["inventory_1"], 2)}) #{if period1_valid, do: "✅ OK", else: "❌ VIOLATED"}"
-)
-
-# Periods 2-4: previous inventory + produced - demand should equal ending inventory
-Enum.each(2..4, fn period ->
-  prev_inventory = solution.variables["inventory_#{period - 1}"]
-  produced = solution.variables["produce_#{period}"]
-  balance = prev_inventory + produced - demand[period]
-  current_inventory = solution.variables["inventory_#{period}"]
-  valid = abs(balance - current_inventory) < 0.001
-
-  IO.puts(
-    "  Period #{period}: #{Float.round(prev_inventory * 1.0, 2)} + #{Float.round(produced * 1.0, 2)} - #{demand[period]} = #{Float.round(balance * 1.0, 2)} (inventory: #{Float.round(current_inventory * 1.0, 2)}) #{if valid, do: "✅ OK", else: "❌ VIOLATED"}"
-  )
-end)
-
-# Check that all production is within capacity
-production_validation =
-  Enum.map(time_periods, fn period ->
-    produced = solution.variables["produce_#{period}"]
-    {period, produced, max_production}
-  end)
-
-IO.puts("")
-IO.puts("Production Capacity Check:")
-
-Enum.each(production_validation, fn {period, produced, capacity} ->
-  status =
-    if produced <= capacity + 0.001 do
-      "✅ OK"
-    else
-      "❌ VIOLATED"
+    # Validation
+    if abs(total_cost - objective_value) > 0.001 do
+      IO.puts("ERROR: Objective value mismatch!")
+      System.halt(1)
     end
 
-  IO.puts("  Period #{period}: #{Float.round(produced, 2)}/#{capacity} units #{status}")
-end)
+    # Validate inventory balance for each period
+    IO.puts("")
+    IO.puts("Inventory Balance Validation:")
 
-# Check for any validation errors
-validation_errors =
-  Enum.filter(
-    [period1_valid] ++
-      Enum.map(2..4, fn t ->
-        abs(
-          solution.variables["inventory_#{t - 1}"] + solution.variables["produce_#{t}"] -
-            demand[t] - solution.variables["inventory_#{t}"]
-        ) < 0.001
-      end),
-    fn valid -> not valid end
-  )
+    # Period 1: initial + produced - demand should equal ending inventory
+    period1_balance = initial_inventory + solution.variables["produce_1"] - demand[1]
+    period1_valid = abs(period1_balance - solution.variables["inventory_1"]) < 0.001
 
-if validation_errors != [] do
-  IO.puts("ERROR: Inventory balance validation failed!")
-  System.halt(1)
+    IO.puts(
+      "  Period 1: #{initial_inventory} + #{Float.round(solution.variables["produce_1"], 2)} - #{demand[1]} = #{Float.round(period1_balance, 2)} (inventory: #{Float.round(solution.variables["inventory_1"], 2)}) #{if period1_valid, do: "✅ OK", else: "❌ VIOLATED"}"
+    )
+
+    # Periods 2-4: previous inventory + produced - demand should equal ending inventory
+    Enum.each(2..4, fn period ->
+      prev_inventory = solution.variables["inventory_#{period - 1}"]
+      produced = solution.variables["produce_#{period}"]
+      balance = prev_inventory + produced - demand[period]
+      current_inventory = solution.variables["inventory_#{period}"]
+      valid = abs(balance - current_inventory) < 0.001
+
+      IO.puts(
+        "  Period #{period}: #{Float.round(prev_inventory * 1.0, 2)} + #{Float.round(produced * 1.0, 2)} - #{demand[period]} = #{Float.round(balance, 2)} (inventory: #{Float.round(current_inventory, 2)}) #{if valid, do: "✅ OK", else: "❌ VIOLATED"}"
+      )
+    end)
+
+    # Check that all production is within capacity
+    production_validation =
+      Enum.map(time_periods, fn period ->
+        produced = solution.variables["produce_#{period}"]
+        {period, produced, max_production}
+      end)
+
+    IO.puts("")
+    IO.puts("Production Capacity Check:")
+
+    Enum.each(production_validation, fn {period, produced, capacity} ->
+      status =
+        if produced <= capacity + 0.001 do
+          "✅ OK"
+        else
+          "❌ VIOLATED"
+        end
+
+      IO.puts("  Period #{period}: #{Float.round(produced, 2)}/#{capacity} units #{status}")
+    end)
+
+    # Check for any validation errors
+    validation_errors =
+      Enum.filter(
+        [period1_valid] ++
+          Enum.map(2..4, fn t ->
+            abs(
+              solution.variables["inventory_#{t - 1}"] + solution.variables["produce_#{t}"] -
+                demand[t] - solution.variables["inventory_#{t}"]
+            ) < 0.001
+          end),
+        fn valid -> not valid end
+      )
+
+    if validation_errors != [] do
+      IO.puts("ERROR: Inventory balance validation failed!")
+      System.halt(1)
+    end
+
+    IO.puts("")
+    IO.puts("✅ Production planning problem solved successfully!")
+
+  :error ->
+    IO.puts("ERROR: Problem could not be solved. This may be due to:")
+    IO.puts("  1. Infeasible constraints (no feasible solution exists)")
+    IO.puts("  2. Unbounded objective (solution can be arbitrarily large)")
+    IO.puts("  3. Invalid constraint formulation")
+    IO.puts("")
+    IO.puts("Please check the problem formulation and try again.")
+    System.halt(1)
 end
-
-IO.puts("")
-IO.puts("✅ Production planning problem solved successfully!")

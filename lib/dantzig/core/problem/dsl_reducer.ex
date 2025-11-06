@@ -428,12 +428,13 @@ defmodule Dantzig.Problem.DSLReducer do
     end)
   end
 
-  # Transform helper functions
-  defp transform_constraint_expression_to_ast(expr),
-    do: Dantzig.Problem.AST.transform_constraint_expression_to_ast(expr)
-
+  # Transform helper functions (used in __define_reduce__ for objective expressions)
   defp transform_objective_expression_to_ast(expr),
     do: Dantzig.Problem.AST.transform_objective_expression_to_ast(expr)
+
+  # Note: transform_constraint_expression_to_ast is currently unused but kept for potential future use
+  # defp transform_constraint_expression_to_ast(expr),
+  #   do: Dantzig.Problem.AST.transform_constraint_expression_to_ast(expr)
 
   # Parse simple constraint expression
   defp parse_simple_constraint_expression(problem, constraint_expr, description),

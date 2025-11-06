@@ -684,7 +684,7 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
               # If it exists, it's a generator variable - resolve it
               # If it doesn't exist, it's a literal atom - use it as-is
               case Map.fetch(bindings, atom_name) do
-                {:ok, value} when is_binary(value) or is_atom(value) ->
+                {:ok, value} ->
                   # This is a generator variable, use its value
                   value
 
