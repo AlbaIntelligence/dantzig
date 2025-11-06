@@ -72,10 +72,10 @@
 - [x] T141g [P] [US1] Add failing test for `interpolate_variables_in_description/2` in `test/dantzig/problem/dsl/constraint_manager_test.exs`
 - [x] T146 [P] [US1] Finalize `interpolate_variables_in_description/2` in `lib/dantzig/problem/dsl/constraint_manager.ex`
 - [x] T147 [P] [BC] Align or remove placeholder `process_define_block/1` in `lib/dantzig/problem/dsl.ex` to avoid drift with `Problem.define`
-- [ ] T141h [P] [US1] Add failing test for model parameters in `Problem.define` in `test/dantzig/dsl/model_parameters_test.exs` (precursor to T155)
-- [ ] T148 [P] [US1] Add model parameters support to `Problem.define` in `lib/dantzig/core/problem.ex` or `lib/dantzig/problem/dsl.ex`
-- [ ] T141i [P] [BC] Add failing test for `Problem.modify` macro in `test/dantzig/dsl/problem_modify_test.exs` (precursor to T156)
-- [ ] T149 [P] [BC] Implement or improve `Problem.modify` macro; update related tests in `test/macro_approach/*`
+- [x] T141h [P] [US1] Add failing test for model parameters in `Problem.define` in `test/dantzig/dsl/model_parameters_test.exs` (precursor to T155)
+- [x] T148 [P] [US1] Add model parameters support to `Problem.define` in `lib/dantzig/core/problem.ex` or `lib/dantzig/problem/dsl.ex`
+- [x] T141i [P] [BC] Add failing test for `Problem.modify` macro in `test/dantzig/dsl/problem_modify_test.exs` (precursor to T156)
+- [x] T149 [P] [BC] Implement or improve `Problem.modify` macro; update related tests in `test/macro_approach/*`
 - [ ] T150 [P] [US2] Fix macro availability and unskip imperative chained‑constraints tests in `test/dantzig/dsl/experimental/integration_test.exs`
 - [ ] T151 [P] [US2] Fix variable access macro generation and unskip tests in `test/dantzig/dsl/experimental/simple_integration_test.exs`
 - [ ] T152 [P] [US2] Deprecate `test/macro_approach/*`; migrate relevant cases into `test/dantzig/dsl/experimental/*` and remove obsolete tests
@@ -260,7 +260,8 @@
 
 **Success Criteria**: SC-007 (error messages clear and actionable for ≥90% of common mistakes)
 
-**Edge Case Mapping** (from spec.md): 
+**Edge Case Mapping** (from spec.md):
+
 - No feasible solution → T045
 - Unbounded objectives → T046
 - Invalid constraint syntax → T047, T097
@@ -431,6 +432,7 @@
 - [ ] T135 [P] Performance optimization across all components
 - [ ] T136 [P] Additional unit tests for edge cases in test/unit/
 - [ ] T137 [P] Security hardening for solver integration (no spec requirement; remove if not needed or add NFR to spec)
+- [ ] T138a [P] Search codebase for TODO comments and create refactoring tasks; found TODOs: Problem.modify macro, Problem.add_constraint, model_parameters support, remove placeholder functions, fix macro availability, variable access macro generation, dsl_reducer refactoring
 - [ ] T138 [P] Run quickstart.md validation
 - [ ] T139 [P] Update README.md with robustification improvements
 - [ ] T140 [P] Create migration guide for existing users (may duplicate T116; ensure T116 creates initial guide, T140 refines it)
@@ -569,8 +571,8 @@ With multiple developers:
 | FR-009: Backward compatibility     | Phase 10 (BC) | 12 tasks   | ✅ Covered |
 | FR-011: 30min onboarding           | Phase 9 (DOC) | 12 tasks   | ✅ Covered |
 | FR-012: Performance targets        | Phase 7 (US5) | 10 tasks   | ✅ Covered |
-| FR-013: Model parameters           | Phase 12       | 8 tasks    | ✅ Covered |
-| FR-014: Problem.modify             | Phase 12       | 8 tasks    | ✅ Covered |
-| FR-015: Constant access           | Phase 13       | 12 tasks   | ✅ Covered |
+| FR-013: Model parameters           | Phase 12      | 8 tasks    | ✅ Covered |
+| FR-014: Problem.modify             | Phase 12      | 8 tasks    | ✅ Covered |
+| FR-015: Constant access            | Phase 13      | 12 tasks   | ✅ Covered |
 
 **Total Tasks**: 153 tasks covering all 15 functional requirements
