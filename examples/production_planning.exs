@@ -114,10 +114,18 @@ problem =
     )
 
     # For periods 2-4: inventory[t-1] + produce[t] - demand[t] = inventory[t]
+    # Model parameters not yet supported for variable access, so hardcode values
     constraints(
-      [t <- 2..4],
-      inventory(t - 1) + produce(t) - demand[t] == 0,
-      "Inventory balance for subsequent periods"
+    inventory(1) + produce(2) - 150 == 0,
+    "Inventory balance for period 2"
+    )
+    constraints(
+      inventory(2) + produce(3) - 80 == 0,
+      "Inventory balance for period 3"
+    )
+    constraints(
+      inventory(3) + produce(4) - 200 == 0,
+      "Inventory balance for period 4"
     )
 
     # Production capacity constraints (already handled by variable bounds)

@@ -347,8 +347,11 @@ problem = Problem.modify(problem) do
   # Update objective to minimize total assignment cost
   # For each worker-task pair, multiply assignment variable by cost
   # Sum all products to get total cost
+  # Model parameters not yet supported for variable access, so hardcode costs
   objective(
-    sum(for w <- workers, t <- tasks, do: assign(w, t) * cost_matrix[w][t]),
+  assign("Alice", "Task1") * 2 + assign("Alice", "Task2") * 3 + assign("Alice", "Task3") * 1 +
+    assign("Bob", "Task1") * 4 + assign("Bob", "Task2") * 2 + assign("Bob", "Task3") * 3 +
+    assign("Charlie", "Task1") * 3 + assign("Charlie", "Task2") * 1 + assign("Charlie", "Task3") * 4,
     direction: :minimize
   )
 end

@@ -88,22 +88,38 @@ problem =
     variables("flow_BT", :continuous, min: 0, max: 7, description: "Flow B to T")
     variables("flow_CT", :continuous, min: 0, max: 12, description: "Flow C to T")
 
-    # Flow conservation at node A: inflow = outflow
-    # Inflow: S→A, Outflow: A→B + A→C
+    # Capacity constraints (variable bounds not working in LP export)
+    constraints(flow_SA <= 5, "Capacity S to A")
+    constraints(flow_SB <= 8, "Capacity S to B")
+    constraints(flow_AB <= 3, "Capacity A to B")
+    constraints(flow_AC <= 10, "Capacity A to C")
+    constraints(flow_BC <= 5, "Capacity B to C")
+    constraints(flow_BT <= 7, "Capacity B to T")
+    constraints(flow_CT <= 12, "Capacity C to T")
+
+    # Non-negativity constraints (variable bounds not working in LP export)
+    constraints(flow_SA >= 0, "Non-negative S to A")
+    constraints(flow_SB >= 0, "Non-negative S to B")
+    constraints(flow_AB >= 0, "Non-negative A to B")
+    constraints(flow_AC >= 0, "Non-negative A to C")
+    constraints(flow_BC >= 0, "Non-negative B to C")
+    constraints(flow_BT >= 0, "Non-negative B to T")
+    constraints(flow_CT >= 0, "Non-negative C to T")
+
+    # Flow conservation at intermediate nodes (A, B, C)
+    # Node A: inflow from S equals outflow to B and C
     constraints(
-      flow_SA == flow_AB + flow_AC,
-      "Flow conservation at node A"
+    flow_SA == flow_AB + flow_AC,
+    "Flow conservation at node A"
     )
 
-    # Flow conservation at node B: inflow = outflow
-    # Inflow: S→B + A→B, Outflow: B→C + B→T
+    # Node B: inflow from S and A equals outflow to C and T
     constraints(
       flow_SB + flow_AB == flow_BC + flow_BT,
-      "Flow conservation at node B"
+    "Flow conservation at node B"
     )
 
-    # Flow conservation at node C: inflow = outflow
-    # Inflow: A→C + B→C, Outflow: C→T
+    # Node C: inflow from A and B equals outflow to T
     constraints(
       flow_AC + flow_BC == flow_CT,
       "Flow conservation at node C"
@@ -111,8 +127,8 @@ problem =
 
     # Objective: maximize total flow into sink T
     objective(
-      flow_BT + flow_CT,
-      direction: :maximize
+    flow_BT + flow_CT,
+    direction: :maximize
     )
   end
 
@@ -121,43 +137,49 @@ IO.puts("Solving the network flow problem...")
 
 IO.puts("Solution:")
 IO.puts("=========")
-IO.puts("Maximum flow: #{Float.round(objective_value + 0.0, 2)} units")
+IO.puts("Maximum flow: #{Float.round(objective_value * 1.0, 2)} units")
 IO.puts("")
 
 IO.puts("Flow on each arc:")
-total_flow = 0
 
 # Map arc tuples to variable names
 arc_to_var = %{
-  {"S", "A"} => "flow_SA",
-  {"S", "B"} => "flow_SB",
-  {"A", "B"} => "flow_AB",
-  {"A", "C"} => "flow_AC",
-  {"B", "C"} => "flow_BC",
-  {"B", "T"} => "flow_BT",
-  {"C", "T"} => "flow_CT"
+ {"S", "A"} => "flow_SA",
+{"S", "B"} => "flow_SB",
+{"A", "B"} => "flow_AB",
+{"A", "C"} => "flow_AC",
+{"B", "C"} => "flow_BC",
+{"B", "T"} => "flow_BT",
+{"C", "T"} => "flow_CT"
 }
 
-Enum.each(arcs, fn {from, to, capacity} ->
-  var_name = arc_to_var[{from, to}]
-  flow_amount = solution.variables[var_name]
+# Calculate total flow and display arcs
+total_flow = Enum.reduce(arcs, 0.0, fn {from, to, capacity}, acc ->
+ var_name = arc_to_var[{from, to}]
+ flow_amount = Map.get(solution.variables, var_name, 0.0)
 
-  if flow_amount > 0.001 do
-    total_flow = total_flow + flow_amount
+ if flow_amount > 0.001 do
     utilization = flow_amount / capacity * 100
 
-    IO.puts(
-      "  #{from} → #{to}: #{Float.round(flow_amount, 2)}/#{capacity} units (#{Float.round(utilization, 1)}% utilized)"
+  IO.puts(
+     "  #{from} → #{to}: #{Float.round(flow_amount * 1.0, 2)}/#{capacity} units (#{Float.round(utilization * 1.0, 1)}% utilized)"
     )
   else
     IO.puts("  #{from} → #{to}: 0.0/#{capacity} units (0.0% utilized)")
+  end
+
+# Only add flows entering the sink to total_flow
+if to == "T" do
+acc + flow_amount
+else
+    acc
   end
 end)
 
 IO.puts("")
 IO.puts("Summary:")
-IO.puts("  Total flow calculated: #{Float.round(total_flow, 2)}")
-IO.puts("  Reported maximum flow: #{Float.round(objective_value, 2)}")
+IO.puts("  Total flow calculated: #{Float.round(total_flow * 1.0, 2)}")
+IO.puts("  Reported maximum flow: #{Float.round(objective_value * 1.0, 2)}")
 IO.puts("  Flow values match: #{abs(total_flow - objective_value) < 0.001}")
 
 # Validation
@@ -216,9 +238,9 @@ sink_inflow = solution.variables["flow_BT"] + solution.variables["flow_CT"]
 
 IO.puts("")
 IO.puts("Network Flow Summary:")
-IO.puts("  Source total outflow: #{Float.round(source_outflow, 2)}")
-IO.puts("  Sink total inflow: #{Float.round(sink_inflow, 2)}")
-IO.puts("  Maximum flow achieved: #{Float.round(objective_value, 2)}")
+IO.puts("  Source total outflow: #{Float.round(source_outflow * 1.0, 2)}")
+IO.puts("  Sink total inflow: #{Float.round(sink_inflow * 1.0, 2)}")
+IO.puts("  Maximum flow achieved: #{Float.round(objective_value * 1.0, 2)}")
 
 IO.puts("")
 IO.puts("LEARNING INSIGHTS:")
