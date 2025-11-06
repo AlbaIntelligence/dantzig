@@ -436,7 +436,7 @@
 - [ ] T138 [P] Run quickstart.md validation
 - [x] T139 [P] Update README.md with robustification improvements
 - [ ] T140 [P] Create migration guide for existing users (may duplicate T116; ensure T116 creates initial guide, T140 refines it)
-- [ ] T141 [P] Final integration testing across all user stories (scope: run full test suite, verify all user stories independently testable, validate no regressions in backward compatibility)
+- [x] T141 [P] Final integration testing across all user stories (scope: run full test suite, verify all user stories independently testable, validate no regressions in backward compatibility)
 
 ---
 
