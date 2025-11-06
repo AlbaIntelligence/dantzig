@@ -29,7 +29,7 @@ IO.puts("✓ Created #{map_size(var_map)} continuous variables")
 
 # In a real implementation, we would use the AST system like this:
 # problem = Macros.add_constraints(problem, [], "x", {:_, :_, :_}, :<=,
-#   max(x[1], x[2], x[3]), "Max constraint")
+#   max(x(1), x(2), x(3)), "Max constraint")
 
 IO.puts("")
 
@@ -43,7 +43,7 @@ IO.puts("")
 
 # In a real implementation:
 # problem = Macros.add_constraints(problem, [], "x", {:_, :_, :_}, :>=,
-#   min(x[1], x[2], x[3]), "Min constraint")
+#   min(x(1), x(2), x(3)), "Min constraint")
 
 IO.puts("✓ Min operation would create constraints: result <= each argument")
 IO.puts("")
@@ -102,12 +102,12 @@ IO.puts("")
 
 # Example combinations that would be supported:
 examples = [
-  "max(x[1], x[2], x[3], x[4])",
-  "min(y[1], y[2], y[3])",
-  "a[1] AND a[2] AND a[3] AND a[4] AND a[5]",
-  "b[1] OR b[2] OR b[3]",
-  "max(min(x[1], x[2]), min(x[3], x[4]))",
-  "a[1] AND (b[1] OR b[2] OR b[3])"
+  "max(x(1), x(2), x(3), x(4))",
+  "min(y(1), y(2), y(3))",
+  "a(1) AND a(2) AND a(3) AND a(4) AND a(5)",
+  "b(1) OR b(2) OR b(3)",
+  "max(min(x(1), x(2)), min(x(3), x(4)))",
+  "a(1) AND (b(1) OR b(2) OR b(3))"
 ]
 
 Enum.each(examples, fn example ->
