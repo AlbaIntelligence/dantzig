@@ -113,6 +113,12 @@ problem =
     )
   end
 
+# Debug: Show variable names
+IO.puts("")
+IO.puts("Variable names created:")
+var_names = Map.keys(problem.variables["ship"])
+IO.inspect(var_names, label: "Ship variables")
+
 IO.puts("Solving the transportation problem...")
 {solution, objective_value} = Problem.solve(problem, print_optimizer_input: false)
 
@@ -120,6 +126,10 @@ IO.puts("Solution:")
 IO.puts("=========")
 IO.puts("Objective value: #{objective_value}")
 IO.puts("")
+
+# Debug: Show solution variables
+IO.puts("Solution variables (first 5):")
+solution.variables |> Map.take(Enum.take(Map.keys(solution.variables), 5)) |> IO.inspect()
 
 IO.puts("Shipping Plan:")
 total_cost = 0
@@ -129,8 +139,8 @@ Enum.each(suppliers, fn supplier ->
   IO.puts("#{supplier}:")
 
   Enum.each(customers, fn customer ->
-    var_name = "ship_#{supplier}_#{customer}"
-    units_shipped = solution.variables[var_name]
+  var_name = "ship(#{supplier},#{customer})"
+  units_shipped = solution.variables[var_name]
 
     # Only show non-zero shipments
     if units_shipped > 0.001 do

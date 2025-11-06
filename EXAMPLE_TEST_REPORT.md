@@ -110,17 +110,17 @@ This report documents the syntax alignment with DSL specs and execution status f
 ## Current Status Summary
 
 - **Total Examples**: 17
-- **✅ Working**: 9 examples (53%)
-- **⚠️ Runtime Errors**: 8 examples (47%)
+- **✅ Working**: 10 examples (59%)
+- **⚠️ Runtime Errors**: 7 examples (41%)
 - **❌ Compilation Errors**: 0 examples (0%)
 
 ### Breakdown by Error Type:
 
-**Access.get / Map Access Issues (4 files)**:
-- `transportation_problem.exs` - `supply[s]`
+**Access.get / Map Access Issues (3 files remaining)**:
 - `production_planning.exs` - `demand[period]`
 - `school_timetabling.exs` - `teacher_skills[t][s]` (nested)
-- All need support for map access syntax in DSL expressions
+- `knapsack_problem.exs` - `items_dict[item].weight`
+- Need support for map access syntax in DSL expressions
 
 **List Comprehension in sum() (2 files)**:
 - `knapsack_problem.exs` - `sum(for item <- item_names, do: ...)`
@@ -142,7 +142,7 @@ This report documents the syntax alignment with DSL specs and execution status f
 
 ## Detailed Findings by Category
 
-### Working Examples (9):
+### Working Examples (10):
 1. **simple_working_example.exs** - Basic DSL examples
 2. **working_example.exs** - Similar to simple_working_example
 3. **new_dsl_example.exs** - Modern DSL demonstration
@@ -152,17 +152,17 @@ This report documents the syntax alignment with DSL specs and execution status f
 7. **variadic_operations_example.exs** - **FIXED** - Variadic operations demonstration
 8. **pattern_based_operations_example.exs** - **FIXED** - Pattern-based operations demonstration
 9. **tutorial_examples.exs** - **FIXED** - Comprehensive tutorial examples
+10. **transportation_problem.exs** - **FIXED** - Access.get expressions now work
 
-### Runtime Errors (8):
+### Runtime Errors (7):
 
 1. **assignment_problem.exs** - Objective calculation mismatch
-2. **knapsack_problem.exs** - Timeout/hanging
-3. **transportation_problem.exs** - Timeout/hanging
-4. **blending_problem.exs** - Timeout/hanging
-5. **production_planning.exs** - Nested Access.get not supported
-6. **network_flow.exs** - Timeout/hanging
-7. **school_timetabling.exs** - Nested Access.get not supported
-8. **diet_problem.exs** - Enumerable protocol error
+2. **knapsack_problem.exs** - `sum(for ...)` syntax not supported
+3. **blending_problem.exs** - Timeout/hanging
+4. **production_planning.exs** - Nested Access.get not supported
+5. **network_flow.exs** - Timeout/hanging
+6. **school_timetabling.exs** - Nested Access.get not supported
+7. **diet_problem.exs** - `sum(for ...)` syntax not supported
 
 ### Compilation Errors (3):
 
