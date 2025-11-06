@@ -276,6 +276,29 @@ defmodule Dantzig.Problem.AST do
 
         Polynomial.variable(var_name_str)
 
+      # Handle variable access patterns like x(1) which expand to {x, meta, [1]}
+      {var_name, _meta, [index]} when is_atom(var_name) and is_integer(index) ->
+        var_name_str = to_string(var_name)
+
+        # Construct the indexed variable name
+        indexed_name = "#{var_name_str}(#{index})"
+
+        # Check if this corresponds to a variable name with index
+        if not is_nil(problem) do
+          var_def = Dantzig.Problem.get_variable(problem, indexed_name)
+
+          if var_def do
+            # This is a variable access - use the indexed variable name
+            Polynomial.variable(indexed_name)
+          else
+            raise ArgumentError,
+              "Variable #{inspect(var_name)}(#{index}) not found. Ensure it was created with variables() first."
+          end
+        else
+          # No problem context - construct indexed name
+          Polynomial.variable(indexed_name)
+        end
+
       # Handle variable reference AST nodes like {:queen2d_1_1, [], Elixir} (when variable not in scope)
       # These occur when a variable name is used but not defined in the current scope
       # Exclude operators and other special forms
