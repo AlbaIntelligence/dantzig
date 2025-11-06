@@ -172,7 +172,7 @@
 - [x] T056 [US3] Enhance documentation for examples/simple_working_example.exs
 - [x] T057 [US3] Enhance documentation for examples/assignment_problem.exs
 - [x] T058 [US3] Enhance documentation for examples/blending_problem.exs
-- [ ] T059 [US3] Enhance documentation for examples/knapsack_problem.exs
+- [x] T059 [US3] Enhance documentation for examples/knapsack_problem.exs
 - [ ] T060 [US3] Enhance documentation for examples/network_flow.exs (create if missing, or document why excluded)
 - [ ] T061 [US3] Enhance documentation for examples/nqueens_dsl_working.exs
 - [ ] T062 [US3] Enhance documentation for examples/production_planning.exs
