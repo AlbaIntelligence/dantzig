@@ -8,7 +8,8 @@ defmodule Dantzig.Coverage.CoverageAnalysisTest do
 
   T053: Validate coverage targets: 80%+ overall, 85%+ core modules
   """
-  use ExUnit.Case, async: false  # Coverage tests should run sequentially
+  # Coverage tests should run sequentially
+  use ExUnit.Case, async: false
 
   @overall_coverage_target 80.0
   @core_module_coverage_target 85.0
@@ -41,6 +42,7 @@ defmodule Dantzig.Coverage.CoverageAnalysisTest do
            "minimum_coverage should be present in coveralls.json"
 
     minimum_coverage = String.to_integer(List.last(minimum_coverage_match))
+
     assert minimum_coverage >= @overall_coverage_target,
            "Overall coverage target should be >= #{@overall_coverage_target}%, got #{minimum_coverage}%"
 
@@ -67,6 +69,7 @@ defmodule Dantzig.Coverage.CoverageAnalysisTest do
            "minimum_coverage_by_file should be present in coveralls.json"
 
     minimum_coverage_by_file = String.to_integer(List.last(minimum_coverage_by_file_match))
+
     assert minimum_coverage_by_file >= @core_module_coverage_target,
            "Core module coverage target should be >= #{@core_module_coverage_target}%, got #{minimum_coverage_by_file}%"
 
@@ -140,8 +143,10 @@ defmodule Dantzig.Coverage.CoverageAnalysisTest do
 
     # Verify that coverage can be measured by checking mix.exs configuration
     mix_exs_content = File.read!("mix.exs")
+
     assert String.contains?(mix_exs_content, "test_coverage"),
            "mix.exs should contain test_coverage configuration"
+
     assert String.contains?(mix_exs_content, "ExCoveralls"),
            "mix.exs should configure ExCoveralls as coverage tool"
   end

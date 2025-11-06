@@ -26,15 +26,21 @@ defmodule Dantzig.EdgeCases.UndefinedVariablesTest do
       problem = fun.()
       # If problem is created, try to use it (should raise error)
       _lp_data = HiGHS.to_lp_iodata(problem)
-      flunk("Expected error for undefined variable, but problem was created and used successfully")
+
+      flunk(
+        "Expected error for undefined variable, but problem was created and used successfully"
+      )
     rescue
       e in [ArgumentError] ->
         message = extract_message(e)
+
         assert String.contains?(message, "undefined") or
                  String.contains?(message, "not found") or
                  String.contains?(message, "Cannot evaluate"),
                "Error message should mention undefined variable, got: #{message}"
+
         e
+
       e ->
         # Other errors are acceptable too
         e
@@ -53,6 +59,7 @@ defmodule Dantzig.EdgeCases.UndefinedVariablesTest do
         end
 
       message = extract_message(error)
+
       assert String.contains?(message, "undefined") or
                String.contains?(message, "Undefined") or
                String.contains?(message, "not found"),
@@ -69,6 +76,7 @@ defmodule Dantzig.EdgeCases.UndefinedVariablesTest do
         end
 
       message = extract_message(error)
+
       assert String.contains?(message, "undefined") or
                String.contains?(message, "Undefined"),
              "Error message should mention undefined variable, got: #{message}"
@@ -86,6 +94,7 @@ defmodule Dantzig.EdgeCases.UndefinedVariablesTest do
         end
 
       message = extract_message(error)
+
       assert String.contains?(message, "undefined") or
                String.contains?(message, "not found"),
              "Error message should mention undefined variable, got: #{message}"
@@ -103,6 +112,7 @@ defmodule Dantzig.EdgeCases.UndefinedVariablesTest do
         end
 
       message = extract_message(error)
+
       assert String.contains?(message, "undefined") or
                String.contains?(message, "not found"),
              "Error message should mention undefined variable, got: #{message}"
@@ -121,6 +131,7 @@ defmodule Dantzig.EdgeCases.UndefinedVariablesTest do
         end
 
       message = extract_message(error)
+
       assert String.contains?(message, "undefined") or
                String.contains?(message, "not found"),
              "Error message should mention undefined variable, got: #{message}"
@@ -150,7 +161,6 @@ defmodule Dantzig.EdgeCases.UndefinedVariablesTest do
   end
 
   describe "Undefined variables in generator contexts" do
-
     test "rejects constraints with wrong number of indices" do
       # Error might be raised during problem definition or when using the problem
       try do
@@ -170,6 +180,7 @@ defmodule Dantzig.EdgeCases.UndefinedVariablesTest do
         e in [ArgumentError] ->
           # Error is expected
           assert e != nil
+
         e ->
           # Other errors are acceptable
           assert e != nil
@@ -219,6 +230,7 @@ defmodule Dantzig.EdgeCases.UndefinedVariablesTest do
       # Error message should mention the variable or provide helpful information
       assert String.length(message) > 0,
              "Error message should not be empty, got: #{message}"
+
       # Might contain helpful suggestions (variables, define, typo) or just variable name
       assert String.contains?(message, "x") or
                String.contains?(message, "variables") or
@@ -256,6 +268,7 @@ defmodule Dantzig.EdgeCases.UndefinedVariablesTest do
         end
 
       message = extract_message(error)
+
       assert String.contains?(message, "undefined") or
                String.contains?(message, "not found"),
              "Error message should mention undefined variable, got: #{message}"
@@ -273,6 +286,7 @@ defmodule Dantzig.EdgeCases.UndefinedVariablesTest do
         end
 
       message = extract_message(error)
+
       assert String.contains?(message, "undefined") or
                String.contains?(message, "not found"),
              "Error message should mention undefined variable, got: #{message}"
@@ -309,6 +323,7 @@ defmodule Dantzig.EdgeCases.UndefinedVariablesTest do
         end
 
       message = extract_message(error)
+
       assert String.contains?(message, "undefined") or
                String.contains?(message, "not found"),
              "Error message should mention undefined variable, got: #{message}"
@@ -326,6 +341,7 @@ defmodule Dantzig.EdgeCases.UndefinedVariablesTest do
         end
 
       message = extract_message(error)
+
       assert String.contains?(message, "undefined") or
                String.contains?(message, "not found"),
              "Error message should mention undefined variable, got: #{message}"
@@ -344,6 +360,7 @@ defmodule Dantzig.EdgeCases.UndefinedVariablesTest do
             variables("x", [], :continuous, "Variable", min_bound: y())
           end
         end
+
         :ok
       rescue
         # If bounds don't support variable references, that's fine
@@ -386,6 +403,7 @@ defmodule Dantzig.EdgeCases.UndefinedVariablesTest do
         end
 
       message = extract_message(error)
+
       assert String.contains?(message, "undefined") or
                String.contains?(message, "not found"),
              "Error message should mention undefined variable, got: #{message}"

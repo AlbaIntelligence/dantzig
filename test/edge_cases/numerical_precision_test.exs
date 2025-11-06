@@ -127,7 +127,8 @@ defmodule Dantzig.EdgeCases.NumericalPrecisionTest do
 
       assert problem.name == "Large Bounds"
       x_def = Problem.get_variable(problem, "x")
-      assert abs(x_def.min - 1.0e10) < 1.0e5  # Larger tolerance for large numbers
+      # Larger tolerance for large numbers
+      assert abs(x_def.min - 1.0e10) < 1.0e5
       assert abs(x_def.max - 1.0e15) < 1.0e10
     end
 

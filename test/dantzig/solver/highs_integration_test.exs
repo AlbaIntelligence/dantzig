@@ -69,7 +69,8 @@ defmodule Dantzig.Solver.HiGHSIntegrationTest do
       assert match?({:ok, %Solution{}}, result)
       {_, solution} = result
       assert solution.objective >= 0
-      assert solution.objective <= 1.1  # Allow small tolerance
+      # Allow small tolerance
+      assert solution.objective <= 1.1
     end
 
     test "solves problem with equality constraints" do
@@ -117,7 +118,8 @@ defmodule Dantzig.Solver.HiGHSIntegrationTest do
       for i <- 1..2 do
         var_name = "x(#{i})"
         val = solution.variables[var_name] || 0
-        assert val >= -0.001  # Allow small tolerance
+        # Allow small tolerance
+        assert val >= -0.001
         assert val <= 1.001
       end
     end
@@ -175,6 +177,7 @@ defmodule Dantzig.Solver.HiGHSIntegrationTest do
         Enum.reduce(1..3, 0, fn i, acc ->
           var_name = "x(#{i})"
           val = solution.variables[var_name] || 0
+
           if val > 0.5 do
             acc + Enum.at(weights, i - 1)
           else
@@ -245,6 +248,7 @@ defmodule Dantzig.Solver.HiGHSIntegrationTest do
             var_name = "x(#{i},#{j})"
             acc + (solution.variables[var_name] || 0)
           end)
+
         assert total_supplied <= supply[i] + 0.001
       end
     end
@@ -278,6 +282,7 @@ defmodule Dantzig.Solver.HiGHSIntegrationTest do
             val = solution.variables[var_name] || 0
             acc + val
           end)
+
         assert abs(total_assigned - 1.0) < 0.001
       end
     end
@@ -405,8 +410,10 @@ defmodule Dantzig.Solver.HiGHSIntegrationTest do
         solution = Dantzig.solve!(problem)
         assert %Solution{} = solution
       rescue
-        MatchError -> :ok  # Expected if solve/1 returns :error
-        RuntimeError -> :ok  # Expected if solver fails
+        # Expected if solve/1 returns :error
+        MatchError -> :ok
+        # Expected if solver fails
+        RuntimeError -> :ok
       end
     end
 
@@ -455,7 +462,7 @@ defmodule Dantzig.Solver.HiGHSIntegrationTest do
         # Verify constraints
         assert x1 >= -0.001
         assert x2 >= -0.001
-        assert abs((x1 + x2) - 1.0) < 0.001
+        assert abs(x1 + x2 - 1.0) < 0.001
       end
     end
 

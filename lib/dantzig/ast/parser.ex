@@ -77,6 +77,7 @@ defmodule Dantzig.AST.Parser do
       # n-ary sum like sum(x, y, z)
       {:sum, _, args} when is_list(args) and length(args) >= 2 ->
         Dantzig.AST.sum(Enum.map(args, &parse_expression/1))
+
       # sum(expr, :for, generators) - generator-based sum
       {:sum, _, [expr, :for, generators]} ->
         %AST.GeneratorSum{
@@ -198,7 +199,9 @@ defmodule Dantzig.AST.Parser do
   """
   def parse_generators(generators) do
     case generators do
-      [] -> raise ArgumentError, "Invalid generator: []"
+      [] ->
+        raise ArgumentError, "Invalid generator: []"
+
       list when is_list(list) ->
         Enum.map(list, fn
           {:<-, _, [var, range]} when is_struct(range, Range) ->
@@ -268,7 +271,8 @@ defmodule Dantzig.AST.Parser do
         %AST.Variable{name: var_name, indices: [], pattern: nil}
 
       # Fallback
-      other -> parse_expression(other)
+      other ->
+        parse_expression(other)
     end)
   end
 

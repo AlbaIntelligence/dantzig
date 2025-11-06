@@ -357,12 +357,15 @@ defmodule Dantzig.EdgeCases.UnboundedObjectivesTest do
         solution = Dantzig.solve!(problem)
         # If it doesn't raise, check that solution indicates unboundedness
         assert %Solution{} = solution
+
         if solution.model_status do
           assert String.contains?(to_string(solution.model_status), "Unbounded")
         end
       rescue
-        MatchError -> :ok  # Expected if solve/1 returns :error
-        RuntimeError -> :ok  # Expected if solver fails
+        # Expected if solve/1 returns :error
+        MatchError -> :ok
+        # Expected if solver fails
+        RuntimeError -> :ok
       end
     end
   end

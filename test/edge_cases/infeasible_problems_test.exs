@@ -244,9 +244,11 @@ defmodule Dantzig.EdgeCases.InfeasibleProblemsTest do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
-      weights = [100]  # Single item with weight 100
+      # Single item with weight 100
+      weights = [100]
       values = [10]
-      capacity = 50  # Capacity is 50, but item weighs 100
+      # Capacity is 50, but item weighs 100
+      capacity = 50
 
       # Infeasible: must select at least one item, but any item violates capacity
       problem =
@@ -364,12 +366,15 @@ defmodule Dantzig.EdgeCases.InfeasibleProblemsTest do
         solution = Dantzig.solve!(problem)
         # If it doesn't raise, check that solution indicates infeasibility
         assert %Solution{} = solution
+
         if solution.model_status do
           assert String.contains?(to_string(solution.model_status), "Infeasible")
         end
       rescue
-        MatchError -> :ok  # Expected if solve/1 returns :error
-        RuntimeError -> :ok  # Expected if solver fails
+        # Expected if solve/1 returns :error
+        MatchError -> :ok
+        # Expected if solver fails
+        RuntimeError -> :ok
       end
     end
   end

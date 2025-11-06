@@ -164,10 +164,12 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
 
           {:/, %Polynomial{} = p, v} when is_number(v) ->
             # Guard ensures v is a number - convert to float explicitly
-            v_float = case v do
-              n when is_integer(n) -> :erlang.float(n)
-              n when is_float(n) -> n
-            end
+            v_float =
+              case v do
+                n when is_integer(n) -> :erlang.float(n)
+                n when is_float(n) -> n
+              end
+
             Polynomial.scale(p, 1.0 / v_float)
 
           {:/, %Polynomial{} = p1, %Polynomial{} = p2} ->

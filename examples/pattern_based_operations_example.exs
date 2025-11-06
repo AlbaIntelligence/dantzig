@@ -272,7 +272,13 @@ IO.puts("")
 problem5 =
   Problem.define do
     new(name: "Pattern-based 4D", direction: :minimize)
-    variables("busy", [i <- 1..2, j <- 1..2, k <- 1..2, l <- 1..2], :continuous, "4D busy variables")
+
+    variables(
+      "busy",
+      [i <- 1..2, j <- 1..2, k <- 1..2, l <- 1..2],
+      :continuous,
+      "4D busy variables"
+    )
   end
 
 var_map5 = Problem.get_variables_nd(problem5, "busy")

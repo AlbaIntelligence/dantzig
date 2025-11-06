@@ -48,7 +48,11 @@ defmodule Dantzig.Problem.DSL.ConstraintManager do
 
               is_binary(description) ->
                 interp_desc =
-                  interpolate_variables_in_description(to_string(description), bindings, index_vals)
+                  interpolate_variables_in_description(
+                    to_string(description),
+                    bindings,
+                    index_vals
+                  )
                   |> String.trim()
 
                 %{updated | description: interp_desc}
@@ -136,12 +140,21 @@ defmodule Dantzig.Problem.DSL.ConstraintManager do
 
         right_poly =
           case right_value do
-            val when is_number(val) -> Polynomial.const(val)
-            :infinity -> :infinity  # Pass :infinity directly, not as polynomial
-            _ -> 
+            val when is_number(val) ->
+              Polynomial.const(val)
+
+            # Pass :infinity directly, not as polynomial
+            :infinity ->
+              :infinity
+
+            _ ->
               # Try to evaluate as constant first (might be :infinity or a number)
-              case Dantzig.Problem.DSL.ExpressionParser.try_evaluate_constant(right_value, bindings) do
-                {:ok, :infinity} -> :infinity  # Pass :infinity directly
+              case Dantzig.Problem.DSL.ExpressionParser.try_evaluate_constant(
+                     right_value,
+                     bindings
+                   ) do
+                # Pass :infinity directly
+                {:ok, :infinity} -> :infinity
                 {:ok, val} when is_number(val) -> Polynomial.const(val)
                 _ -> parse_expression_to_polynomial(right_value, bindings, problem)
               end
@@ -154,12 +167,21 @@ defmodule Dantzig.Problem.DSL.ConstraintManager do
 
         right_poly =
           case right_value do
-            val when is_number(val) -> Polynomial.const(val)
-            :infinity -> :infinity  # Pass :infinity directly, not as polynomial
-            _ -> 
+            val when is_number(val) ->
+              Polynomial.const(val)
+
+            # Pass :infinity directly, not as polynomial
+            :infinity ->
+              :infinity
+
+            _ ->
               # Try to evaluate as constant first (might be :infinity or a number)
-              case Dantzig.Problem.DSL.ExpressionParser.try_evaluate_constant(right_value, bindings) do
-                {:ok, :infinity} -> :infinity  # Pass :infinity directly
+              case Dantzig.Problem.DSL.ExpressionParser.try_evaluate_constant(
+                     right_value,
+                     bindings
+                   ) do
+                # Pass :infinity directly
+                {:ok, :infinity} -> :infinity
                 {:ok, val} when is_number(val) -> Polynomial.const(val)
                 _ -> parse_expression_to_polynomial(right_value, bindings, problem)
               end
@@ -216,53 +238,62 @@ defmodule Dantzig.Problem.DSL.ConstraintManager do
   end
 
   # Helper function to interpolate variables in constraint descriptions
-  defp interpolate_variables_in_description(description, bindings, index_vals) when is_binary(description) do
+  defp interpolate_variables_in_description(description, bindings, index_vals)
+       when is_binary(description) do
     # Handle string interpolation syntax like "Variable #{i}"
     # First, check if description contains interpolation syntax
     # Build "#{" using character codes to avoid string interpolation syntax issues
     interpolation_pattern = [35, 123] |> List.to_string()
-    result = if String.contains?(description, interpolation_pattern) do
-      # This is string interpolation syntax - use string replacement for simple cases
-      Enum.reduce(bindings, description, fn {var_atom, value}, acc_desc ->
-        var_name = to_string(var_atom)
-        # Replace #{var_name} patterns - use simple string replacement
-        # Build pattern string by concatenating parts to avoid interpolation syntax issues  
-        pattern_str = [35, 123] |> List.to_string() |> Kernel.<>(var_name) |> Kernel.<>(List.to_string([125]))
-        String.replace(acc_desc, pattern_str, to_string(value))
-      end)
-    else
-      # Standard string replacement for non-interpolation strings
-      # First, replace any named bindings, e.g., l_name -> "calories"
-      by_binding =
+
+    result =
+      if String.contains?(description, interpolation_pattern) do
+        # This is string interpolation syntax - use string replacement for simple cases
         Enum.reduce(bindings, description, fn {var_atom, value}, acc_desc ->
           var_name = to_string(var_atom)
-          pattern = ~r/\b#{Regex.escape(var_name)}\b/
-          String.replace(acc_desc, pattern, to_string(value))
+          # Replace #{var_name} patterns - use simple string replacement
+          # Build pattern string by concatenating parts to avoid interpolation syntax issues  
+          pattern_str =
+            [35, 123]
+            |> List.to_string()
+            |> Kernel.<>(var_name)
+            |> Kernel.<>(List.to_string([125]))
+
+          String.replace(acc_desc, pattern_str, to_string(value))
         end)
+      else
+        # Standard string replacement for non-interpolation strings
+        # First, replace any named bindings, e.g., l_name -> "calories"
+        by_binding =
+          Enum.reduce(bindings, description, fn {var_atom, value}, acc_desc ->
+            var_name = to_string(var_atom)
+            pattern = ~r/\b#{Regex.escape(var_name)}\b/
+            String.replace(acc_desc, pattern, to_string(value))
+          end)
 
-      # Then, for conventional i/j/k ... placeholders (when numeric), append index values like i_1
-      variable_names = ["i", "j", "k", "l", "m", "n"]
+        # Then, for conventional i/j/k ... placeholders (when numeric), append index values like i_1
+        variable_names = ["i", "j", "k", "l", "m", "n"]
 
-      Enum.reduce(Enum.with_index(variable_names), by_binding, fn {var_name, index}, acc_desc ->
-        if index < length(index_vals) do
-          value = Enum.at(index_vals, index)
-          pattern = ~r/\b#{Regex.escape(var_name)}\b/
-          String.replace(acc_desc, pattern, "#{var_name}_#{value}")
-        else
-          acc_desc
-        end
-      end)
-    end
-    
+        Enum.reduce(Enum.with_index(variable_names), by_binding, fn {var_name, index}, acc_desc ->
+          if index < length(index_vals) do
+            value = Enum.at(index_vals, index)
+            pattern = ~r/\b#{Regex.escape(var_name)}\b/
+            String.replace(acc_desc, pattern, "#{var_name}_#{value}")
+          else
+            acc_desc
+          end
+        end)
+      end
+
     result
   end
 
   # Handle AST interpolation forms (from transform_description_to_ast)
-  defp interpolate_variables_in_description(description_ast, bindings, index_vals) when is_tuple(description_ast) do
+  defp interpolate_variables_in_description(description_ast, bindings, index_vals)
+       when is_tuple(description_ast) do
     # Handle AST forms like {:<<>>, ...} from string interpolation
     # Convert bindings to keyword list for Code.eval_quoted
     var_bindings = Map.to_list(bindings)
-    
+
     try do
       # Reconstruct evaluable AST (replace normalized atoms with variable references)
       evaluable_ast = reconstruct_evaluable_ast(description_ast, bindings)

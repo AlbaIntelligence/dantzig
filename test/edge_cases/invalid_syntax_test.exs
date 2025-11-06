@@ -64,6 +64,7 @@ defmodule Dantzig.EdgeCases.InvalidSyntaxTest do
         end
 
       message = extract_message(error)
+
       assert String.contains?(message, "division") or
                String.contains?(message, "Division") or
                String.contains?(message, "unsupported") or
@@ -111,6 +112,7 @@ defmodule Dantzig.EdgeCases.InvalidSyntaxTest do
         end
 
       message = extract_message(error)
+
       assert String.contains?(message, "undefined") or
                String.contains?(message, "Undefined") or
                String.contains?(message, "not found"),
@@ -342,7 +344,8 @@ defmodule Dantzig.EdgeCases.InvalidSyntaxTest do
         end
 
       assert problem.name == "Valid Constraints"
-      assert map_size(problem.constraints) == 6  # 3 constraints × 2 types
+      # 3 constraints × 2 types
+      assert map_size(problem.constraints) == 6
     end
 
     test "validates constraint structure after creation" do

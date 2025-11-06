@@ -432,9 +432,9 @@ defmodule Dantzig.ASTTest do
   describe "ProblemAST.transform_generators_to_ast/1" do
     test "transforms list of generators with atom variables" do
       generators = quote do: [i <- 1..3, j <- 1..2]
-      
+
       result = ProblemAST.transform_generators_to_ast(generators)
-      
+
       # Should return a list of generator ASTs
       assert is_list(result)
       assert length(result) == 2
@@ -442,18 +442,18 @@ defmodule Dantzig.ASTTest do
 
     test "returns original generators if not all are valid generator patterns" do
       generators = [1, 2, 3]
-      
+
       result = ProblemAST.transform_generators_to_ast(generators)
-      
+
       # Should return original if not valid generator patterns
       assert result == generators
     end
 
     test "returns non-list input as-is" do
       input = :atom
-      
+
       result = ProblemAST.transform_generators_to_ast(input)
-      
+
       assert result == input
     end
   end
@@ -461,18 +461,18 @@ defmodule Dantzig.ASTTest do
   describe "ProblemAST.transform_constraint_expression_to_ast/1" do
     test "normalizes variable reference with generator variable" do
       expr = quote do: x(i)
-      
+
       result = ProblemAST.transform_constraint_expression_to_ast(expr)
-      
+
       # Should normalize generator variable to atom
       assert match?({:x, _, [:i]}, result)
     end
 
     test "preserves wildcard pattern" do
       expr = quote do: queen2d(i, :_)
-      
+
       result = ProblemAST.transform_constraint_expression_to_ast(expr)
-      
+
       # Should preserve wildcard
       {_, _, args} = result
       assert :_ in args
@@ -480,9 +480,9 @@ defmodule Dantzig.ASTTest do
 
     test "preserves numeric literals" do
       expr = quote do: x(1)
-      
+
       result = ProblemAST.transform_constraint_expression_to_ast(expr)
-      
+
       # Should preserve numeric literal
       {_, _, [arg]} = result
       assert arg == 1
@@ -490,18 +490,18 @@ defmodule Dantzig.ASTTest do
 
     test "normalizes nested variable references" do
       expr = quote do: x(i) + y(j)
-      
+
       result = ProblemAST.transform_constraint_expression_to_ast(expr)
-      
+
       # Should normalize both variable references
       assert match?({:+, _, [_, _]}, result)
     end
 
     test "handles comparison operations" do
       expr = quote do: x(i) <= 10
-      
+
       result = ProblemAST.transform_constraint_expression_to_ast(expr)
-      
+
       # Should normalize variable reference in comparison
       assert match?({:<=, _, [_, _]}, result)
     end
@@ -510,18 +510,18 @@ defmodule Dantzig.ASTTest do
   describe "ProblemAST.transform_objective_expression_to_ast/1" do
     test "normalizes variable reference with generator variable" do
       expr = quote do: x(i)
-      
+
       result = ProblemAST.transform_objective_expression_to_ast(expr)
-      
+
       # Should normalize generator variable to atom
       assert match?({:x, _, [:i]}, result)
     end
 
     test "preserves wildcard pattern" do
       expr = quote do: sum(queen2d(i, :_))
-      
+
       result = ProblemAST.transform_objective_expression_to_ast(expr)
-      
+
       # Should preserve wildcard
       assert match?({:sum, _, _}, result)
     end
@@ -536,9 +536,9 @@ defmodule Dantzig.ASTTest do
       inner_expr = {:qty, [], [food_var]}
       # The AST structure expected by rewrite_generator_sum
       expr = {:sum, {:for, inner_expr, [generator]}}
-      
+
       result = ProblemAST.transform_objective_expression_to_ast(expr)
-      
+
       # Should transform generator sum - may return original or transformed
       assert match?({:sum, _}, result)
     end
@@ -547,26 +547,26 @@ defmodule Dantzig.ASTTest do
   describe "ProblemAST.transform_description_to_ast/1" do
     test "returns plain string as-is" do
       description = "Plain description"
-      
+
       result = ProblemAST.transform_description_to_ast(description)
-      
+
       assert result == description
     end
 
     test "normalizes string interpolation with generator variable" do
       desc = quote do: "Variable #{i}"
-      
+
       result = ProblemAST.transform_description_to_ast(desc)
-      
+
       # Should normalize interpolation
       assert match?({:<<>>, _, _}, result)
     end
 
     test "normalizes complex string interpolation" do
       desc = quote do: "Position (#{i}, #{j})"
-      
+
       result = ProblemAST.transform_description_to_ast(desc)
-      
+
       # Should normalize all interpolations
       assert match?({:<<>>, _, _}, result)
     end
@@ -580,56 +580,56 @@ defmodule Dantzig.ASTTest do
 
     test "evaluates unary minus" do
       expr = quote do: -5
-      
+
       result = ProblemAST.evaluate_simple_expression(expr)
-      
+
       assert result == -5
     end
 
     test "evaluates addition" do
       expr = quote do: 2 + 3
-      
+
       result = ProblemAST.evaluate_simple_expression(expr)
-      
+
       assert result == 5
     end
 
     test "evaluates subtraction" do
       expr = quote do: 10 - 3
-      
+
       result = ProblemAST.evaluate_simple_expression(expr)
-      
+
       assert result == 7
     end
 
     test "evaluates multiplication" do
       expr = quote do: 3 * 4
-      
+
       result = ProblemAST.evaluate_simple_expression(expr)
-      
+
       assert result == 12
     end
 
     test "evaluates division" do
       expr = quote do: 15 / 3
-      
+
       result = ProblemAST.evaluate_simple_expression(expr)
-      
+
       assert result == 5.0
     end
 
     test "evaluates nested expressions" do
       expr = quote do: 2 + 3 * 4
-      
+
       result = ProblemAST.evaluate_simple_expression(expr)
-      
+
       # Note: Elixir operator precedence applies
       assert result == 14
     end
 
     test "raises error for non-numeric expressions" do
       expr = quote do: :atom
-      
+
       assert_raise ArgumentError, fn ->
         ProblemAST.evaluate_simple_expression(expr)
       end
@@ -639,27 +639,27 @@ defmodule Dantzig.ASTTest do
   describe "ProblemAST.parse_simple_expression_to_polynomial/2" do
     test "parses Dantzig.Polynomial.variable call" do
       expr = quote do: Dantzig.Polynomial.variable("x")
-      
+
       result = ProblemAST.parse_simple_expression_to_polynomial(expr)
-      
+
       assert %Polynomial{} = result
       assert Polynomial.variables(result) == ["x"]
     end
 
     test "parses Polynomial.variable call" do
       expr = quote do: Polynomial.variable("x")
-      
+
       result = ProblemAST.parse_simple_expression_to_polynomial(expr)
-      
+
       assert %Polynomial{} = result
       assert Polynomial.variables(result) == ["x"]
     end
 
     test "parses atom variable name" do
       expr = quote do: x
-      
+
       result = ProblemAST.parse_simple_expression_to_polynomial(expr)
-      
+
       assert %Polynomial{} = result
       assert Polynomial.variables(result) == ["x"]
     end
@@ -667,11 +667,11 @@ defmodule Dantzig.ASTTest do
     test "parses variable reference AST node with problem context" do
       problem = Problem.new()
       {problem, _x_poly} = Problem.new_variable(problem, "x", type: :continuous)
-      
+
       expr = {:x, [], Elixir}
-      
+
       result = ProblemAST.parse_simple_expression_to_polynomial(expr, problem)
-      
+
       assert %Polynomial{} = result
       assert Polynomial.variables(result) == ["x"]
     end
@@ -681,9 +681,9 @@ defmodule Dantzig.ASTTest do
       problem = Problem.new()
       {problem, _x_poly} = Problem.new_variable(problem, "x", type: :continuous)
       {problem, _y_poly} = Problem.new_variable(problem, "y", type: :continuous)
-      
+
       result = ProblemAST.parse_simple_expression_to_polynomial(expr, problem)
-      
+
       assert %Polynomial{} = result
       vars = Polynomial.variables(result)
       assert "x" in vars
@@ -695,9 +695,9 @@ defmodule Dantzig.ASTTest do
       problem = Problem.new()
       {problem, _x_poly} = Problem.new_variable(problem, "x", type: :continuous)
       {problem, _y_poly} = Problem.new_variable(problem, "y", type: :continuous)
-      
+
       result = ProblemAST.parse_simple_expression_to_polynomial(expr, problem)
-      
+
       assert %Polynomial{} = result
     end
 
@@ -705,9 +705,9 @@ defmodule Dantzig.ASTTest do
       expr = quote do: 2 * x
       problem = Problem.new()
       {problem, _x_poly} = Problem.new_variable(problem, "x", type: :continuous)
-      
+
       result = ProblemAST.parse_simple_expression_to_polynomial(expr, problem)
-      
+
       assert %Polynomial{} = result
     end
 
@@ -715,9 +715,9 @@ defmodule Dantzig.ASTTest do
       expr = quote do: x / 2
       problem = Problem.new()
       {problem, _x_poly} = Problem.new_variable(problem, "x", type: :continuous)
-      
+
       result = ProblemAST.parse_simple_expression_to_polynomial(expr, problem)
-      
+
       assert %Polynomial{} = result
     end
 
@@ -725,9 +725,9 @@ defmodule Dantzig.ASTTest do
       expr = quote do: -x
       problem = Problem.new()
       {problem, _x_poly} = Problem.new_variable(problem, "x", type: :continuous)
-      
+
       result = ProblemAST.parse_simple_expression_to_polynomial(expr, problem)
-      
+
       assert %Polynomial{} = result
     end
 
@@ -741,9 +741,9 @@ defmodule Dantzig.ASTTest do
 
     test "parses constant arithmetic" do
       expr = quote do: 2 + 3
-      
+
       result = ProblemAST.parse_simple_expression_to_polynomial(expr)
-      
+
       assert %Polynomial{} = result
       # Verify it's a constant polynomial
       vars = Polynomial.variables(result)
@@ -752,7 +752,7 @@ defmodule Dantzig.ASTTest do
 
     test "handles undefined variable without problem context" do
       expr = {:undefined_var, [], Elixir}
-      
+
       # Without problem context, the function tries to treat it as a variable name
       # This may or may not raise an error depending on implementation
       # Let's test the actual behavior
@@ -761,14 +761,15 @@ defmodule Dantzig.ASTTest do
         # If it doesn't raise, it should return a polynomial
         assert %Polynomial{} = result
       rescue
-        ArgumentError -> :ok  # Expected if variable lookup fails
+        # Expected if variable lookup fails
+        ArgumentError -> :ok
       end
     end
 
     test "raises error for undefined variable with problem context" do
       problem = Problem.new()
       expr = {:undefined_var, [], Elixir}
-      
+
       assert_raise ArgumentError, fn ->
         ProblemAST.parse_simple_expression_to_polynomial(expr, problem)
       end
@@ -777,11 +778,11 @@ defmodule Dantzig.ASTTest do
     test "handles variable reference AST with problem context" do
       problem = Problem.new()
       {problem, _x_poly} = Problem.new_variable(problem, "x", type: :continuous)
-      
+
       expr = {:x, [], Elixir}
-      
+
       result = ProblemAST.parse_simple_expression_to_polynomial(expr, problem)
-      
+
       assert %Polynomial{} = result
       assert Polynomial.variables(result) == ["x"]
     end
@@ -789,9 +790,9 @@ defmodule Dantzig.ASTTest do
     test "handles bare atom variable name with problem context" do
       problem = Problem.new()
       {problem, _x_poly} = Problem.new_variable(problem, "x", type: :continuous)
-      
+
       result = ProblemAST.parse_simple_expression_to_polynomial(:x, problem)
-      
+
       assert %Polynomial{} = result
       assert Polynomial.variables(result) == ["x"]
     end

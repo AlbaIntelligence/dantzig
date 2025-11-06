@@ -45,15 +45,16 @@ defmodule Dantzig.EdgeCases.SolverFailuresTest do
 
       # If solver is not available, solve should handle it
       # (In practice, System.cmd might raise or return error code)
-      result = try do
-        HiGHS.solve(problem)
-      rescue
-        # System.cmd might raise for missing binary
-        e -> {:error, e}
-      catch
-        # Or catch other errors
-        e -> {:error, e}
-      end
+      result =
+        try do
+          HiGHS.solve(problem)
+        rescue
+          # System.cmd might raise for missing binary
+          e -> {:error, e}
+        catch
+          # Or catch other errors
+          e -> {:error, e}
+        end
 
       # Result should either be {:ok, solution}, :error, or {:error, exception}
       assert result == :error or match?({:ok, _}, result) or match?({:error, _}, result)
@@ -155,9 +156,11 @@ defmodule Dantzig.EdgeCases.SolverFailuresTest do
         MatchError ->
           # Expected if solve/1 returns :error
           :ok
+
         RuntimeError ->
           # Expected if solver fails to create solution file
           :ok
+
         e ->
           # Other errors are also acceptable for failure scenarios
           flunk("Unexpected error: #{inspect(e)}")
@@ -188,13 +191,14 @@ defmodule Dantzig.EdgeCases.SolverFailuresTest do
       assert is_list(lp_data) or is_binary(lp_data)
 
       # Solving might succeed or fail depending on solver
-      result = try do
-        HiGHS.solve(problem)
-      rescue
-        e -> {:error, e}
-      catch
-        e -> {:error, e}
-      end
+      result =
+        try do
+          HiGHS.solve(problem)
+        rescue
+          e -> {:error, e}
+        catch
+          e -> {:error, e}
+        end
 
       # Should handle result gracefully
       assert result == :error or match?({:ok, _}, result) or match?({:error, _}, result)
@@ -220,13 +224,14 @@ defmodule Dantzig.EdgeCases.SolverFailuresTest do
       assert is_list(lp_data) or is_binary(lp_data)
 
       # Solving should work (names will be sanitized)
-      result = try do
-        HiGHS.solve(problem)
-      rescue
-        e -> {:error, e}
-      catch
-        e -> {:error, e}
-      end
+      result =
+        try do
+          HiGHS.solve(problem)
+        rescue
+          e -> {:error, e}
+        catch
+          e -> {:error, e}
+        end
 
       assert result == :error or match?({:ok, _}, result) or match?({:error, _}, result)
     end
@@ -260,26 +265,26 @@ defmodule Dantzig.EdgeCases.SolverFailuresTest do
     test "handles solution file with extra whitespace" do
       # Solution file with excessive whitespace
       whitespace_content = """
-      
-      
+
+
       Model status
-      
+
       Optimal
-      
-      
+
+
       # Primal solution values
-      
+
       Feasible
-      
+
       Objective
-      
+
       1.0
-      
+
       # Columns 0
-      
+
       # Rows 0
-      
-      
+
+
       """
 
       result = Solution.from_file_contents(whitespace_content)
@@ -321,15 +326,16 @@ defmodule Dantzig.EdgeCases.SolverFailuresTest do
         end
 
       # solve/1 should handle file operations internally
-      result = try do
-        HiGHS.solve(problem)
-      rescue
-        File.Error -> {:error, :file_error}
-        RuntimeError -> {:error, :runtime_error}
-        e -> {:error, e}
-      catch
-        e -> {:error, e}
-      end
+      result =
+        try do
+          HiGHS.solve(problem)
+        rescue
+          File.Error -> {:error, :file_error}
+          RuntimeError -> {:error, :runtime_error}
+          e -> {:error, e}
+        catch
+          e -> {:error, e}
+        end
 
       # Should return some result (success or error)
       assert result == :error or match?({:ok, _}, result) or match?({:error, _}, result)
@@ -354,17 +360,19 @@ defmodule Dantzig.EdgeCases.SolverFailuresTest do
 
       # If solver process fails, System.cmd might return non-zero exit code
       # or raise an exception. solve/1 should handle this.
-      result = try do
-        HiGHS.solve(problem)
-      rescue
-        RuntimeError ->
-          # Expected if solver fails to produce solution file
-          :error
-        e ->
-          {:error, e}
-      catch
-        e -> {:error, e}
-      end
+      result =
+        try do
+          HiGHS.solve(problem)
+        rescue
+          RuntimeError ->
+            # Expected if solver fails to produce solution file
+            :error
+
+          e ->
+            {:error, e}
+        catch
+          e -> {:error, e}
+        end
 
       # Should handle failure gracefully
       assert result == :error or match?({:ok, _}, result) or match?({:error, _}, result)

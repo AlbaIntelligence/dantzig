@@ -92,13 +92,14 @@ defmodule Dantzig.LPExamplesTest do
 
     # Helper function for exponential smoothing
     defp forecast_demand(demand_history, alpha) do
-      smoothed = Enum.reduce(demand_history, [], fn demand, acc ->
-        case acc do
-          [] -> [demand]
-          [last | _] -> [alpha * demand + (1 - alpha) * last | acc]
-        end
-      end)
-      |> Enum.reverse()
+      smoothed =
+        Enum.reduce(demand_history, [], fn demand, acc ->
+          case acc do
+            [] -> [demand]
+            [last | _] -> [alpha * demand + (1 - alpha) * last | acc]
+          end
+        end)
+        |> Enum.reverse()
 
       trunc(List.last(smoothed))
     end
@@ -124,7 +125,8 @@ defmodule Dantzig.LPExamplesTest do
       # Expected solution from source: x=10, y=65.52, profit=1866.50
       assert_in_delta solution.variables["x"], 10.0, 0.01
       assert_in_delta solution.variables["y"], 65.52, 0.01
-      assert_in_delta objective_value, 1866.50, 0.1  # Allow some tolerance for floating point
+      # Allow some tolerance for floating point
+      assert_in_delta objective_value, 1866.50, 0.1
     end
   end
 
@@ -197,9 +199,9 @@ defmodule Dantzig.LPExamplesTest do
       {solution, objective_value} = Problem.solve(problem, print_optimizer_input: false)
 
       # Expected solution from source: x1=47/9≈5.222, x2=20/9≈2.222, objective=355/9≈39.444
-      assert_in_delta solution.variables["x1"], 47/9, 0.01
-      assert_in_delta solution.variables["x2"], 20/9, 0.01
-      assert_in_delta objective_value, 355/9, 0.01
+      assert_in_delta solution.variables["x1"], 47 / 9, 0.01
+      assert_in_delta solution.variables["x2"], 20 / 9, 0.01
+      assert_in_delta objective_value, 355 / 9, 0.01
     end
   end
 
@@ -222,9 +224,11 @@ defmodule Dantzig.LPExamplesTest do
       {solution, objective_value} = Problem.solve(problem, print_optimizer_input: false)
 
       # Expected solution from source: xT=1.333, xC=10.667, profit=146.667
-      assert_in_delta solution.variables["xT"], 4/3, 0.01
-      assert_in_delta solution.variables["xC"], 32/3, 0.01  # 10.667 = 32/3
-      assert_in_delta objective_value, 440/3, 0.01  # 146.667 = 440/3
+      assert_in_delta solution.variables["xT"], 4 / 3, 0.01
+      # 10.667 = 32/3
+      assert_in_delta solution.variables["xC"], 32 / 3, 0.01
+      # 146.667 = 440/3
+      assert_in_delta objective_value, 440 / 3, 0.01
     end
   end
 end

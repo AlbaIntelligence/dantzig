@@ -144,7 +144,8 @@ defmodule Dantzig.AST do
         %Variable{name: to_atom(name), indices: [pattern], pattern: pattern}
 
       # indices list
-      indices -> %Variable{name: to_atom(name), indices: indices, pattern: nil}
+      indices ->
+        %Variable{name: to_atom(name), indices: indices, pattern: nil}
     end
   end
 

@@ -12,10 +12,10 @@ defmodule Dantzig.Problem.DSL.ConstraintManagerTest do
       description = "Variable i"
       bindings = %{i: 1}
       index_vals = [1]
-      
+
       # Test via create_constraint_name which uses interpolate_variables_in_description
       result = ConstraintManager.create_constraint_name(description, bindings, index_vals)
-      
+
       # Should interpolate i to 1
       assert result == "Variable 1"
     end
@@ -25,9 +25,9 @@ defmodule Dantzig.Problem.DSL.ConstraintManagerTest do
       description = "Position (i, j)"
       bindings = %{i: 2, j: 3}
       index_vals = [2, 3]
-      
+
       result = ConstraintManager.create_constraint_name(description, bindings, index_vals)
-      
+
       # Should interpolate both variables
       assert result == "Position (2, 3)"
     end
@@ -37,9 +37,9 @@ defmodule Dantzig.Problem.DSL.ConstraintManagerTest do
       description = "Plain description"
       bindings = %{}
       index_vals = []
-      
+
       result = ConstraintManager.create_constraint_name(description, bindings, index_vals)
-      
+
       # Should remain unchanged
       assert result == description
     end
@@ -49,9 +49,9 @@ defmodule Dantzig.Problem.DSL.ConstraintManagerTest do
       description_ast = quote do: "Variable #{i}"
       bindings = %{i: 1}
       index_vals = [1]
-      
+
       result = ConstraintManager.create_constraint_name(description_ast, bindings, index_vals)
-      
+
       # Should resolve to "Variable 1"
       assert result == "Variable 1"
     end
@@ -61,9 +61,9 @@ defmodule Dantzig.Problem.DSL.ConstraintManagerTest do
       description_ast = quote do: "Position (#{i}, #{j})"
       bindings = %{i: 2, j: 3}
       index_vals = [2, 3]
-      
+
       result = ConstraintManager.create_constraint_name(description_ast, bindings, index_vals)
-      
+
       # Should resolve to "Position (2, 3)"
       assert result == "Position (2, 3)"
     end
@@ -73,10 +73,10 @@ defmodule Dantzig.Problem.DSL.ConstraintManagerTest do
       description = nil
       bindings = %{}
       index_vals = []
-      
+
       # Should not raise an error
       result = ConstraintManager.create_constraint_name(description, bindings, index_vals)
-      
+
       # Should return a default constraint name
       assert is_binary(result)
     end
@@ -86,9 +86,9 @@ defmodule Dantzig.Problem.DSL.ConstraintManagerTest do
       description_ast = quote do: "Sum #{i + j}"
       bindings = %{i: 2, j: 3}
       index_vals = [2, 3]
-      
+
       result = ConstraintManager.create_constraint_name(description_ast, bindings, index_vals)
-      
+
       # Should resolve to "Sum 5"
       assert result == "Sum 5"
     end
@@ -100,9 +100,9 @@ defmodule Dantzig.Problem.DSL.ConstraintManagerTest do
       transformed_desc = AST.transform_description_to_ast(original_desc)
       bindings = %{i: 1}
       index_vals = [1]
-      
+
       result = ConstraintManager.create_constraint_name(transformed_desc, bindings, index_vals)
-      
+
       # Should resolve to "Variable 1"
       assert result == "Variable 1"
     end

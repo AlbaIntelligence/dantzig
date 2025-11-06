@@ -83,7 +83,7 @@ defmodule Dantzig.Constraint do
       when operator in @operators do
     name = Keyword.get(opts, :name)
     description = Keyword.get(opts, :description)
-    
+
     # Handle :infinity bounds - constraints with infinity bounds are effectively unbounded
     # For <= with :infinity right side, skip constraint (always satisfied)
     # For >= with :infinity right side, should not happen (would be unsatisfiable)
@@ -98,8 +98,10 @@ defmodule Dantzig.Constraint do
           right_hand_side: :infinity,
           description: description
         }
+
       operator == :>= and right == :infinity ->
         raise ArgumentError, "Cannot create constraint with >= :infinity (unsatisfiable)"
+
       true ->
         # Convert raw numbers into polynomials
         left = Polynomial.to_polynomial(left)

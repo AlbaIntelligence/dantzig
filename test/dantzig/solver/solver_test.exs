@@ -122,7 +122,10 @@ defmodule Dantzig.SolverTest do
     test "constraint operator :== converts to = in LP format" do
       problem = Problem.new()
       {problem, x_poly} = Problem.new_variable(problem, "x", type: :continuous)
-      constraint = Constraint.new_linear(x_poly, :==, Polynomial.const(10.0), description: "Equality")
+
+      constraint =
+        Constraint.new_linear(x_poly, :==, Polynomial.const(10.0), description: "Equality")
+
       problem = Problem.add_constraint(problem, constraint)
       problem = Problem.minimize(problem, x_poly)
 
@@ -136,7 +139,10 @@ defmodule Dantzig.SolverTest do
     test "constraint operator :<= converts to <= in LP format" do
       problem = Problem.new()
       {problem, x_poly} = Problem.new_variable(problem, "x", type: :continuous)
-      constraint = Constraint.new_linear(x_poly, :<=, Polynomial.const(10.0), description: "Less equal")
+
+      constraint =
+        Constraint.new_linear(x_poly, :<=, Polynomial.const(10.0), description: "Less equal")
+
       problem = Problem.add_constraint(problem, constraint)
       problem = Problem.minimize(problem, x_poly)
 
@@ -202,7 +208,9 @@ defmodule Dantzig.SolverTest do
       problem = Problem.new()
       {problem, x_poly} = Problem.new_variable(problem, "x", type: :continuous)
       # Use a name with special characters that need sanitization
-      constraint = Constraint.new_linear(x_poly, :<=, Polynomial.const(10.0), description: "test+constraint")
+      constraint =
+        Constraint.new_linear(x_poly, :<=, Polynomial.const(10.0), description: "test+constraint")
+
       problem = Problem.add_constraint(problem, constraint)
       problem = Problem.minimize(problem, x_poly)
 
@@ -307,8 +315,10 @@ defmodule Dantzig.SolverTest do
         # If we get here, solver worked
         assert %Dantzig.Solution{} = solution
       rescue
-        MatchError -> :ok  # Expected if solve/1 returns :error
-        RuntimeError -> :ok  # Expected if solver fails
+        # Expected if solve/1 returns :error
+        MatchError -> :ok
+        # Expected if solver fails
+        RuntimeError -> :ok
       end
     end
   end
@@ -357,7 +367,7 @@ defmodule Dantzig.SolverTest do
         end
 
       # Create temporary file path
-      temp_file = Path.join(System.tmp_dir!(), "test_problem_#{:rand.uniform(1000000)}.lp")
+      temp_file = Path.join(System.tmp_dir!(), "test_problem_#{:rand.uniform(1_000_000)}.lp")
 
       try do
         Dantzig.dump_problem_to_file(problem, temp_file)
@@ -384,16 +394,23 @@ defmodule Dantzig.SolverTest do
       {problem, y_poly} = Problem.new_variable(problem, "y", type: :continuous)
 
       # Add equality constraint
-      constraint1 = Constraint.new_linear(x_poly, :==, Polynomial.const(10.0), description: "Equality")
+      constraint1 =
+        Constraint.new_linear(x_poly, :==, Polynomial.const(10.0), description: "Equality")
+
       problem = Problem.add_constraint(problem, constraint1)
 
       # Add less-than-or-equal constraint
-      constraint2 = Constraint.new_linear(y_poly, :<=, Polynomial.const(5.0), description: "Less equal")
+      constraint2 =
+        Constraint.new_linear(y_poly, :<=, Polynomial.const(5.0), description: "Less equal")
+
       problem = Problem.add_constraint(problem, constraint2)
 
       # Add greater-than-or-equal constraint
       sum_poly = Polynomial.add(x_poly, y_poly)
-      constraint3 = Constraint.new_linear(sum_poly, :>=, Polynomial.const(0.0), description: "Greater equal")
+
+      constraint3 =
+        Constraint.new_linear(sum_poly, :>=, Polynomial.const(0.0), description: "Greater equal")
+
       problem = Problem.add_constraint(problem, constraint3)
 
       problem = Problem.minimize(problem, sum_poly)
@@ -427,7 +444,10 @@ defmodule Dantzig.SolverTest do
 
     test "handles problem with custom variable bounds" do
       problem = Problem.new()
-      {problem, x_poly} = Problem.new_variable(problem, "x", type: :continuous, min: 5.0, max: 15.0)
+
+      {problem, x_poly} =
+        Problem.new_variable(problem, "x", type: :continuous, min: 5.0, max: 15.0)
+
       problem = Problem.minimize(problem, x_poly)
 
       iodata = HiGHS.to_lp_iodata(problem)

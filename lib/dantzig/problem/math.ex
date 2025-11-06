@@ -21,4 +21,3 @@ defmodule Dantzig.Problem.Math do
     end
   end
 end
-

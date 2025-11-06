@@ -7,10 +7,12 @@ defmodule Examples.ExampleExecutionTest do
 
   T054: Create example execution validation test
   """
-  use ExUnit.Case, async: false  # Example execution tests should run sequentially
+  # Example execution tests should run sequentially
+  use ExUnit.Case, async: false
 
   @examples_dir "examples"
-  @test_timeout 30_000  # 30 seconds timeout per example
+  # 30 seconds timeout per example
+  @test_timeout 30_000
 
   # List of example files that should be tested
   @expected_examples [
@@ -27,9 +29,12 @@ defmodule Examples.ExampleExecutionTest do
 
   # Examples that may require special handling or have known issues
   @optional_examples [
-    "nqueens_dsl.exs",  # May have specific requirements
-    "school_timetabling.exs",  # May require additional setup
-    "diet_problem.exs"  # May have specific solver requirements
+    # May have specific requirements
+    "nqueens_dsl.exs",
+    # May require additional setup
+    "school_timetabling.exs",
+    # May have specific solver requirements
+    "diet_problem.exs"
   ]
 
   # Examples that are test/utility files and should not be executed
@@ -45,6 +50,7 @@ defmodule Examples.ExampleExecutionTest do
     # Verify that expected example files exist
     for example <- @expected_examples do
       example_path = Path.join(@examples_dir, example)
+
       assert File.exists?(example_path),
              "Expected example file #{example} should exist at #{example_path}"
     end
@@ -170,6 +176,7 @@ defmodule Examples.ExampleExecutionTest do
 
     # Verify we have at least the expected examples
     expected_count = length(@expected_examples)
+
     assert length(example_files) >= expected_count,
            "Should have at least #{expected_count} example files, found #{length(example_files)}"
   end
@@ -198,12 +205,12 @@ defmodule Examples.ExampleExecutionTest do
       # Verify file is readable and contains valid Elixir code
       content = File.read!(example_path)
       assert String.length(content) > 0, "Example file should not be empty"
+
       assert String.contains?(content, "Problem.define") or
                String.contains?(content, "Dantzig"),
              "Example should contain DSL usage"
     end
   end
-
 
   # Helper function to compile an example file
   defp compile_example_file(file_path) do
@@ -215,6 +222,7 @@ defmodule Examples.ExampleExecutionTest do
     rescue
       e ->
         error_msg = Exception.message(e)
+
         # Ignore module redefinition warnings (these are common when examples are run multiple times)
         if String.contains?(error_msg, "module") and
              (String.contains?(error_msg, "already") or String.contains?(error_msg, "redefining")) do

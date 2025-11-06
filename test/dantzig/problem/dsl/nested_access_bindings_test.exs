@@ -1,11 +1,11 @@
 defmodule Dantzig.Problem.DSL.NestedAccessBindingsTest do
   @moduledoc """
   Tests for nested Access.get expressions with generator bindings in sum expressions.
-  
+
   These tests verify that generator variables (like 'food' from 'for food <- food_names')
   are correctly available when evaluating nested constant access expressions like
   'foods_dict[food][nutrient_to_atom[limit]]'.
-  
+
   Based on debug scripts created to diagnose the binding propagation issue.
   """
 
@@ -16,9 +16,11 @@ defmodule Dantzig.Problem.DSL.NestedAccessBindingsTest do
   describe "enumerate_for_bindings" do
     test "creates bindings for single generator" do
       bindings = %{food_names: ["hamburger", "chicken"]}
-      generator = quote do
-        food <- food_names
-      end
+
+      generator =
+        quote do
+          food <- food_names
+        end
 
       # Use public function
       result = ExpressionParser.enumerate_for_bindings([generator], bindings)
@@ -34,13 +36,15 @@ defmodule Dantzig.Problem.DSL.NestedAccessBindingsTest do
         food_names: ["hamburger", "chicken"]
       }
 
-      constraint_gen = quote do
-        limit <- limits_names
-      end
+      constraint_gen =
+        quote do
+          limit <- limits_names
+        end
 
-      sum_gen = quote do
-        food <- food_names
-      end
+      sum_gen =
+        quote do
+          food <- food_names
+        end
 
       # First level (constraint generator)
       constraint_bindings = ExpressionParser.enumerate_for_bindings([constraint_gen], bindings)
@@ -67,9 +71,10 @@ defmodule Dantzig.Problem.DSL.NestedAccessBindingsTest do
         food_names: ["hamburger"]
       }
 
-      generator = quote do
-        food <- food_names
-      end
+      generator =
+        quote do
+          food <- food_names
+        end
 
       result = ExpressionParser.enumerate_for_bindings([generator], outer_bindings)
 
@@ -94,21 +99,22 @@ defmodule Dantzig.Problem.DSL.NestedAccessBindingsTest do
       nutrient_to_atom = %{"calories" => :calories}
 
       # Test via actual problem definition - this should work now
-      problem = Problem.define(model_parameters: %{
-        foods_dict: foods_dict,
-        nutrient_to_atom: nutrient_to_atom,
-        food_names: food_names
-      }) do
-        new(name: "Test Problem")
-        variables("qty", [food <- food_names], :continuous, min: 0.0, max: :infinity)
-        
-        # This constraint should parse successfully
-        # Use struct field access syntax
-        constraints(
-          sum(for food <- food_names, do: foods_dict[food].calories) <= 1000,
-          "Test constraint"
-        )
-      end
+      problem =
+        Problem.define model_parameters: %{
+                         foods_dict: foods_dict,
+                         nutrient_to_atom: nutrient_to_atom,
+                         food_names: food_names
+                       } do
+          new(name: "Test Problem")
+          variables("qty", [food <- food_names], :continuous, min: 0.0, max: :infinity)
+
+          # This constraint should parse successfully
+          # Use struct field access syntax
+          constraints(
+            sum(for food <- food_names, do: foods_dict[food].calories) <= 1000,
+            "Test constraint"
+          )
+        end
 
       # Should create constraint without error
       assert map_size(problem.constraints) == 1
@@ -134,21 +140,24 @@ defmodule Dantzig.Problem.DSL.NestedAccessBindingsTest do
       limits_dict = for limit_entry <- limits, into: %{}, do: {limit_entry.nutrient, limit_entry}
       nutrient_to_atom = %{"calories" => :calories, "protein" => :protein}
 
-      problem = Problem.define(model_parameters: %{
-        foods_dict: foods_dict,
-        limits_dict: limits_dict,
-        food_names: food_names,
-        limits_names: limits_names,
-        nutrient_to_atom: nutrient_to_atom
-      }) do
-        new(name: "Diet Problem")
-        variables("qty", [food <- food_names], :continuous, min: 0.0, max: :infinity)
-      end
+      problem =
+        Problem.define model_parameters: %{
+                         foods_dict: foods_dict,
+                         limits_dict: limits_dict,
+                         food_names: food_names,
+                         limits_names: limits_names,
+                         nutrient_to_atom: nutrient_to_atom
+                       } do
+          new(name: "Diet Problem")
+          variables("qty", [food <- food_names], :continuous, min: 0.0, max: :infinity)
+        end
 
       # This is the exact constraint that was failing
-      constraint_expr = quote do
-        sum(for food <- food_names, do: qty(food) * foods_dict[food][nutrient_to_atom[limit]]) <= limits_dict[limit].max
-      end
+      constraint_expr =
+        quote do
+          sum(for food <- food_names, do: qty(food) * foods_dict[food][nutrient_to_atom[limit]]) <=
+            limits_dict[limit].max
+        end
 
       # Parse with limit="calories" binding
       outer_bindings = %{
@@ -162,10 +171,10 @@ defmodule Dantzig.Problem.DSL.NestedAccessBindingsTest do
 
       # Should NOT raise "Cannot evaluate variable 'food'" error
       assert Problem.DSL.ConstraintManager.parse_constraint_expression(
-        constraint_expr,
-        outer_bindings,
-        problem
-      ) != nil
+               constraint_expr,
+               outer_bindings,
+               problem
+             ) != nil
     end
 
     test "creates full diet problem successfully" do
@@ -187,31 +196,34 @@ defmodule Dantzig.Problem.DSL.NestedAccessBindingsTest do
       nutrient_to_atom = %{"calories" => :calories, "protein" => :protein}
 
       # This should create the problem without errors
-      problem = Problem.define(model_parameters: %{
-        foods_dict: foods_dict,
-        limits_dict: limits_dict,
-        food_names: food_names,
-        limits_names: limits_names,
-        nutrient_to_atom: nutrient_to_atom
-      }) do
-        new(name: "Diet Problem")
+      problem =
+        Problem.define model_parameters: %{
+                         foods_dict: foods_dict,
+                         limits_dict: limits_dict,
+                         food_names: food_names,
+                         limits_names: limits_names,
+                         nutrient_to_atom: nutrient_to_atom
+                       } do
+          new(name: "Diet Problem")
 
-        variables("qty", [food <- food_names], :continuous, min: 0.0, max: :infinity)
+          variables("qty", [food <- food_names], :continuous, min: 0.0, max: :infinity)
 
-        constraints(
-          [limit <- limits_names],
-          sum(for food <- food_names, do: qty(food) * foods_dict[food][nutrient_to_atom[limit]]) <= 2200,
-          "Min and max #{limit}"
-        )
+          constraints(
+            [limit <- limits_names],
+            sum(for food <- food_names, do: qty(food) * foods_dict[food][nutrient_to_atom[limit]]) <=
+              2200,
+            "Min and max #{limit}"
+          )
 
-        objective(
-          sum(for food <- food_names, do: qty(food) * foods_dict[food].cost),
-          direction: :minimize
-        )
-      end
+          objective(
+            sum(for food <- food_names, do: qty(food) * foods_dict[food].cost),
+            direction: :minimize
+          )
+        end
 
       assert problem != nil
-      assert Map.size(problem.constraints) == 2  # One for each limit
+      # One for each limit
+      assert Map.size(problem.constraints) == 2
       assert problem.objective != nil
     end
   end
@@ -226,19 +238,20 @@ defmodule Dantzig.Problem.DSL.NestedAccessBindingsTest do
       foods_dict = for food_entry <- foods, into: %{}, do: {food_entry.name, food_entry}
 
       # Test via actual problem definition
-      problem = Problem.define(model_parameters: %{
-        foods_dict: foods_dict,
-        food_names: food_names
-      }) do
-        new(name: "Test Problem")
-        variables("qty", [food <- food_names], :continuous, min: 0.0, max: :infinity)
-        
-        # Sum expression where body uses 'food' from generator
-        constraints(
-          sum(for food <- food_names, do: foods_dict[food].calories) <= 1000,
-          "Test constraint"
-        )
-      end
+      problem =
+        Problem.define model_parameters: %{
+                         foods_dict: foods_dict,
+                         food_names: food_names
+                       } do
+          new(name: "Test Problem")
+          variables("qty", [food <- food_names], :continuous, min: 0.0, max: :infinity)
+
+          # Sum expression where body uses 'food' from generator
+          constraints(
+            sum(for food <- food_names, do: foods_dict[food].calories) <= 1000,
+            "Test constraint"
+          )
+        end
 
       # Should create constraint without error
       assert map_size(problem.constraints) == 1

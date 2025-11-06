@@ -4,7 +4,7 @@
 defmodule Dantzig.Coverage.Analysis do
   @moduledoc """
   Coverage analysis utilities for the Dantzig package.
-  
+
   Provides functions to:
   - Analyze overall test coverage
   - Validate core module coverage requirements
@@ -14,7 +14,7 @@ defmodule Dantzig.Coverage.Analysis do
 
   @core_modules [
     "Dantzig.Problem",
-    "Dantzig.DSL", 
+    "Dantzig.DSL",
     "Dantzig.AST",
     "Dantzig.Solver"
   ]
@@ -24,16 +24,17 @@ defmodule Dantzig.Coverage.Analysis do
 
   @doc """
   Analyzes test coverage for the entire codebase.
-  
+
   Returns a coverage report with overall and per-module metrics.
   """
   def analyze_coverage(opts \\ []) do
     threshold = Keyword.get(opts, :threshold, @overall_threshold)
     core_threshold = Keyword.get(opts, :core_threshold, @core_threshold)
-    
+
     # This would integrate with ExCoveralls in a real implementation
     %{
-      overall_coverage: 0.0,  # Placeholder - will be populated by ExCoveralls
+      # Placeholder - will be populated by ExCoveralls
+      overall_coverage: 0.0,
       core_modules: %{},
       test_files: %{},
       status: :pending,
@@ -44,39 +45,47 @@ defmodule Dantzig.Coverage.Analysis do
 
   @doc """
   Validates that coverage meets required thresholds.
-  
+
   Returns :ok if thresholds are met, {:error, violations} if not.
   """
   def validate_thresholds(report) do
     violations = []
-    
+
     # Check overall coverage
     if report.overall_coverage < report.threshold do
-      violations = [%{
-        type: :overall_coverage,
-        actual: report.overall_coverage,
-        required: report.threshold,
-        message: "Overall coverage #{report.overall_coverage} below required #{report.threshold}"
-      } | violations]
-    end
-    
-    # Check core module coverage
-    core_violations = Enum.filter(report.core_modules, fn {_module, coverage} ->
-      coverage < report.core_threshold
-    end)
-    
-    if length(core_violations) > 0 do
-      violations = violations ++ Enum.map(core_violations, fn {module, coverage} ->
+      violations = [
         %{
-          type: :core_module_coverage,
-          module: module,
-          actual: coverage,
-          required: report.core_threshold,
-          message: "Core module #{module} coverage #{coverage} below required #{report.core_threshold}"
+          type: :overall_coverage,
+          actual: report.overall_coverage,
+          required: report.threshold,
+          message:
+            "Overall coverage #{report.overall_coverage} below required #{report.threshold}"
         }
-      end)
+        | violations
+      ]
     end
-    
+
+    # Check core module coverage
+    core_violations =
+      Enum.filter(report.core_modules, fn {_module, coverage} ->
+        coverage < report.core_threshold
+      end)
+
+    if length(core_violations) > 0 do
+      violations =
+        violations ++
+          Enum.map(core_violations, fn {module, coverage} ->
+            %{
+              type: :core_module_coverage,
+              module: module,
+              actual: coverage,
+              required: report.core_threshold,
+              message:
+                "Core module #{module} coverage #{coverage} below required #{report.core_threshold}"
+            }
+          end)
+    end
+
     if length(violations) > 0 do
       {:error, :thresholds_not_met, violations}
     else

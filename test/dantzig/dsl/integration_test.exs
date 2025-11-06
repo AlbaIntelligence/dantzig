@@ -300,7 +300,12 @@ defmodule Dantzig.DSL.IntegrationTest do
       problem =
         Problem.define model_parameters: %{data: data} do
           new(name: "Nested Params")
-          variables("x", [i <- 1..2], :continuous, "Variable", min_bound: data[:bounds][:min], max_bound: data[:bounds][:max])
+
+          variables("x", [i <- 1..2], :continuous, "Variable",
+            min_bound: data[:bounds][:min],
+            max_bound: data[:bounds][:max]
+          )
+
           objective(sum(x(:_)), direction: :minimize)
         end
 

@@ -11,7 +11,7 @@ defmodule Dantzig.DSL.ProblemModifyTest do
       end
 
     modified =
-      Problem.modify(base) do
+      Problem.modify base do
         constraints([i <- 1..2], x(i) <= 1, "c_#{i}")
       end
 
@@ -26,15 +26,17 @@ defmodule Dantzig.DSL.ProblemModifyTest do
   # ===========================================================================
 
   test "Problem.modify accepts existing problem and block" do
-    base = Problem.define do
-      new(name: "Base Problem")
-      variables("x", [i <- 1..3], :continuous)
-    end
+    base =
+      Problem.define do
+        new(name: "Base Problem")
+        variables("x", [i <- 1..3], :continuous)
+      end
 
     # This should work - Problem.modify is implemented
-    modified = Problem.modify(base) do
-      variables("y", [i <- 1..2], :binary)
-    end
+    modified =
+      Problem.modify base do
+        variables("y", [i <- 1..2], :binary)
+      end
 
     # Should preserve original variables and add new ones
     x_vars = Problem.get_variables_nd(modified, "x")
@@ -44,15 +46,17 @@ defmodule Dantzig.DSL.ProblemModifyTest do
   end
 
   test "Problem.modify can add variables to existing problem" do
-    base = Problem.define do
-      new(name: "Base Problem")
-      variables("x", [i <- 1..2], :continuous)
-    end
+    base =
+      Problem.define do
+        new(name: "Base Problem")
+        variables("x", [i <- 1..2], :continuous)
+      end
 
     # Problem.modify is implemented and should work
-    modified = Problem.modify(base) do
-      variables("y", [j <- 1..3], :binary)
-    end
+    modified =
+      Problem.modify base do
+        variables("y", [j <- 1..3], :binary)
+      end
 
     # Should have both x and y variables
     x_vars = Problem.get_variables_nd(modified, "x")
@@ -62,36 +66,40 @@ defmodule Dantzig.DSL.ProblemModifyTest do
   end
 
   test "Problem.modify can update objective function" do
-    base = Problem.define do
-      new(name: "Base Problem")
-      variables("x", [i <- 1..2], :continuous)
-      objective(sum(for i <- 1..2, do: x(i)), :maximize)
-    end
+    base =
+      Problem.define do
+        new(name: "Base Problem")
+        variables("x", [i <- 1..2], :continuous)
+        objective(sum(for i <- 1..2, do: x(i)), :maximize)
+      end
 
     original_objective = base.objective
 
     # Problem.modify is implemented and should work
-    modified = Problem.modify(base) do
-      objective(sum(for i <- 1..2, do: 2 * x(i)), :maximize)
-    end
+    modified =
+      Problem.modify base do
+        objective(sum(for i <- 1..2, do: 2 * x(i)), :maximize)
+      end
 
     # Objective should be updated
     assert modified.objective != original_objective
   end
 
   test "Problem.modify preserves existing problem state" do
-    base = Problem.define do
-      new(name: "Base Problem")
-      variables("x", [i <- 1..2], :continuous)
-      constraints([i <- 1..2], x(i) >= 0)
-    end
+    base =
+      Problem.define do
+        new(name: "Base Problem")
+        variables("x", [i <- 1..2], :continuous)
+        constraints([i <- 1..2], x(i) >= 0)
+      end
 
     original_constraint_count = map_size(base.constraints)
 
     # Problem.modify is implemented and should work
-    modified = Problem.modify(base) do
-      variables("y", [j <- 1..2], :binary)
-    end
+    modified =
+      Problem.modify base do
+        variables("y", [j <- 1..2], :binary)
+      end
 
     # Should preserve original constraints
     assert map_size(modified.constraints) == original_constraint_count
@@ -103,23 +111,26 @@ defmodule Dantzig.DSL.ProblemModifyTest do
   test "Problem.modify raises error for invalid problem" do
     # Problem.modify has proper type guards and should raise FunctionClauseError for invalid input
     assert_raise FunctionClauseError, fn ->
-      Problem.modify(%{not_a_problem: true}) do
+      Problem.modify %{not_a_problem: true} do
         variables("x", [i <- 1..2], :continuous)
       end
     end
   end
 
   test "Problem.modify allows referencing undefined variables" do
-    base = Problem.define do
-      new(name: "Base Problem")
-      variables("x", [i <- 1..2], :continuous)
-    end
+    base =
+      Problem.define do
+        new(name: "Base Problem")
+        variables("x", [i <- 1..2], :continuous)
+      end
 
     # Problem.modify currently allows undefined variables (may be intended behavior)
     # This test documents the current behavior
-    modified = Problem.modify(base) do
-      constraints([i <- 1..2], y(i) >= 0)  # y not defined - should this error?
-    end
+    modified =
+      Problem.modify base do
+        # y not defined - should this error?
+        constraints([i <- 1..2], y(i) >= 0)
+      end
 
     # Currently this doesn't raise an error, so we just check the problem is returned
     assert modified != nil

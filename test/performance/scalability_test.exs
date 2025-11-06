@@ -11,7 +11,8 @@ defmodule Dantzig.Performance.ScalabilityTest do
 
   T052: Add performance tests for scalability
   """
-  use ExUnit.Case, async: false  # Performance tests should run sequentially
+  # Performance tests should run sequentially
+  use ExUnit.Case, async: false
 
   require Dantzig.Problem, as: Problem
   alias Dantzig.{Problem, HiGHS, Config}
@@ -231,6 +232,7 @@ defmodule Dantzig.Performance.ScalabilityTest do
 
       # Verify all problems were created successfully
       assert length(problems) == 3
+
       Enum.each(problems, fn problem ->
         assert problem != nil
         assert map_size(problem.variable_defs) > 0
@@ -250,6 +252,7 @@ defmodule Dantzig.Performance.ScalabilityTest do
         end
 
       assert length(problems) == 10
+
       Enum.each(problems, fn problem ->
         assert problem != nil
         assert map_size(problem.variable_defs) == 100
@@ -308,18 +311,21 @@ defmodule Dantzig.Performance.ScalabilityTest do
     test "problem creation time scales reasonably with variable count" do
       # Test that creation time doesn't grow too quickly
       sizes = [50, 100, 200]
-      times = Enum.map(sizes, fn n ->
-        {_problem, elapsed} =
-          measure_time(fn ->
-            Problem.define do
-              new(name: "Trend Test #{n}", direction: :minimize)
-              variables("x", [i <- 1..n], :continuous, "Variable")
-              constraints([i <- 1..n], x(i) >= 0, "Non-negativity")
-              objective(sum(x(:_)), direction: :minimize)
-            end
-          end)
-        elapsed
-      end)
+
+      times =
+        Enum.map(sizes, fn n ->
+          {_problem, elapsed} =
+            measure_time(fn ->
+              Problem.define do
+                new(name: "Trend Test #{n}", direction: :minimize)
+                variables("x", [i <- 1..n], :continuous, "Variable")
+                constraints([i <- 1..n], x(i) >= 0, "Non-negativity")
+                objective(sum(x(:_)), direction: :minimize)
+              end
+            end)
+
+          elapsed
+        end)
 
       # Verify times are reasonable (each size should complete)
       Enum.each(times, fn time ->
@@ -335,18 +341,20 @@ defmodule Dantzig.Performance.ScalabilityTest do
 
     test "LP export time scales reasonably with variable count" do
       sizes = [50, 100, 200]
-      times = Enum.map(sizes, fn n ->
-        problem =
-          Problem.define do
-            new(name: "LP Trend Test #{n}", direction: :minimize)
-            variables("x", [i <- 1..n], :continuous, "Variable")
-            constraints([i <- 1..n], x(i) >= 0, "Non-negativity")
-            objective(sum(x(:_)), direction: :minimize)
-          end
 
-        {_lp_data, elapsed} = measure_time(fn -> HiGHS.to_lp_iodata(problem) end)
-        elapsed
-      end)
+      times =
+        Enum.map(sizes, fn n ->
+          problem =
+            Problem.define do
+              new(name: "LP Trend Test #{n}", direction: :minimize)
+              variables("x", [i <- 1..n], :continuous, "Variable")
+              constraints([i <- 1..n], x(i) >= 0, "Non-negativity")
+              objective(sum(x(:_)), direction: :minimize)
+            end
+
+          {_lp_data, elapsed} = measure_time(fn -> HiGHS.to_lp_iodata(problem) end)
+          elapsed
+        end)
 
       # Verify times are reasonable
       Enum.each(times, fn time ->

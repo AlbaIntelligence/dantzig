@@ -189,4 +189,3 @@ IO.puts("• Automatic linearization")
 IO.puts("• Scalable to any number of arguments")
 IO.puts("• Composable with other operations")
 IO.puts("• No manual constraint creation needed")
-

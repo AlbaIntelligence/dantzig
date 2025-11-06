@@ -254,8 +254,6 @@ defmodule Dantzig.Problem.DSLReducer do
       when is_binary(name) and is_list(generators) and is_atom(type) ->
         Problem.variables(acc, name, generators, type, [])
 
-
-
       # Generator-based constraints: constraints(generators, expr, desc)
       {:constraints, _, [generators, constraint_expr, desc]} = _ast, acc when is_list(generators) ->
         Problem.constraints(acc, generators, constraint_expr, desc)

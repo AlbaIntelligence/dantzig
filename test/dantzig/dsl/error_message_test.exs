@@ -52,6 +52,7 @@ defmodule Dantzig.DSL.ErrorMessageTest do
         end
 
       message = extract_message(error)
+
       assert String.contains?(message, "x") or String.contains?(message, "Undefined variable"),
              "Should mention undefined variable, got: #{message}"
     end
@@ -66,9 +67,11 @@ defmodule Dantzig.DSL.ErrorMessageTest do
         end
 
       message = extract_message(error)
-      assert has_actionable_guidance?(message), 
+
+      assert has_actionable_guidance?(message),
              "Error message should include actionable guidance, got: #{message}"
-      assert has_examples?(message), 
+
+      assert has_examples?(message),
              "Error message should include examples, got: #{message}"
     end
 
@@ -84,6 +87,7 @@ defmodule Dantzig.DSL.ErrorMessageTest do
         end
 
       message = extract_message(error)
+
       assert String.contains?(message, "y") or String.contains?(message, "Undefined variable"),
              "Should mention the undefined variable name, got: #{message}"
     end
@@ -125,9 +129,11 @@ defmodule Dantzig.DSL.ErrorMessageTest do
         end
 
       message = extract_message(error)
-      assert has_actionable_guidance?(message), 
+
+      assert has_actionable_guidance?(message),
              "Should include actionable guidance, got: #{message}"
-      assert has_examples?(message), 
+
+      assert has_examples?(message),
              "Should include examples, got: #{message}"
     end
   end
@@ -145,13 +151,16 @@ defmodule Dantzig.DSL.ErrorMessageTest do
         end
 
       message = extract_message(error)
-      assert has_actionable_guidance?(message), 
+
+      assert has_actionable_guidance?(message),
              "Should include actionable guidance, got: #{message}"
-      assert has_examples?(message), 
+
+      assert has_examples?(message),
              "Should include examples, got: #{message}"
+
       # Check for minimize or maximize (case-insensitive check)
       assert String.contains?(String.downcase(message), "minimize") or
-               String.contains?(String.downcase(message), "maximize"), 
+               String.contains?(String.downcase(message), "maximize"),
              "Should mention valid directions, got: #{message}"
     end
 
@@ -167,9 +176,11 @@ defmodule Dantzig.DSL.ErrorMessageTest do
 
       message = extract_message(error)
       message_lower = String.downcase(message)
-      assert String.contains?(message_lower, "minimize"), 
+
+      assert String.contains?(message_lower, "minimize"),
              "Should mention :minimize, got: #{message}"
-      assert String.contains?(message_lower, "maximize"), 
+
+      assert String.contains?(message_lower, "maximize"),
              "Should mention :maximize, got: #{message}"
     end
   end
@@ -239,7 +250,7 @@ defmodule Dantzig.DSL.ErrorMessageTest do
         end
 
       message = extract_message(error)
-      
+
       # Check for structured format
       has_description = String.length(message) > 20
       has_guidance = has_actionable_guidance?(message)
@@ -256,27 +267,36 @@ defmodule Dantzig.DSL.ErrorMessageTest do
       # Common usage mistakes from spec.md and research.md:
       # We verify that enhanced error messages exist for these categories
       enhanced_error_categories = [
-        "Undefined variable errors",                    # ✅ Enhanced in T034
-        "Arithmetic operation errors (non-numeric)",    # ✅ Enhanced in T034  
-        "Unsupported arithmetic operations",            # ✅ Enhanced in T034
-        "Constraint expression errors",                # ✅ Enhanced in T034
-        "Objective direction errors",                   # ✅ Enhanced in T034
-        "Constant access errors (undefined)",           # ✅ Enhanced in T034
-        "Constant access errors (non-numeric)",         # ✅ Enhanced in T034
-        "Expression evaluation errors"                  # ✅ Enhanced in T034
+        # ✅ Enhanced in T034
+        "Undefined variable errors",
+        # ✅ Enhanced in T034  
+        "Arithmetic operation errors (non-numeric)",
+        # ✅ Enhanced in T034
+        "Unsupported arithmetic operations",
+        # ✅ Enhanced in T034
+        "Constraint expression errors",
+        # ✅ Enhanced in T034
+        "Objective direction errors",
+        # ✅ Enhanced in T034
+        "Constant access errors (undefined)",
+        # ✅ Enhanced in T034
+        "Constant access errors (non-numeric)",
+        # ✅ Enhanced in T034
+        "Expression evaluation errors"
       ]
 
       # Total common mistake categories:
-      total_categories = 10  # Approximate total from spec
-      
+      # Approximate total from spec
+      total_categories = 10
+
       # We have enhanced error messages for 8 major categories
       # Plus existing error_message_quality_test.exs covers additional edge cases
       # This gives us ≥80% coverage of enhanced messages, meeting SC-007 requirement
       # when combined with existing tests
-      
+
       assert length(enhanced_error_categories) >= 8,
              "Should have enhanced error messages for at least 8 categories"
-      
+
       # Note: Combined with test/error_message_quality_test.exs, we achieve
       # comprehensive coverage of common usage mistakes (≥90% per SC-007)
     end
