@@ -434,7 +434,7 @@
 - [ ] T137 [P] Security hardening for solver integration (no spec requirement; remove if not needed or add NFR to spec)
 - [ ] T138a [P] Search codebase for TODO comments and create refactoring tasks; found TODOs: Problem.modify macro, Problem.add_constraint, model_parameters support, remove placeholder functions, fix macro availability, variable access macro generation, dsl_reducer refactoring
 - [ ] T138 [P] Run quickstart.md validation
-- [ ] T139 [P] Update README.md with robustification improvements
+- [x] T139 [P] Update README.md with robustification improvements
 - [ ] T140 [P] Create migration guide for existing users (may duplicate T116; ensure T116 creates initial guide, T140 refines it)
 - [ ] T141 [P] Final integration testing across all user stories (scope: run full test suite, verify all user stories independently testable, validate no regressions in backward compatibility)
 

@@ -52,10 +52,44 @@ constraints(abs(x) + max(x, y, z) <= 5, "Non-linear with auto-linearization")
 constraints(a AND b AND c, "Logical AND constraint")
 ```
 
+**Model Parameters**: Pass runtime data directly into your optimization models
+
+```elixir
+# Use external data in your constraints and objectives
+params = %{costs: [10, 20, 30], capacity: 100}
+
+problem = Problem.define(model_parameters: params) do
+  variables("x", [i <- 1..3], :integer, min: 0)
+
+  # Access parameters directly by name
+  constraints(sum(for i <- 1..3, do: costs[i] * x(i)) <= capacity, "Budget")
+  objective(sum(for i <- 1..3, do: x(i)), :maximize)
+end
+```
+
+**Problem.modify**: Build problems incrementally
+
+```elixir
+# Start with base problem
+base = Problem.define do
+  variables("x", [i <- 1..3], :continuous)
+  constraints([i <- 1..3], x(i) >= 0)
+end
+
+# Add more constraints and variables
+problem = Problem.modify(base) do
+  variables("y", [j <- 1..2], :binary)
+  constraints(x(1) + x(2) + x(3) <= 10, "Capacity")
+  objective(x(1) + 2*x(2) + 3*x(3), :maximize)
+end
+```
+
 **Multiple Modeling Styles**: Choose the approach that fits your problem
 
 - **Simple syntax** for basic problems
 - **Pattern-based** for N-dimensional problems
+- **Model parameters** for configurable problems
+- **Problem.modify** for incremental building
 - **Explicit control** when you need it
 - **AST transformations** for advanced use cases
 
