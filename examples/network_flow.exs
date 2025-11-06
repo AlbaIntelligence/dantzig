@@ -129,18 +129,18 @@ total_flow = 0
 
 # Map arc tuples to variable names
 arc_to_var = %{
-{"S", "A"} => "flow_SA",
+  {"S", "A"} => "flow_SA",
   {"S", "B"} => "flow_SB",
-{"A", "B"} => "flow_AB",
-{"A", "C"} => "flow_AC",
-{"B", "C"} => "flow_BC",
+  {"A", "B"} => "flow_AB",
+  {"A", "C"} => "flow_AC",
+  {"B", "C"} => "flow_BC",
   {"B", "T"} => "flow_BT",
-{"C", "T"} => "flow_CT"
+  {"C", "T"} => "flow_CT"
 }
 
 Enum.each(arcs, fn {from, to, capacity} ->
-var_name = arc_to_var[{from, to}]
-flow_amount = solution.variables[var_name]
+  var_name = arc_to_var[{from, to}]
+  flow_amount = solution.variables[var_name]
 
   if flow_amount > 0.001 do
     total_flow = total_flow + flow_amount
@@ -171,11 +171,11 @@ IO.puts("")
 IO.puts("Capacity Constraint Validation:")
 
 capacity_violations =
-Enum.filter(arcs, fn {from, to, capacity} ->
-var_name = arc_to_var[{from, to}]
-flow_amount = solution.variables[var_name]
-flow_amount > capacity + 0.001
-end)
+  Enum.filter(arcs, fn {from, to, capacity} ->
+    var_name = arc_to_var[{from, to}]
+    flow_amount = solution.variables[var_name]
+    flow_amount > capacity + 0.001
+  end)
 
 if capacity_violations == [] do
   IO.puts("  ✅ All capacity constraints satisfied")
@@ -190,18 +190,18 @@ IO.puts("Flow Conservation Validation:")
 
 # Define node inflows and outflows explicitly
 node_flows = %{
-"A" => %{in: ["flow_SA"], out: ["flow_AB", "flow_AC"]},
-"B" => %{in: ["flow_SB", "flow_AB"], out: ["flow_BC", "flow_BT"]},
-"C" => %{in: ["flow_AC", "flow_BC"], out: ["flow_CT"]}
+  "A" => %{in: ["flow_SA"], out: ["flow_AB", "flow_AC"]},
+  "B" => %{in: ["flow_SB", "flow_AB"], out: ["flow_BC", "flow_BT"]},
+  "C" => %{in: ["flow_AC", "flow_BC"], out: ["flow_CT"]}
 }
 
 conservation_violations =
-Enum.filter(["A", "B", "C"], fn node ->
-flows = node_flows[node]
-flow_in = Enum.reduce(flows.in, 0, fn var, acc -> acc + solution.variables[var] end)
-flow_out = Enum.reduce(flows.out, 0, fn var, acc -> acc + solution.variables[var] end)
+  Enum.filter(["A", "B", "C"], fn node ->
+    flows = node_flows[node]
+    flow_in = Enum.reduce(flows.in, 0, fn var, acc -> acc + solution.variables[var] end)
+    flow_out = Enum.reduce(flows.out, 0, fn var, acc -> acc + solution.variables[var] end)
     abs(flow_in - flow_out) >= 0.001
-end)
+  end)
 
 if conservation_violations == [] do
   IO.puts("  ✅ Flow conservation satisfied at all intermediate nodes")
