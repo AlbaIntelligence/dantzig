@@ -116,11 +116,10 @@ This report documents the syntax alignment with DSL specs and execution status f
 
 ### Breakdown by Error Type:
 
-**Access.get / Map Access Issues (3 files remaining)**:
+**Access.get / Map Access Issues (2 files remaining)**:
 - `production_planning.exs` - `demand[period]`
 - `school_timetabling.exs` - `teacher_skills[t][s]` (nested)
-- `knapsack_problem.exs` - `items_dict[item].weight`
-- Need support for map access syntax in DSL expressions
+- Map access syntax now supported in DSL expressions (transportation_problem.exs fixed)
 
 **List Comprehension in sum() (2 files)**:
 - `knapsack_problem.exs` - `sum(for item <- item_names, do: ...)`
@@ -152,7 +151,7 @@ This report documents the syntax alignment with DSL specs and execution status f
 7. **variadic_operations_example.exs** - **FIXED** - Variadic operations demonstration
 8. **pattern_based_operations_example.exs** - **FIXED** - Pattern-based operations demonstration
 9. **tutorial_examples.exs** - **FIXED** - Comprehensive tutorial examples
-10. **transportation_problem.exs** - **FIXED** - Access.get expressions now work
+10. **transportation_problem.exs** - **FIXED** - Access.get expressions now work, problem solves correctly
 
 ### Runtime Errors (7):
 
