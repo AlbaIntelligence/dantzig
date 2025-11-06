@@ -40,9 +40,11 @@ product1_demand = [23, 27, 34, 40]
 product2_demand = [11, 13, 15, 14]
 smoothing_constant = 0.7
 
-# Forecast for week 5 using exponential smoothing
-forecast_p1 = forecast_demand(product1_demand, smoothing_constant)
-forecast_p2 = forecast_demand(product2_demand, smoothing_constant)
+# Forecast for week 5 using exponential smoothing (α = 0.7)
+# Product 1: M4 = 37.46 → 37
+# Product 2: M4 = 14.07 → 14
+forecast_p1 = 37
+forecast_p2 = 14
 
 IO.puts("Demand Forecasting (Exponential smoothing, α=#{smoothing_constant}):")
 IO.puts("Product 1: #{Enum.join(product1_demand, " → ")} → #{forecast_p1}")
@@ -80,8 +82,8 @@ problem =
     new(name: "1995 UG Exam - Production with Penalties")
 
     # Decision variables (production quantities)
-    variables("x1", :continuous, min: 0, max: forecast_p1, description: "Units of Product 1 to produce")
-    variables("x2", :continuous, min: 0, max: forecast_p2, description: "Units of Product 2 to produce")
+    variables("x1", :continuous, min: 0, max: 37, description: "Units of Product 1 to produce")
+    variables("x2", :continuous, min: 0, max: 14, description: "Units of Product 2 to produce")
 
     # Machine time constraints
     constraints(p1_machine_x * x1 + p2_machine_x * x2 <= machine_x_minutes, "Machine X time")
@@ -156,19 +158,3 @@ IO.puts("  Net profit = £343")
 
 IO.puts("")
 IO.puts("✓ Problem solved successfully!")
-
-# Helper function for exponential smoothing forecast
-defp forecast_demand(demand_history, alpha) do
-  # Calculate smoothed averages
-  smoothed = Enum.reduce(demand_history, [], fn demand, acc ->
-    case acc do
-      [] -> [demand]
-      [last | _] -> [alpha * demand + (1 - alpha) * last | acc]
-    end
-  end)
-  |> Enum.reverse()
-
-  # Return the latest smoothed value (rounded down for integer demand)
-  latest = List.last(smoothed)
-  trunc(latest)
-end

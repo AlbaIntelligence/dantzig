@@ -67,7 +67,7 @@ problem =
     new(name: "1994 UG Exam - Cost Optimization")
 
     # Decision variables
-    variables("x", :continuous, min: contract_x, description: "Number of items X to produce")
+    variables("x", :continuous, min: 10, description: "Number of items X to produce")
     variables("y", :continuous, min: 0, description: "Number of items Y to produce")
 
     # Time constraints
@@ -90,8 +90,15 @@ problem =
     objective(17.1667 * x + 25.8667 * y, direction: :maximize)
   end
 
+# Debug: Show variable definitions
+IO.puts("")
+IO.puts("Variable definitions:")
+problem.variable_defs |> Enum.each(fn {name, var} ->
+  IO.puts("  #{name}: type=#{var.type}, min=#{inspect(var.min)}, max=#{inspect(var.max)}")
+end)
+
 # Solve the problem
-{solution, objective_value} = Problem.solve(problem, print_optimizer_input: false)
+{solution, objective_value} = Problem.solve(problem, print_optimizer_input: true)
 
 IO.puts("Solution:")
 IO.puts("========")
