@@ -1,36 +1,118 @@
 # Comprehensive Tutorial Examples for Modern Dantzig DSL
-# This file demonstrates all the features of the modern DSL system
+# ==========================================================
+#
+# This tutorial demonstrates all the features of the modern Dantzig DSL system
+# through practical examples of classic optimization problems.
+#
+# Business Context
+# ----------------
+# Optimization problems are everywhere in business and engineering:
+#
+# - **Resource Allocation**: Assigning limited resources efficiently
+# - **Scheduling**: Finding optimal time assignments for tasks
+# - **Routing**: Determining best paths through networks
+# - **Assignment**: Matching entities under constraints
+# - **Facility Location**: Deciding where to place resources
+#
+# Mathematical Foundation
+# -----------------------
+# All optimization problems share the same structure:
+#
+#     minimize/maximize: f(x₁, x₂, ..., xₙ)
+#     subject to:        gᵢ(x) ≤ bᵢ for i = 1..m
+#                        hⱼ(x) = cⱼ for j = 1..p
+#                        xₖ ∈ {0,1} or ℝ or ℤ for each variable
+#
+# DSL Syntax Overview
+# --------------------
+#
+# **Problem Definition:**
+#   Problem.define do
+#     new(name: "Problem", direction: :minimize)
+#     variables("x", [i <- 1..n], :binary, "Description")
+#     constraints([i <- 1..n], expression, "Description")
+#     objective(expression, direction: :minimize)
+#   end
+#
+# **Variable Patterns:**
+#   - Single index: x(i)
+#   - Multi-index: x(i, j, k)
+#   - Aggregations: x(i, :_) sums over second index
+#   - Generators: [i <- 1..n, j <- list]
+#
+# **Constraint Types:**
+#   - Equality: x + y == 1
+#   - Inequality: x + y <= 10
+#   - Aggregations: sum(x(:_)) <= 5
+#
+# Common Gotchas
+# --------------
+# 1. **Generator Scope**: Variables in generators are only available within that constraint
+# 2. **Wildcard Order**: x(i, :_) ≠ x(:_, i) - order matters for multi-dimensional variables
+# 3. **Variable Types**: Choose :binary for yes/no, :continuous for real numbers, :integer for whole numbers
+# 4. **Performance**: Large binary problems can be computationally expensive
+#
+# Learning Objectives
+# -------------------
+# After this tutorial, you will understand:
+# - How to define optimization problems using the DSL
+# - Variable creation with generators and patterns
+# - Constraint formulation with mathematical expressions
+# - Multi-dimensional variable handling
+# - Aggregation operations (sum, max, min)
+# - Real-world problem modeling techniques
 
 require Dantzig.Problem, as: Problem
 require Dantzig.Problem.DSL, as: DSL
 
-IO.puts("=== DANTZIG MACROS TUTORIAL ===")
-IO.puts("This tutorial demonstrates the clean syntax for optimization problems")
+IO.puts("=== DANTZIG DSL COMPREHENSIVE TUTORIAL ===")
+IO.puts("This tutorial covers all major DSL features through practical examples")
 IO.puts("")
 
 # ============================================================================
-# EXAMPLE 1: N-QUEENS PROBLEM
+# EXAMPLE 1: N-QUEENS PROBLEM - Constraint Satisfaction
 # ============================================================================
-IO.puts("1. N-QUEENS PROBLEM")
-IO.puts("===================")
-IO.puts("Place N queens on an N×N chessboard so that no two queens attack each other.")
+#
+# Business Context: Resource placement and conflict avoidance
+# - Applications: Meeting room scheduling, exam timetabling, employee shift assignment
+# - Challenge: Ensure no two resources occupy the same "row" or "column" simultaneously
+#
+# Mathematical Formulation:
+# - Variables: x[i,j] ∈ {0,1} for i,j ∈ {1,2,3,4}
+# - Constraints:
+#   - Row uniqueness: Σⱼ x[i,j] = 1 ∀i (exactly one queen per row)
+#   - Column uniqueness: Σᵢ x[i,j] = 1 ∀j (exactly one queen per column)
+# - Note: Diagonal constraints omitted for simplicity in this tutorial
+#
+# DSL Learning Points:
+# - Multi-dimensional variable creation with nested generators
+# - Sum aggregation with wildcards (:_)
+# - Pattern-based constraint generation
+
+IO.puts("1. N-QUEENS PROBLEM - Constraint Satisfaction")
+IO.puts("=============================================")
+IO.puts("Place 4 queens on a 4×4 chessboard so no two queens threaten each other.")
+IO.puts("This demonstrates resource allocation with mutual exclusion constraints.")
 IO.puts("")
 
-# Create a new problem
+# Create the optimization problem using DSL syntax
 problem =
   Problem.define do
-    new(name: "N-Queens", direction: :minimize)
+    new(name: "N-Queens Tutorial", direction: :minimize)
 
     # Variables: x[i,j] = 1 if queen is placed at position (i,j)
-    # Modern clean syntax: [i <- 1..4, j <- 1..4]
+    # Generator [i <- 1..4, j <- 1..4] creates 4×4 = 16 binary variables
+    # Type :binary means each variable can only be 0 or 1
     variables("x", [i <- 1..4, j <- 1..4], :binary, "Queen position")
 
-    # Constraint 1: exactly one queen per row
-    # Pattern x(i, :_) means "sum over all j for fixed i"
+    # Constraint: exactly one queen per row
+    # For each row i, sum x[i,j] over all columns j must equal 1
+    # Pattern x(i, :_) means "sum over all values of second index"
     constraints([i <- 1..4], sum(x(i, :_)) == 1, "One queen per row")
 
-    # Constraint 2: exactly one queen per column
-    # Pattern x(:_, j) means "sum over all i for fixed j"
+    # Constraint: exactly one queen per column
+    # For each column j, sum x[i,j] over all rows i must equal 1
+    # Pattern x(:_, j) means "sum over all values of first index"
     constraints([j <- 1..4], sum(x(:_, j)) == 1, "One queen per column")
   end
 
@@ -42,28 +124,52 @@ IO.puts("✓ Added constraints: #{map_size(problem.constraints)} total constrain
 IO.puts("")
 
 # ============================================================================
-# EXAMPLE 2: TRAVELING SALESMAN PROBLEM (TSP)
+# EXAMPLE 2: TRAVELING SALESMAN PROBLEM - Network Routing
 # ============================================================================
-IO.puts("2. TRAVELING SALESMAN PROBLEM")
-IO.puts("=============================")
-IO.puts("Find the shortest route visiting each city exactly once and returning to start.")
+#
+# Business Context: Route optimization and logistics
+# - Applications: Delivery routing, circuit board design, DNA sequencing
+# - Challenge: Find optimal path through network with visit constraints
+#
+# Mathematical Formulation:
+# - Variables: x[i,j] ∈ {0,1} for i,j ∈ cities (1 if edge used in tour)
+# - Constraints:
+#   - Degree constraints: Each city has exactly one incoming and one outgoing edge
+#   - Outgoing: Σⱼ x[i,j] = 1 ∀i (leave each city exactly once)
+#   - Incoming: Σᵢ x[i,j] = 1 ∀j (arrive at each city exactly once)
+# - Objective: minimize ΣᵢΣⱼ c[i,j] * x[i,j] (total distance)
+# - Note: This simplified version lacks subtour elimination; real TSP needs more constraints
+#
+# DSL Learning Points:
+# - Using lists as generator domains
+# - Bidirectional constraints (outgoing vs incoming)
+# - Network flow modeling patterns
+
+IO.puts("2. TRAVELING SALESMAN PROBLEM - Network Routing")
+IO.puts("================================================")
+IO.puts("Find the shortest route visiting each of 4 cities exactly once.")
+IO.puts("This demonstrates routing problems with degree constraints.")
 IO.puts("")
 
+# Define the cities to visit (could be city names or coordinates)
 cities = [1, 2, 3, 4]
 
 problem2 =
   Problem.define do
-    new(name: "TSP", direction: :minimize)
+    new(name: "TSP Tutorial", direction: :minimize)
 
-    # Variables: x[i,j] = 1 if edge (i,j) is used in the tour
-    variables("x", [i <- cities, j <- cities], :binary, "Edge used")
+    # Variables: x[i,j] = 1 if we travel from city i to city j
+    # Generator uses a list of cities, creating variables for all pairs
+    # Note: In practice, you'd exclude self-loops (i != j)
+    variables("x", [i <- cities, j <- cities], :binary, "Edge used in tour")
 
-    # Constraint: each city has exactly 2 edges (incoming and outgoing)
-    # Outgoing edges: sum over j for fixed i
-    constraints([i <- cities], sum(x(i, :_)) == 1, "Outgoing edges")
+    # Constraint: each city has exactly one outgoing edge (leave each city once)
+    # For each starting city i, sum over all destination cities j
+    constraints([i <- cities], sum(x(i, :_)) == 1, "One outgoing edge per city")
 
-    # Incoming edges: sum over i for fixed j
-    constraints([j <- cities], sum(x(:_, j)) == 1, "Incoming edges")
+    # Constraint: each city has exactly one incoming edge (arrive at each city once)
+    # For each destination city j, sum over all starting cities i
+    constraints([j <- cities], sum(x(:_, j)) == 1, "One incoming edge per city")
   end
 
 var_map2 = Problem.get_variables_nd(problem2, "x")
