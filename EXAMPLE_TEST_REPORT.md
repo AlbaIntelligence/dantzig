@@ -76,22 +76,19 @@ This report documents the syntax alignment with DSL specs and execution status f
    - Issue: `for food <- food_names` in objective expression may be causing issues
    - **Status**: Needs investigation - for-comprehension in objective expression
 
-### ❌ Compilation Errors:
+### ✅ Fixed - Now Working:
 
 1. **variadic_operations_example.exs**:
-   - ❌ **COMPILATION ERROR**: `undefined function <-/2`
-   - Issue: Uses deprecated `Problem.new()` API with generator syntax `[i <- 1..3]`
-   - **Status**: Needs update to use `Problem.define` syntax
+- ✅ **FIXED**: Added missing `require Dantzig.Problem.DSL, as: DSL`
+- Now compiles and executes successfully
 
 2. **pattern_based_operations_example.exs**:
-   - ❌ **COMPILATION ERROR**: `undefined function <-/2`
-   - Issue: Uses deprecated `Problem.new()` API with generator syntax
-   - **Status**: Needs update to use `Problem.define` syntax
+    - ✅ **FIXED**: Added missing `require Dantzig.Problem.DSL, as: DSL`
+- Now compiles and executes successfully
 
 3. **tutorial_examples.exs**:
-   - ❌ **COMPILATION ERROR**: `undefined function <-/2`
-   - Issue: Uses deprecated `Problem.new()` API with generator syntax
-   - **Status**: Needs update to use `Problem.define` syntax
+    - ✅ **FIXED**: Added missing `require Dantzig.Problem.DSL, as: DSL`
+    - Now compiles and executes successfully
 
 ## Recent Fixes Applied
 
@@ -113,9 +110,9 @@ This report documents the syntax alignment with DSL specs and execution status f
 ## Current Status Summary
 
 - **Total Examples**: 17
-- **✅ Working**: 6 examples (35%)
+- **✅ Working**: 9 examples (53%)
 - **⚠️ Runtime Errors**: 8 examples (47%)
-- **❌ Compilation Errors**: 3 examples (18%)
+- **❌ Compilation Errors**: 0 examples (0%)
 
 ### Breakdown by Error Type:
 
@@ -145,13 +142,16 @@ This report documents the syntax alignment with DSL specs and execution status f
 
 ## Detailed Findings by Category
 
-### Working Examples (6):
+### Working Examples (9):
 1. **simple_working_example.exs** - Basic DSL examples
 2. **working_example.exs** - Similar to simple_working_example
 3. **new_dsl_example.exs** - Modern DSL demonstration
 4. **nqueens_dsl.exs** - **FIXED** - N-Queens problems with variable recognition
 5. **test_basic_dsl.exs** - **FIXED** - Basic DSL functionality tests
 6. **generate_timetable_svg.exs** - SVG generation (no DSL, standalone)
+7. **variadic_operations_example.exs** - **FIXED** - Variadic operations demonstration
+8. **pattern_based_operations_example.exs** - **FIXED** - Pattern-based operations demonstration
+9. **tutorial_examples.exs** - **FIXED** - Comprehensive tutorial examples
 
 ### Runtime Errors (8):
 

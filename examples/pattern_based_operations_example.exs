@@ -2,6 +2,7 @@
 # Demonstrates the modern pattern-based syntax: max(x[_]), min(x[_]), etc.
 
 require Dantzig.Problem, as: Problem
+require Dantzig.Problem.DSL, as: DSL
 
 IO.puts("=== PATTERN-BASED OPERATIONS DEMONSTRATION ===")
 IO.puts("This example shows the new pattern-based syntax for variadic operations")

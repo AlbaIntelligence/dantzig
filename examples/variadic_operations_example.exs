@@ -2,6 +2,7 @@
 # Demonstrates the enhanced support for variadic operations: max(), min(), and(), or()
 
 require Dantzig.Problem, as: Problem
+require Dantzig.Problem.DSL, as: DSL
 
 IO.puts("=== VARIADIC OPERATIONS DEMONSTRATION ===")
 IO.puts("This example shows how max(), min(), and(), or() can take any number of arguments")

@@ -2,6 +2,7 @@
 # This file demonstrates all the features of the modern DSL system
 
 require Dantzig.Problem, as: Problem
+require Dantzig.Problem.DSL, as: DSL
 
 IO.puts("=== DANTZIG MACROS TUTORIAL ===")
 IO.puts("This tutorial demonstrates the clean syntax for optimization problems")
