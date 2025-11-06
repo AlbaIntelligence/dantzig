@@ -151,8 +151,8 @@ defmodule Dantzig.Problem.DSLReducer do
       when is_binary(name) and is_atom(type) and is_list(opts) and not is_binary(hd(opts)) ->
         # Extract description and bounds from opts
         description = Keyword.get(opts, :description, "")
-        min_bound = Keyword.get(opts, :min)
-        max_bound = Keyword.get(opts, :max)
+        min_bound = Keyword.get(opts, :min_bound)
+        max_bound = Keyword.get(opts, :max_bound)
 
         # Validate bounds before creating variable
         validate_bounds_for_single_variable!(type, min_bound, max_bound)
@@ -189,8 +189,8 @@ defmodule Dantzig.Problem.DSLReducer do
           end
 
         # Extract bounds from bounds_list
-        min_bound = Keyword.get(bounds_list, :min)
-        max_bound = Keyword.get(bounds_list, :max)
+        min_bound = Keyword.get(bounds_list, :min_bound)
+        max_bound = Keyword.get(bounds_list, :max_bound)
 
         # Validate bounds before creating variable
         validate_bounds_for_single_variable!(type, min_bound, max_bound)
@@ -304,8 +304,8 @@ defmodule Dantzig.Problem.DSLReducer do
       when is_binary(name) and is_atom(type) and is_list(opts) and not is_binary(hd(opts)) ->
         # Extract description and bounds from opts
         description = Keyword.get(opts, :description, "")
-        min_bound = Keyword.get(opts, :min)
-        max_bound = Keyword.get(opts, :max)
+        min_bound = Keyword.get(opts, :min_bound)
+        max_bound = Keyword.get(opts, :max_bound)
 
         # Validate bounds before creating variable
         validate_bounds_for_single_variable!(type, min_bound, max_bound)
@@ -341,8 +341,8 @@ defmodule Dantzig.Problem.DSLReducer do
           end
 
         # Extract bounds from bounds_list
-        min_bound = Keyword.get(bounds_list, :min)
-        max_bound = Keyword.get(bounds_list, :max)
+        min_bound = Keyword.get(bounds_list, :min_bound)
+        max_bound = Keyword.get(bounds_list, :max_bound)
 
         # Validate bounds before creating variable
         validate_bounds_for_single_variable!(type, min_bound, max_bound)
@@ -361,8 +361,8 @@ defmodule Dantzig.Problem.DSLReducer do
       when is_binary(name) and is_list(generators) and is_atom(type) and is_binary(description) and
              is_list(bounds_opts) ->
         # Extract bounds from bounds_opts and merge with description
-        min_bound = Keyword.get(bounds_opts, :min)
-        max_bound = Keyword.get(bounds_opts, :max)
+        min_bound = Keyword.get(bounds_opts, :min_bound)
+        max_bound = Keyword.get(bounds_opts, :max_bound)
 
         # Validate bounds before creating variables
         validate_bounds_for_single_variable!(type, min_bound, max_bound)
