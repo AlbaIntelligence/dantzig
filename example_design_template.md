@@ -7,6 +7,7 @@ Based on examining existing examples, I've identified the structure and patterns
 ### **Good Examples Analysis:**
 
 1. **simple_working_example.exs** (290 lines)
+
    - ✅ Comprehensive header documentation
    - ✅ Business context and real-world applications
    - ✅ Mathematical formulation with proper notation
@@ -17,6 +18,7 @@ Based on examining existing examples, I've identified the structure and patterns
    - ✅ Learning insights section
 
 2. **transportation_problem.exs** (349 lines)
+
    - ✅ Good problem definition and data setup
    - ✅ Model parameters usage (partial)
    - ✅ Comprehensive validation and error checking
@@ -79,13 +81,13 @@ require Dantzig.Problem.DSL, as: DSL
 problem =
   Problem.define [model_parameters: data] do
     new(name: "Problem Name", description: "Problem description", direction: :minimize)
-    
+
     # Variables section
     # [Clear variable definition with pattern-based generators]
-    
+
     # Constraints section
     # [Well-documented constraints with meaningful names]
-    
+
     # Objective section
     # [Clear objective function definition]
   end
@@ -94,7 +96,7 @@ problem =
 # Solution and Analysis
 # ============================================================================
 
-{solution, objective_value} = Problem.solve(problem, print_optimizer_input: false)
+{solution, objective_value} = Problem.solve(problem, solver: :highs, print_optimizer_input: true)
 
 # [Comprehensive solution display with validation]
 
@@ -109,6 +111,7 @@ problem =
 ### **Tier 1: Beginner Level (Fill immediate gaps)**
 
 1. **Two-Variable Linear Programming**
+
    - **DSL Features**: Basic variables, simple constraints, objective
    - **Variables**: 2 continuous variables (x, y)
    - **Constraints**: 3-4 linear inequalities defining a polygon
@@ -116,6 +119,7 @@ problem =
    - **Value**: Perfect introduction to LP basics, visualizable
 
 2. **Simple Diet Problem** (Fix existing)
+
    - **Current Status**: Exists but has sum(for ...) syntax issues
    - **Fix Required**: Update to use proper DSL syntax
    - **DSL Features**: Model parameters, simple constraints, cost minimization
@@ -129,6 +133,7 @@ problem =
 ### **Tier 2: Intermediate Level (Add missing features)**
 
 4. **Portfolio Optimization**
+
    - **DSL Features**: Parameter arrays, complex objectives, budget constraints
    - **Variables**: 5-8 investment options
    - **Constraints**: Budget, risk limits, diversification
@@ -143,6 +148,7 @@ problem =
 ### **Tier 3: Advanced Level (Showcase advanced features)**
 
 6. **Facility Location Problem**
+
    - **DSL Features**: Mixed-integer programming, fixed costs
    - **Variables**: Binary facility location + continuous assignment
    - **Constraints**: Fixed costs, capacity limits, demand satisfaction
@@ -157,15 +163,17 @@ problem =
 ## 🔧 DSL Feature Coverage Goals
 
 ### **Current Coverage (from analysis):**
+
 - ✅ Basic continuous variables
 - ✅ Simple constraints (==, <=, >=)
 - ✅ Pattern-based variable generation
 - ✅ Basic sum expressions
-- ✅ Wildcard aggregations (:_)
+- ✅ Wildcard aggregations (:\_)
 - ✅ Model parameters (partial support)
 - ✅ Binary variables (knapsack)
 
 ### **Missing Coverage to Add:**
+
 - ❌ Integer variables
 - ❌ Complex parameter arrays
 - ❌ Multi-objective optimization
@@ -176,7 +184,9 @@ problem =
 ## 📏 Quality Standards for Examples
 
 ### **Documentation Requirements:**
+
 1. **Header Section** (50-100 lines):
+
    - Problem name and description
    - Business context (real-world applications)
    - Mathematical formulation (proper notation)
@@ -184,17 +194,20 @@ problem =
    - Common gotchas section
 
 2. **Data Definition** (20-40 lines):
+
    - Clear variable names
    - Meaningful comments
    - Well-structured data
 
 3. **Problem Creation** (30-60 lines):
+
    - Pattern-based variable generation
    - Well-documented constraints
    - Clear objective function
    - Proper use of model parameters
 
 4. **Solution Analysis** (40-80 lines):
+
    - Solution display with validation
    - Error checking and verification
    - Performance metrics
@@ -205,13 +218,16 @@ problem =
    - Real-world applications
 
 ### **Technical Requirements:**
+
 1. **DSL Syntax Compliance**:
+
    - Use pattern-based variable generation where possible
    - Follow DSL naming conventions
    - Proper use of wildcards and aggregations
    - Model parameters when appropriate
 
 2. **Code Quality**:
+
    - No compilation warnings
    - Comprehensive error handling
    - Validation of solutions
@@ -226,12 +242,14 @@ problem =
 ## 🚀 Implementation Strategy
 
 ### **Phase 1: Fix Existing Issues**
+
 1. Fix diet_problem.exs (sum(for ...) syntax)
 2. Fix transportation_problem.exs (Access.get issues)
 3. Fix knapsack_problem.exs (pattern-based variables)
 4. Fix assignment_problem.exs (objective calculation)
 
 ### **Phase 2: Implement New Examples**
+
 1. **Two-Variable LP** (easiest to start with)
 2. **Resource Allocation** (pattern-based constraints)
 3. **Portfolio Optimization** (complex objectives)
@@ -239,6 +257,7 @@ problem =
 5. **Multi-Objective LP** (advanced features)
 
 ### **Phase 3: Advanced Examples**
+
 1. **Facility Location** (mixed-integer)
 2. **Network Flow** (graph-based modeling)
 3. **Stochastic Programming** (uncertainty)
@@ -252,6 +271,7 @@ problem =
 5. **Validation**: All solutions properly validated and verified
 
 This design provides a clear roadmap for creating rich, educational examples that showcase the full capabilities of the Dantzig DSL.
+
 ## 📊 Analysis of Current Examples
 
 Based on examining existing examples, I've identified the structure and patterns that work well:
@@ -259,6 +279,7 @@ Based on examining existing examples, I've identified the structure and patterns
 ### **Good Examples Analysis:**
 
 1. **simple_working_example.exs** (290 lines)
+
    - ✅ Comprehensive header documentation
    - ✅ Business context and real-world applications
    - ✅ Mathematical formulation with proper notation
@@ -269,6 +290,7 @@ Based on examining existing examples, I've identified the structure and patterns
    - ✅ Learning insights section
 
 2. **transportation_problem.exs** (349 lines)
+
    - ✅ Good problem definition and data setup
    - ✅ Model parameters usage (partial)
    - ✅ Comprehensive validation and error checking
@@ -331,13 +353,13 @@ require Dantzig.Problem.DSL, as: DSL
 problem =
   Problem.define [model_parameters: data] do
     new(name: "Problem Name", description: "Problem description", direction: :minimize)
-    
+
     # Variables section
     # [Clear variable definition with pattern-based generators]
-    
+
     # Constraints section
     # [Well-documented constraints with meaningful names]
-    
+
     # Objective section
     # [Clear objective function definition]
   end
@@ -346,7 +368,7 @@ problem =
 # Solution and Analysis
 # ============================================================================
 
-{solution, objective_value} = Problem.solve(problem, print_optimizer_input: false)
+{solution, objective_value} = Problem.solve(problem, solver: :highs, print_optimizer_input: true)
 
 # [Comprehensive solution display with validation]
 
@@ -361,6 +383,7 @@ problem =
 ### **Tier 1: Beginner Level (Fill immediate gaps)**
 
 1. **Two-Variable Linear Programming**
+
    - **DSL Features**: Basic variables, simple constraints, objective
    - **Variables**: 2 continuous variables (x, y)
    - **Constraints**: 3-4 linear inequalities defining a polygon
@@ -368,6 +391,7 @@ problem =
    - **Value**: Perfect introduction to LP basics, visualizable
 
 2. **Simple Diet Problem** (Fix existing)
+
    - **Current Status**: Exists but has sum(for ...) syntax issues
    - **Fix Required**: Update to use proper DSL syntax
    - **DSL Features**: Model parameters, simple constraints, cost minimization
@@ -381,6 +405,7 @@ problem =
 ### **Tier 2: Intermediate Level (Add missing features)**
 
 4. **Portfolio Optimization**
+
    - **DSL Features**: Parameter arrays, complex objectives, budget constraints
    - **Variables**: 5-8 investment options
    - **Constraints**: Budget, risk limits, diversification
@@ -395,6 +420,7 @@ problem =
 ### **Tier 3: Advanced Level (Showcase advanced features)**
 
 6. **Facility Location Problem**
+
    - **DSL Features**: Mixed-integer programming, fixed costs
    - **Variables**: Binary facility location + continuous assignment
    - **Constraints**: Fixed costs, capacity limits, demand satisfaction
@@ -409,15 +435,17 @@ problem =
 ## 🔧 DSL Feature Coverage Goals
 
 ### **Current Coverage (from analysis):**
+
 - ✅ Basic continuous variables
 - ✅ Simple constraints (==, <=, >=)
 - ✅ Pattern-based variable generation
 - ✅ Basic sum expressions
-- ✅ Wildcard aggregations (:_)
+- ✅ Wildcard aggregations (:\_)
 - ✅ Model parameters (partial support)
 - ✅ Binary variables (knapsack)
 
 ### **Missing Coverage to Add:**
+
 - ❌ Integer variables
 - ❌ Complex parameter arrays
 - ❌ Multi-objective optimization
@@ -428,7 +456,9 @@ problem =
 ## 📏 Quality Standards for Examples
 
 ### **Documentation Requirements:**
+
 1. **Header Section** (50-100 lines):
+
    - Problem name and description
    - Business context (real-world applications)
    - Mathematical formulation (proper notation)
@@ -436,17 +466,20 @@ problem =
    - Common gotchas section
 
 2. **Data Definition** (20-40 lines):
+
    - Clear variable names
    - Meaningful comments
    - Well-structured data
 
 3. **Problem Creation** (30-60 lines):
+
    - Pattern-based variable generation
    - Well-documented constraints
    - Clear objective function
    - Proper use of model parameters
 
 4. **Solution Analysis** (40-80 lines):
+
    - Solution display with validation
    - Error checking and verification
    - Performance metrics
@@ -457,13 +490,16 @@ problem =
    - Real-world applications
 
 ### **Technical Requirements:**
+
 1. **DSL Syntax Compliance**:
+
    - Use pattern-based variable generation where possible
    - Follow DSL naming conventions
    - Proper use of wildcards and aggregations
    - Model parameters when appropriate
 
 2. **Code Quality**:
+
    - No compilation warnings
    - Comprehensive error handling
    - Validation of solutions
@@ -478,12 +514,14 @@ problem =
 ## 🚀 Implementation Strategy
 
 ### **Phase 1: Fix Existing Issues**
+
 1. Fix diet_problem.exs (sum(for ...) syntax)
 2. Fix transportation_problem.exs (Access.get issues)
 3. Fix knapsack_problem.exs (pattern-based variables)
 4. Fix assignment_problem.exs (objective calculation)
 
 ### **Phase 2: Implement New Examples**
+
 1. **Two-Variable LP** (easiest to start with)
 2. **Resource Allocation** (pattern-based constraints)
 3. **Portfolio Optimization** (complex objectives)
@@ -491,6 +529,7 @@ problem =
 5. **Multi-Objective LP** (advanced features)
 
 ### **Phase 3: Advanced Examples**
+
 1. **Facility Location** (mixed-integer)
 2. **Network Flow** (graph-based modeling)
 3. **Stochastic Programming** (uncertainty)

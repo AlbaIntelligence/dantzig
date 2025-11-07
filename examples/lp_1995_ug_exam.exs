@@ -66,14 +66,23 @@ p2_machine_y = 45
 # Profits and penalties
 profit_p1 = 10
 profit_p2 = 4
-penalty_p1 = 3  # per unsatisfied unit
-penalty_p2 = 1  # per unsatisfied unit
+# per unsatisfied unit
+penalty_p1 = 3
+# per unsatisfied unit
+penalty_p2 = 1
 
 IO.puts("Production Constraints:")
 IO.puts("  Machine X: #{machine_x_hours} hours (#{machine_x_minutes} minutes)")
 IO.puts("  Machine Y: #{machine_y_hours} hours (#{machine_y_minutes} minutes)")
-IO.puts("  Product 1: #{p1_machine_x}min/X, #{p1_machine_y}min/Y, £#{profit_p1} profit, £#{penalty_p1} penalty")
-IO.puts("  Product 2: #{p2_machine_x}min/X, #{p2_machine_y}min/Y, £#{profit_p2} profit, £#{penalty_p2} penalty")
+
+IO.puts(
+  "  Product 1: #{p1_machine_x}min/X, #{p1_machine_y}min/Y, £#{profit_p1} profit, £#{penalty_p1} penalty"
+)
+
+IO.puts(
+  "  Product 2: #{p2_machine_x}min/X, #{p2_machine_y}min/Y, £#{profit_p2} profit, £#{penalty_p2} penalty"
+)
+
 IO.puts("")
 
 # Create the optimization problem
@@ -82,8 +91,17 @@ problem =
     new(name: "1995 UG Exam - Production with Penalties")
 
     # Decision variables (production quantities)
-    variables("x1", :continuous, min_bound: 0, max_bound: 37, description: "Units of Product 1 to produce")
-    variables("x2", :continuous, min_bound: 0, max_bound: 14, description: "Units of Product 2 to produce")
+    variables("x1", :continuous,
+      min_bound: 0,
+      max_bound: 37,
+      description: "Units of Product 1 to produce"
+    )
+
+    variables("x2", :continuous,
+      min_bound: 0,
+      max_bound: 14,
+      description: "Units of Product 2 to produce"
+    )
 
     # Machine time constraints
     constraints(p1_machine_x * x1 + p2_machine_x * x2 <= machine_x_minutes, "Machine X time")
@@ -101,7 +119,7 @@ problem =
   end
 
 # Solve the problem
-{solution, objective_value} = Problem.solve(problem, print_optimizer_input: false)
+{solution, objective_value} = Problem.solve(problem, solver: :highs, print_optimizer_input: true)
 
 IO.puts("Solution:")
 IO.puts("========")
@@ -109,6 +127,7 @@ IO.puts("Net profit: £#{Float.round(objective_value, 2)}")
 IO.puts("")
 
 IO.puts("Production Plan:")
+
 solution.variables
 |> Enum.sort_by(fn {k, _} -> k end)
 |> Enum.each(fn {var_name, value} ->

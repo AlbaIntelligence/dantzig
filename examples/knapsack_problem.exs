@@ -79,7 +79,7 @@ problem =
   end
 
 IO.puts("Solving the knapsack problem...")
-{solution, objective_value} = Problem.solve(problem, print_optimizer_input: false)
+{solution, objective_value} = Problem.solve(problem, solver: :highs, print_optimizer_input: true)
 
 IO.puts("Solution:")
 IO.puts("=========")

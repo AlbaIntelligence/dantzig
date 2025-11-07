@@ -313,7 +313,7 @@ end
 IO.puts("Solving the simplified assignment problem...")
 IO.puts("(Objective: minimize number of assignments)")
 IO.puts("")
-{solution, objective_value} = Problem.solve(problem, print_optimizer_input: false)
+{solution, objective_value} = Problem.solve(problem, solver: :highs, print_optimizer_input: true)
 
 IO.puts("Solution:")
 IO.puts("=========")
@@ -343,25 +343,26 @@ IO.puts("")
 # This multiplies each assignment variable by its corresponding cost and
 # sums the result, giving us the total assignment cost.
 #
-problem = Problem.modify(problem) do
-  # Update objective to minimize total assignment cost
-  # For each worker-task pair, multiply assignment variable by cost
-  # Sum all products to get total cost
-  # Note: Nested map access cost_matrix[w][t] with variables from for-comprehension
-  # doesn't work correctly, so using explicit terms for now
-  objective(
-  assign("Alice", "Task1") * cost_matrix["Alice"]["Task1"] +
-    assign("Alice", "Task2") * cost_matrix["Alice"]["Task2"] +
-    assign("Alice", "Task3") * cost_matrix["Alice"]["Task3"] +
-    assign("Bob", "Task1") * cost_matrix["Bob"]["Task1"] +
-    assign("Bob", "Task2") * cost_matrix["Bob"]["Task2"] +
-    assign("Bob", "Task3") * cost_matrix["Bob"]["Task3"] +
-    assign("Charlie", "Task1") * cost_matrix["Charlie"]["Task1"] +
-    assign("Charlie", "Task2") * cost_matrix["Charlie"]["Task2"] +
-    assign("Charlie", "Task3") * cost_matrix["Charlie"]["Task3"],
-    :minimize
-  )
-end
+problem =
+  Problem.modify problem do
+    # Update objective to minimize total assignment cost
+    # For each worker-task pair, multiply assignment variable by cost
+    # Sum all products to get total cost
+    # Note: Nested map access cost_matrix[w][t] with variables from for-comprehension
+    # doesn't work correctly, so using explicit terms for now
+    objective(
+      assign("Alice", "Task1") * cost_matrix["Alice"]["Task1"] +
+        assign("Alice", "Task2") * cost_matrix["Alice"]["Task2"] +
+        assign("Alice", "Task3") * cost_matrix["Alice"]["Task3"] +
+        assign("Bob", "Task1") * cost_matrix["Bob"]["Task1"] +
+        assign("Bob", "Task2") * cost_matrix["Bob"]["Task2"] +
+        assign("Bob", "Task3") * cost_matrix["Bob"]["Task3"] +
+        assign("Charlie", "Task1") * cost_matrix["Charlie"]["Task1"] +
+        assign("Charlie", "Task2") * cost_matrix["Charlie"]["Task2"] +
+        assign("Charlie", "Task3") * cost_matrix["Charlie"]["Task3"],
+      :minimize
+    )
+  end
 
 # ============================================================================
 # Solve with Actual Cost Objective
@@ -373,7 +374,7 @@ end
 IO.puts("Solving the full assignment problem...")
 IO.puts("(Objective: minimize total assignment cost)")
 IO.puts("")
-{solution, objective_value} = Problem.solve(problem, print_optimizer_input: false)
+{solution, objective_value} = Problem.solve(problem, solver: :highs, print_optimizer_input: true)
 
 IO.puts("Solution:")
 IO.puts("=========")

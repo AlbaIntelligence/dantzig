@@ -33,8 +33,10 @@ IO.puts("")
 # Problem data
 profit_a = 3
 profit_b = 5
-time_a = 12    # minutes per unit A
-time_b = 25    # minutes per unit B
+# minutes per unit A
+time_a = 12
+# minutes per unit B
+time_b = 25
 available_hours = 30
 available_minutes = available_hours * 60
 
@@ -65,7 +67,7 @@ problem =
   end
 
 # Solve the problem
-{solution, objective_value} = Problem.solve(problem, print_optimizer_input: false)
+{solution, objective_value} = Problem.solve(problem, solver: :highs, print_optimizer_input: true)
 
 IO.puts("Solution:")
 IO.puts("========")
@@ -73,6 +75,7 @@ IO.puts("Profit: £#{Float.round(objective_value, 2)}")
 IO.puts("")
 
 IO.puts("Production Plan:")
+
 solution.variables
 |> Enum.sort_by(fn {k, _} -> k end)
 |> Enum.each(fn {var_name, value} ->

@@ -97,9 +97,20 @@ problem =
     )
 
     # Decision variables: fraction_m = fraction of material m in the blend
-    variables("fraction_Material1", :continuous, "Fraction of Material1 in blend", min_bound: 0.1, max_bound: 0.8)
-    variables("fraction_Material2", :continuous, "Fraction of Material2 in blend", min_bound: 0.1, max_bound: 0.8)
-    variables("fraction_Material3", :continuous, "Fraction of Material3 in blend", min_bound: 0.1, max_bound: 0.8)
+    variables("fraction_Material1", :continuous, "Fraction of Material1 in blend",
+      min_bound: 0.1,
+      max_bound: 0.8
+    )
+
+    variables("fraction_Material2", :continuous, "Fraction of Material2 in blend",
+      min_bound: 0.1,
+      max_bound: 0.8
+    )
+
+    variables("fraction_Material3", :continuous, "Fraction of Material3 in blend",
+      min_bound: 0.1,
+      max_bound: 0.8
+    )
 
     # Constraint: fractions must sum to 1 (100% of blend)
     constraints(
@@ -109,24 +120,26 @@ problem =
 
     # Quality constraints (hardcoded for now - model parameters not yet implemented)
     constraints(
-    fraction_Material1 * 0.8 + fraction_Material2 * 0.6 + fraction_Material3 * 0.9 >= min_quality1,
-    "Minimum quality1 requirement"
+      fraction_Material1 * 0.8 + fraction_Material2 * 0.6 + fraction_Material3 * 0.9 >=
+        min_quality1,
+      "Minimum quality1 requirement"
     )
 
     constraints(
-    fraction_Material1 * 0.2 + fraction_Material2 * 0.4 + fraction_Material3 * 0.1 <= max_quality2,
-    "Maximum quality2 requirement"
+      fraction_Material1 * 0.2 + fraction_Material2 * 0.4 + fraction_Material3 * 0.1 <=
+        max_quality2,
+      "Maximum quality2 requirement"
     )
 
     # Objective: minimize total cost
     objective(
-    fraction_Material1 * 5.0 + fraction_Material2 * 8.0 + fraction_Material3 * 6.0,
-    direction: :minimize
+      fraction_Material1 * 5.0 + fraction_Material2 * 8.0 + fraction_Material3 * 6.0,
+      direction: :minimize
     )
   end
 
 IO.puts("Solving the blending problem...")
-{solution, objective_value} = Problem.solve(problem, print_optimizer_input: false)
+{solution, objective_value} = Problem.solve(problem, solver: :highs, print_optimizer_input: true)
 
 IO.puts("Solution:")
 IO.puts("=========")
@@ -137,14 +150,14 @@ IO.puts("Optimal Blend Composition:")
 
 # Display the blend composition
 Enum.each(materials, fn material ->
-var_name = "fraction_#{material}"
-fraction = solution.variables[var_name]
+  var_name = "fraction_#{material}"
+  fraction = solution.variables[var_name]
 
-material_cost = fraction * cost_per_unit[material]
+  material_cost = fraction * cost_per_unit[material]
 
-IO.puts(
-"  #{material}: #{Float.round(fraction * 100.0, 2)}% (cost contribution: $#{Float.round(material_cost, 2)})"
-)
+  IO.puts(
+    "  #{material}: #{Float.round(fraction * 100.0, 2)}% (cost contribution: $#{Float.round(material_cost, 2)})"
+  )
 end)
 
 IO.puts("")
@@ -158,25 +171,44 @@ IO.puts("")
 IO.puts("Constraint Validation:")
 
 # Check blend composition (sum = 1)
-total_fraction = solution.variables["fraction_Material1"] + solution.variables["fraction_Material2"] + solution.variables["fraction_Material3"]
+total_fraction =
+  solution.variables["fraction_Material1"] + solution.variables["fraction_Material2"] +
+    solution.variables["fraction_Material3"]
+
 blend_ok = abs(total_fraction - 1.0) < 0.001
-IO.puts("  Blend composition (sum = 1.0): #{Float.round(total_fraction, 4)} #{if blend_ok, do: "✅", else: "❌"}")
+
+IO.puts(
+  "  Blend composition (sum = 1.0): #{Float.round(total_fraction, 4)} #{if blend_ok, do: "✅", else: "❌"}"
+)
 
 # Check quality constraints
-quality1_achieved = solution.variables["fraction_Material1"] * 0.8 + solution.variables["fraction_Material2"] * 0.6 + solution.variables["fraction_Material3"] * 0.9
-quality2_achieved = solution.variables["fraction_Material1"] * 0.2 + solution.variables["fraction_Material2"] * 0.4 + solution.variables["fraction_Material3"] * 0.1
+quality1_achieved =
+  solution.variables["fraction_Material1"] * 0.8 + solution.variables["fraction_Material2"] * 0.6 +
+    solution.variables["fraction_Material3"] * 0.9
+
+quality2_achieved =
+  solution.variables["fraction_Material1"] * 0.2 + solution.variables["fraction_Material2"] * 0.4 +
+    solution.variables["fraction_Material3"] * 0.1
 
 quality1_ok = quality1_achieved >= min_quality1 - 0.001
 quality2_ok = quality2_achieved <= max_quality2 + 0.001
 
-IO.puts("  Quality1 (≥ #{min_quality1}): #{Float.round(quality1_achieved, 4)} #{if quality1_ok, do: "✅", else: "❌"}")
-IO.puts("  Quality2 (≤ #{max_quality2}): #{Float.round(quality2_achieved, 4)} #{if quality2_ok, do: "✅", else: "❌"}")
+IO.puts(
+  "  Quality1 (≥ #{min_quality1}): #{Float.round(quality1_achieved, 4)} #{if quality1_ok, do: "✅", else: "❌"}"
+)
+
+IO.puts(
+  "  Quality2 (≤ #{max_quality2}): #{Float.round(quality2_achieved, 4)} #{if quality2_ok, do: "✅", else: "❌"}"
+)
 
 # Check fraction bounds (10% - 80%)
 bounds_ok =
-solution.variables["fraction_Material1"] >= 0.1 - 0.001 and solution.variables["fraction_Material1"] <= 0.8 + 0.001 and
-solution.variables["fraction_Material2"] >= 0.1 - 0.001 and solution.variables["fraction_Material2"] <= 0.8 + 0.001 and
-solution.variables["fraction_Material3"] >= 0.1 - 0.001 and solution.variables["fraction_Material3"] <= 0.8 + 0.001
+  solution.variables["fraction_Material1"] >= 0.1 - 0.001 and
+    solution.variables["fraction_Material1"] <= 0.8 + 0.001 and
+    solution.variables["fraction_Material2"] >= 0.1 - 0.001 and
+    solution.variables["fraction_Material2"] <= 0.8 + 0.001 and
+    solution.variables["fraction_Material3"] >= 0.1 - 0.001 and
+    solution.variables["fraction_Material3"] <= 0.8 + 0.001
 
 IO.puts("  Fraction bounds (10%-80%): #{if bounds_ok, do: "✅ All OK", else: "❌ VIOLATED"}")
 
@@ -192,16 +224,16 @@ IO.puts("")
 IO.puts("Quality Contribution by Material:")
 
 Enum.each(materials, fn material ->
-var_name = "fraction_#{material}"
-fraction = solution.variables[var_name]
-props = quality_properties[material]
+  var_name = "fraction_#{material}"
+  fraction = solution.variables[var_name]
+  props = quality_properties[material]
 
-quality1_contrib = fraction * props.quality1
-quality2_contrib = fraction * props.quality2
+  quality1_contrib = fraction * props.quality1
+  quality2_contrib = fraction * props.quality2
 
-IO.puts(
-"  #{material}: Q1=#{Float.round(quality1_contrib * 1.0, 4)}, Q2=#{Float.round(quality2_contrib * 1.0, 4)}"
-)
+  IO.puts(
+    "  #{material}: Q1=#{Float.round(quality1_contrib * 1.0, 4)}, Q2=#{Float.round(quality2_contrib * 1.0, 4)}"
+  )
 end)
 
 IO.puts("")

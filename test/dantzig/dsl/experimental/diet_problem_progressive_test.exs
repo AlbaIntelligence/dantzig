@@ -296,7 +296,7 @@ defmodule Dantzig.DSL.DietProblemProgressiveTest do
         end
 
       # Solve the problem
-      {solution, objective} = Problem.solve(problem, print_optimizer_input: false)
+      {solution, objective} = Problem.solve(problem, solver: :highs, print_optimizer_input: true)
 
       # Verify solution
       assert solution.model_status == "Optimal"

@@ -109,14 +109,14 @@ problem =
     # Flow conservation at intermediate nodes (A, B, C)
     # Node A: inflow from S equals outflow to B and C
     constraints(
-    flow_SA == flow_AB + flow_AC,
-    "Flow conservation at node A"
+      flow_SA == flow_AB + flow_AC,
+      "Flow conservation at node A"
     )
 
     # Node B: inflow from S and A equals outflow to C and T
     constraints(
       flow_SB + flow_AB == flow_BC + flow_BT,
-    "Flow conservation at node B"
+      "Flow conservation at node B"
     )
 
     # Node C: inflow from A and B equals outflow to T
@@ -127,13 +127,13 @@ problem =
 
     # Objective: maximize total flow into sink T
     objective(
-    flow_BT + flow_CT,
-    direction: :maximize
+      flow_BT + flow_CT,
+      direction: :maximize
     )
   end
 
 IO.puts("Solving the network flow problem...")
-{solution, objective_value} = Problem.solve(problem, print_optimizer_input: false)
+{solution, objective_value} = Problem.solve(problem, solver: :highs, print_optimizer_input: true)
 
 IO.puts("Solution:")
 IO.puts("=========")
@@ -144,37 +144,38 @@ IO.puts("Flow on each arc:")
 
 # Map arc tuples to variable names
 arc_to_var = %{
- {"S", "A"} => "flow_SA",
-{"S", "B"} => "flow_SB",
-{"A", "B"} => "flow_AB",
-{"A", "C"} => "flow_AC",
-{"B", "C"} => "flow_BC",
-{"B", "T"} => "flow_BT",
-{"C", "T"} => "flow_CT"
+  {"S", "A"} => "flow_SA",
+  {"S", "B"} => "flow_SB",
+  {"A", "B"} => "flow_AB",
+  {"A", "C"} => "flow_AC",
+  {"B", "C"} => "flow_BC",
+  {"B", "T"} => "flow_BT",
+  {"C", "T"} => "flow_CT"
 }
 
 # Calculate total flow and display arcs
-total_flow = Enum.reduce(arcs, 0.0, fn {from, to, capacity}, acc ->
- var_name = arc_to_var[{from, to}]
- flow_amount = Map.get(solution.variables, var_name, 0.0)
+total_flow =
+  Enum.reduce(arcs, 0.0, fn {from, to, capacity}, acc ->
+    var_name = arc_to_var[{from, to}]
+    flow_amount = Map.get(solution.variables, var_name, 0.0)
 
- if flow_amount > 0.001 do
-    utilization = flow_amount / capacity * 100
+    if flow_amount > 0.001 do
+      utilization = flow_amount / capacity * 100
 
-  IO.puts(
-     "  #{from} → #{to}: #{Float.round(flow_amount * 1.0, 2)}/#{capacity} units (#{Float.round(utilization * 1.0, 1)}% utilized)"
-    )
-  else
-    IO.puts("  #{from} → #{to}: 0.0/#{capacity} units (0.0% utilized)")
-  end
+      IO.puts(
+        "  #{from} → #{to}: #{Float.round(flow_amount * 1.0, 2)}/#{capacity} units (#{Float.round(utilization * 1.0, 1)}% utilized)"
+      )
+    else
+      IO.puts("  #{from} → #{to}: 0.0/#{capacity} units (0.0% utilized)")
+    end
 
-# Only add flows entering the sink to total_flow
-if to == "T" do
-acc + flow_amount
-else
-    acc
-  end
-end)
+    # Only add flows entering the sink to total_flow
+    if to == "T" do
+      acc + flow_amount
+    else
+      acc
+    end
+  end)
 
 IO.puts("")
 IO.puts("Summary:")

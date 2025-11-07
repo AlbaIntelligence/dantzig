@@ -162,7 +162,7 @@ problem =
   end
 
 IO.puts("Solving the school timetabling problem...")
-solve_result = Problem.solve(problem, print_optimizer_input: false)
+solve_result = Problem.solve(problem, solver: :highs, print_optimizer_input: true)
 
 {objective_value, solution} =
   case solve_result do

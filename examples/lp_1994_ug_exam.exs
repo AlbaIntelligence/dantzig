@@ -98,7 +98,7 @@ problem.variable_defs |> Enum.each(fn {name, var} ->
 end)
 
 # Solve the problem
-{solution, objective_value} = Problem.solve(problem, print_optimizer_input: true)
+{solution, objective_value} = Problem.solve(problem, solver: highs, print_optimizer_input:true)
 
 IO.puts("Solution:")
 IO.puts("========")

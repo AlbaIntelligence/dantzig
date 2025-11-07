@@ -30,8 +30,10 @@ IO.puts("")
 # Problem data
 profit_table = 30
 profit_chair = 10
-time_table = 6    # hours per table
-time_chair = 3    # hours per chair
+# hours per table
+time_table = 6
+# hours per chair
+time_chair = 3
 max_hours = 40
 
 # Demand constraint: chairs >= 3 * tables
@@ -54,11 +56,19 @@ problem =
     new(name: "1986 UG Exam - Carpenter Production")
 
     # Decision variables
-    variables("xT", :continuous, min_bound: 0, max_bound: max_tables, description: "Number of tables to make")
+    variables("xT", :continuous,
+      min_bound: 0,
+      max_bound: max_tables,
+      description: "Number of tables to make"
+    )
+
     variables("xC", :continuous, min_bound: 0, description: "Number of chairs to make")
 
     # Time constraint
-    constraints(time_table * xT + time_chair * xC <= max_hours, "Total working hours <= #{max_hours}")
+    constraints(
+      time_table * xT + time_chair * xC <= max_hours,
+      "Total working hours <= #{max_hours}"
+    )
 
     # Demand constraint: chairs >= 3 * tables
     constraints(xC >= demand_ratio * xT, "At least #{demand_ratio} chairs per table")
@@ -73,7 +83,7 @@ problem =
   end
 
 # Solve the problem
-{solution, objective_value} = Problem.solve(problem, print_optimizer_input: false)
+{solution, objective_value} = Problem.solve(problem, solver: :highs, print_optimizer_input: true)
 
 IO.puts("Solution:")
 IO.puts("========")
@@ -81,6 +91,7 @@ IO.puts("Profit: £#{Float.round(objective_value, 3)}")
 IO.puts("")
 
 IO.puts("Production Plan:")
+
 solution.variables
 |> Enum.sort_by(fn {k, _} -> k end)
 |> Enum.each(fn {var_name, value} ->

@@ -229,7 +229,7 @@ problem =
 
     # Decision variables: quantity of each product to produce
     variables(
-      "production",
+      "produce",
       [product <- product_names],
       :continuous,
       min_bound: 0.0,

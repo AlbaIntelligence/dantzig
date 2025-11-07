@@ -84,12 +84,14 @@ budget = 500
 
 # Display project information
 IO.puts("Available Projects:")
+
 Enum.each(projects, fn project ->
   IO.puts("  #{display_names[project]}:")
   IO.puts("    Cost: $#{costs[project]}K")
   IO.puts("    Benefit: $#{benefits[project]}K")
-  IO.puts("    Profit: $#{(benefits[project] - costs[project])}K")
+  IO.puts("    Profit: $#{benefits[project] - costs[project]}K")
 end)
+
 IO.puts("")
 IO.puts("Total Budget: $#{budget}K")
 IO.puts("")
@@ -97,11 +99,11 @@ IO.puts("")
 # Create the optimization problem
 problem =
   Problem.define model_parameters: %{
-    projects: projects,
-    costs: costs,
-    benefits: benefits,
-    budget: budget
-  } do
+                   projects: projects,
+                   costs: costs,
+                   benefits: benefits,
+                   budget: budget
+                 } do
     new(
       name: "Resource Allocation Problem",
       description: "Allocate budget across projects to maximize total benefit"
@@ -130,7 +132,7 @@ IO.puts("- 1 objective function (maximize benefit)")
 IO.puts("")
 
 # Solve the optimization problem
-{solution, objective_value} = Problem.solve(problem, print_optimizer_input: false)
+{solution, objective_value} = Problem.solve(problem, solver: :highs, print_optimizer_input: true)
 
 IO.puts("Solution:")
 IO.puts("========")
@@ -138,25 +140,32 @@ IO.puts("Maximum total benefit: $#{Float.round(objective_value * 1.0, 2)}K")
 IO.puts("")
 
 IO.puts("Selected Projects:")
-{total_cost, selected_projects} = Enum.reduce(projects, {0, []}, fn project, {acc_cost, acc_projects} ->
-  selected = solution.variables["select(#{project})"] || 0
-  display_name = display_names[project]
-  if selected > 0.5 do
-    IO.puts("  ✓ #{display_name}")
-    IO.puts("    Cost: $#{costs[project]}K, Benefit: $#{benefits[project]}K")
-    {acc_cost + costs[project], [display_name | acc_projects]}
-  else
-    IO.puts("  ✗ #{display_name}")
-    {acc_cost, acc_projects}
-  end
-end)
+
+{total_cost, selected_projects} =
+  Enum.reduce(projects, {0, []}, fn project, {acc_cost, acc_projects} ->
+    selected = solution.variables["select(#{project})"] || 0
+    display_name = display_names[project]
+
+    if selected > 0.5 do
+      IO.puts("  ✓ #{display_name}")
+      IO.puts("    Cost: $#{costs[project]}K, Benefit: $#{benefits[project]}K")
+      {acc_cost + costs[project], [display_name | acc_projects]}
+    else
+      IO.puts("  ✗ #{display_name}")
+      {acc_cost, acc_projects}
+    end
+  end)
 
 IO.puts("")
 IO.puts("Summary:")
 IO.puts("  Selected projects: #{Enum.join(Enum.reverse(selected_projects), ", ")}")
-IO.puts("  Total cost: $#{total_cost}K / $#{budget}K (#{Float.round(100 * total_cost / budget, 1)}%)")
+
+IO.puts(
+  "  Total cost: $#{total_cost}K / $#{budget}K (#{Float.round(100 * total_cost / budget, 1)}%)"
+)
+
 IO.puts("  Total benefit: $#{Float.round(objective_value * 1.0, 2)}K")
-IO.puts("  Net profit: $#{(objective_value - total_cost)}K")
+IO.puts("  Net profit: $#{objective_value - total_cost}K")
 IO.puts("")
 
 # Validation
@@ -172,7 +181,13 @@ IO.puts("Validation:")
 IO.puts("✓ Budget constraint satisfied: #{budget_ok}")
 IO.puts("✓ Valid project selection: #{selection_valid}")
 IO.puts("✓ Benefit calculation correct: #{benefit_correct}")
-IO.puts("✓ All variables binary: #{Enum.all?(projects, fn p -> s = solution.variables["select(#{p})"] || 0; s == 0.0 or s == 1.0 end)}")
+
+IO.puts(
+  "✓ All variables binary: #{Enum.all?(projects, fn p ->
+    s = solution.variables["select(#{p})"] || 0
+    s == 0.0 or s == 1.0
+  end)}"
+)
 
 IO.puts("")
 IO.puts("LEARNING INSIGHTS:")
@@ -186,6 +201,7 @@ IO.puts("• Real-world applications: project selection, budget allocation, port
 # Analysis of the solution
 IO.puts("")
 IO.puts("Solution Analysis:")
+
 case selected_projects do
   ["Mobile App", "Data Analytics"] ->
     IO.puts("• Selected high-benefit projects that fit within budget")

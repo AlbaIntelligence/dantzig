@@ -283,7 +283,7 @@ defmodule Dantzig.SolverTest do
 
       # Test that the function accepts the problem
       # Note: This will fail if HiGHS solver is not available, but tests the API
-      result = Dantzig.solve(problem, print_optimizer_input: false)
+      result = Dantzig.solve(problem, solver: highs, print_optimizer_input:true)
 
       # Result should be either {:ok, solution} or :error
       assert result == :error or match?({:ok, _}, result)
@@ -299,7 +299,7 @@ defmodule Dantzig.SolverTest do
         end
 
       # Test with print_optimizer_input enabled
-      result = Dantzig.solve(problem, print_optimizer_input: true)
+      result = Dantzig.solve(problem, solver: highs, print_optimizer_input:true)
 
       # Result should be either {:ok, solution} or :error
       assert result == :error or match?({:ok, _}, result)
@@ -355,7 +355,7 @@ defmodule Dantzig.SolverTest do
           objective(sum(x(:_)), direction: :minimize)
         end
 
-      result = Problem.solve(problem, print_optimizer_input: false)
+      result = Problem.solve(problem, solver: :highs, print_optimizer_input: true)
 
       # Should return {solution, objective} or :error
       assert result == :error or match?({%Dantzig.Solution{}, _number}, result)

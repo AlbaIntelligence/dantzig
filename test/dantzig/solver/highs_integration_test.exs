@@ -431,7 +431,7 @@ defmodule Dantzig.Solver.HiGHSIntegrationTest do
         end
 
       # Should not raise even with print_optimizer_input enabled
-      result = Dantzig.solve(problem, print_optimizer_input: true)
+      result = Dantzig.solve(problem, solver: highs, print_optimizer_input:true)
 
       assert result == :error or match?({:ok, %Solution{}}, result)
     end

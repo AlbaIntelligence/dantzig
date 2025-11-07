@@ -79,8 +79,8 @@ defmodule Dantzig.Problem do
   @spec new_variable(t(), String.t(), keyword()) :: {t(), Polynomial.t()}
   def new_variable(problem, name, opts \\ []) do
     type = Keyword.get(opts, :type, :continuous)
-    min_bound = Keyword.get(opts, :min, nil)
-    max_bound = Keyword.get(opts, :max, nil)
+    min_bound = Keyword.get(opts, :min_bound, nil)
+    max_bound = Keyword.get(opts, :max_bound, nil)
     description = Keyword.get(opts, :description, nil)
 
     # Set default bounds for binary variables if not specified
@@ -255,7 +255,7 @@ defmodule Dantzig.Problem do
   def solve(%__MODULE__{} = problem, opts \\ []) do
     print_optimizer_input = Keyword.get(opts, :print_optimizer_input, false)
 
-    case Dantzig.solve(problem, print_optimizer_input: print_optimizer_input) do
+    case Dantzig.solve(problem, solver: :highs, print_optimizer_input: print_optimizer_input) do
       {:ok, solution} -> {solution, solution.objective}
       :error -> :error
     end
@@ -524,8 +524,8 @@ defmodule Dantzig.Problem do
   """
   @spec variable(t(), String.t(), atom(), keyword()) :: {t(), Polynomial.t()}
   def variable(problem, var_name, var_type, opts \\ []) do
-    min_bound = Keyword.get(opts, :min)
-    max_bound = Keyword.get(opts, :max)
+    min_bound = Keyword.get(opts, :min_bound)
+    max_bound = Keyword.get(opts, :max_bound)
     _description = Keyword.get(opts, :description)
 
     new_variable(problem, var_name, type: var_type, min_bound: min_bound, max_bound: max_bound)

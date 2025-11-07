@@ -40,21 +40,46 @@
 # supplies and demands are concentrated at specific nodes.
 #
 # DSL SYNTAX EXPLANATION:
-# - variables("ship", [s <- suppliers, c <- customers], :continuous, min: 0.0, max: :infinity)
-#   Creates continuous variables for all supplier-customer pairs
-# - sum(for c <- customers, do: ship("Supplier1", c)) <= 20
-#   Enforces supply capacity constraints
-# - sum(for s <- suppliers, do: ship(s, "Customer1")) == 15
-#   Enforces demand satisfaction
+# - Model parameters: Pass data via model_parameters: %{...} for clean separation
+#   of problem data from problem structure. Parameters are accessible directly by
+#   name (e.g., supply, demand, cost_matrix) in expressions.
+# - Pattern-based variables: variables("ship", [s <- suppliers, c <- customers], :continuous, ...)
+#   creates variables for all supplier-customer pairs using nested generator syntax.
+# - Variable bounds: min_bound: 0.0, max_bound: :infinity enforces non-negativity
+#   (no negative shipments) and allows unlimited shipments.
+# - Pattern-based constraints: sum(ship(s, :_)) uses wildcard syntax to sum over
+#   all customers for a given supplier, enforcing supply capacity constraints.
+# - Pattern-based demand constraints: sum(ship(:_, c)) uses wildcard syntax to sum
+#   over all suppliers for a given customer, enforcing exact demand satisfaction.
+# - Objective with nested comprehensions: sum(for s <- suppliers, c <- customers, do: ...)
+#   aggregates shipping costs across all supplier-customer pairs.
+# - Variable access: ship(s, c) accesses variables in expressions.
+# - Model parameter access: supply[s], demand[c], cost_matrix[s][c] access constants
+#   from model_parameters in expressions.
 #
 # COMMON GOTCHAS:
-# 1. **Supply-Demand Balance**: Total supply must equal total demand for feasible solution
-# 2. **Variable Bounds**: Use min: 0.0 for non-negativity (no negative shipments)
-# 3. **Cost Matrix Structure**: Ensure cost_matrix has entries for all supplier-customer pairs
-# 4. **Model Parameters**: Currently hardcoded - model parameters not yet supported
-# 5. **Demand Requirements**: Use == for exact demand satisfaction, not <=
-# 6. **Supply Constraints**: Use <= for capacity limits, not == (to allow unused capacity)
-# 7. **Unbalanced Problems**: Add dummy suppliers/customers for unbalanced problems
+# 1. **Supply-Demand Balance**: Total supply must equal total demand for a balanced
+#    transportation problem. Unbalanced problems require dummy suppliers/customers
+#    or constraint modifications.
+# 2. **Variable Bounds**: Use min_bound: 0.0 for non-negativity (no negative shipments).
+#    Use max_bound: :infinity to allow unlimited shipments (or set specific capacity
+#    limits if needed).
+# 3. **Cost Matrix Structure**: Ensure cost_matrix has entries for all supplier-customer
+#    pairs. Nested map structure: cost_matrix[supplier][customer] accesses shipping costs.
+# 4. **Model Parameters**: Model parameters are now supported and should be used for
+#    clean data separation. Access via direct name (supply, demand) not params.supply.
+# 5. **Demand Requirements**: Use == for exact demand satisfaction, not <=. Each customer
+#    must receive exactly their required demand.
+# 6. **Supply Constraints**: Use <= for capacity limits, not == (to allow unused capacity).
+#    Suppliers can ship less than their capacity if it's optimal.
+# 7. **Wildcard Syntax**: Use ship(s, :_) to sum over all customers for supplier s, and
+#    ship(:_, c) to sum over all suppliers for customer c. This is more elegant than
+#    explicit for comprehensions in constraints.
+# 8. **Variable Naming**: Variable names are auto-generated as ship(Supplier1,Customer1),
+#    ship(Supplier1,Customer2), etc. Access them in solution using parentheses format:
+#    solution.variables["ship(#{supplier},#{customer})"].
+# 9. **Nested Generators**: When creating variables with [s <- suppliers, c <- customers],
+#    all combinations are created. Order matters: first generator is outer loop.
 
 require Dantzig.Problem, as: Problem
 require Dantzig.Problem.DSL, as: DSL
@@ -137,6 +162,9 @@ problem =
     )
 
     # Continuous variables: ship[s,c] = units shipped from supplier s to customer c
+    # Note: Nested generators [s <- suppliers, c <- customers] create variables for
+    # all combinations of suppliers and customers. The order matters: s is the outer
+    # loop, c is the inner loop.
     variables(
       "ship",
       [s <- suppliers, c <- customers],
@@ -147,6 +175,8 @@ problem =
     )
 
     # Constraint: supply limits - each supplier cannot ship more than their capacity
+    # Note: sum(ship(s, :_)) uses wildcard syntax to sum over all customers for
+    # supplier s. This is more elegant than explicit for comprehensions.
     constraints(
       [s <- suppliers],
       sum(ship(s, :_)) <= supply[s],
@@ -154,6 +184,8 @@ problem =
     )
 
     # Constraint: demand requirements - each customer must receive exactly their demand
+    # Note: sum(ship(:_, c)) uses wildcard syntax to sum over all suppliers for
+    # customer c. Use == for exact demand satisfaction (not <=).
     constraints(
       [c <- customers],
       sum(ship(:_, c)) == demand[c],
@@ -161,6 +193,9 @@ problem =
     )
 
     # Objective: minimize total shipping cost
+    # Note: Uses nested for comprehension to iterate over all supplier-customer pairs.
+    # Each term: ship(s, c) * cost_matrix[s][c] multiplies the shipment quantity by
+    # the per-unit shipping cost. The sum aggregates costs across all pairs.
     objective(
       sum(for s <- suppliers, c <- customers, do: ship(s, c) * cost_matrix[s][c]),
       :minimize
@@ -190,7 +225,7 @@ var_names = Map.keys(problem.variables["ship"])
 IO.inspect(var_names, label: "Ship variables")
 
 IO.puts("Solving the transportation problem...")
-{solution, objective_value} = Problem.solve(problem, print_optimizer_input: false)
+{solution, objective_value} = Problem.solve(problem, solver: :highs, print_optimizer_input: true)
 
 IO.puts("Solution:")
 IO.puts("=========")
@@ -267,7 +302,7 @@ customer_validation =
   Enum.map(customers, fn customer ->
     total_received =
       Enum.reduce(suppliers, 0, fn supplier, acc ->
-        var_name = "ship_#{supplier}_#{customer}"
+        var_name = "ship(#{supplier},#{customer})"
         acc + Map.get(solution.variables, var_name, 0)
       end)
 

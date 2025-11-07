@@ -159,8 +159,12 @@ defmodule Dantzig.Problem.DSLReducer do
 
         # Build variable options - convert bounds to the format expected by new_variable
         var_opts = [type: type, description: description]
-        var_opts = if min_bound != nil, do: Keyword.put(var_opts, :min, min_bound), else: var_opts
-        var_opts = if max_bound != nil, do: Keyword.put(var_opts, :max, max_bound), else: var_opts
+
+        var_opts =
+          if min_bound != nil, do: Keyword.put(var_opts, :min_bound, min_bound), else: var_opts
+
+        var_opts =
+          if max_bound != nil, do: Keyword.put(var_opts, :max_bound, max_bound), else: var_opts
 
         {new_problem, _} = Problem.new_variable(acc, name, var_opts)
 

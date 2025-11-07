@@ -157,7 +157,7 @@ problem_diet =
 
 # Solve the optimization problem
 IO.puts("\nSolving the diet optimization problem...")
-result = Problem.solve(problem_diet, print_optimizer_input: false)
+result = Problem.solve(problem_diet, print_optimizer_input: true)
 
 case result do
   {solution, objective_value} ->

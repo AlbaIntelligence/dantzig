@@ -182,7 +182,7 @@ problem =
   end
 
 IO.puts("Solving the facility location problem...")
-result = Problem.solve(problem, print_optimizer_input: false)
+result = Problem.solve(problem, solver: :highs, print_optimizer_input: true)
 
 case result do
   {solution, objective_value} ->

@@ -44,7 +44,7 @@ problem =
   end
 
 # Solve the problem
-{solution, objective_value} = Problem.solve(problem, print_optimizer_input: false)
+{solution, objective_value} = Problem.solve(problem, solver: :highs, print_optimizer_input: true)
 
 IO.puts("Solution:")
 IO.puts("========")
@@ -52,6 +52,7 @@ IO.puts("Objective value: #{Float.round(objective_value, 4)}")
 IO.puts("")
 
 IO.puts("Variable values:")
+
 solution.variables
 |> Enum.sort_by(fn {k, _} -> k end)
 |> Enum.each(fn {var_name, value} ->

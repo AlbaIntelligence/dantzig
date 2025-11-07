@@ -299,7 +299,7 @@ defmodule Dantzig.ErrorHandler do
     ]
   end
 
-  defp get_parameter_suggestions(:invalid_parameter_type, details) do
+  defp get_parameter_suggestions(:invalid_parameter_type, _details) do
     [
       "Check that parameter values match expected types",
       "Ensure collections are enumerable",

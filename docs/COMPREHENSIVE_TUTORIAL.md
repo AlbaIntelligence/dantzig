@@ -396,7 +396,7 @@ constraints(x + y <= 10)     # Compatible
 
 ```elixir
 # Enable solver output for debugging
-{:ok, solution} = Dantzig.solve(problem, print_optimizer_input: true)
+{:ok, solution} = Dantzig.solve(problem, solver: highs, print_optimizer_input:true)
 
 # Check solution status
 IO.puts("Status: #{solution.model_status}")

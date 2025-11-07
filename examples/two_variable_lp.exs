@@ -78,11 +78,11 @@ problem =
     variables("produce_B", :continuous, "Units of product B to produce", min_bound: 0.0)
 
     # Constraints: resource limitations
-    constraints(2*produce_A + 3*produce_B <= 40, "Labor hours available (40 hours)")
-    constraints(1*produce_A + 2*produce_B <= 20, "Raw materials available (20 units)")
+    constraints(2 * produce_A + 3 * produce_B <= 40, "Labor hours available (40 hours)")
+    constraints(1 * produce_A + 2 * produce_B <= 20, "Raw materials available (20 units)")
 
     # Objective: maximize total profit
-    objective(10*produce_A + 15*produce_B, :maximize)
+    objective(10 * produce_A + 15 * produce_B, :maximize)
   end
 
 IO.puts("Problem Structure:")
@@ -92,7 +92,7 @@ IO.puts("- 1 objective function (maximize profit)")
 IO.puts("")
 
 # Solve the optimization problem
-{solution, objective_value} = Problem.solve(problem, print_optimizer_input: false)
+{solution, objective_value} = Problem.solve(problem, solver: :highs, print_optimizer_input: true)
 
 IO.puts("Solution:")
 IO.puts("========")
@@ -100,29 +100,54 @@ IO.puts("Maximum profit: $#{Float.round(objective_value * 1.0, 2)}")
 IO.puts("")
 
 IO.puts("Optimal Production Plan:")
-IO.puts("Product A: #{Float.round((solution.variables["produce_A"] || 0) * 1.0, 2)} units (profit: $#{Float.round(10 * (solution.variables["produce_A"] || 0) * 1.0, 2)})")
-IO.puts("Product B: #{Float.round((solution.variables["produce_B"] || 0) * 1.0, 2)} units (profit: $#{Float.round(15 * (solution.variables["produce_B"] || 0) * 1.0, 2)})")
+
+IO.puts(
+  "Product A: #{Float.round((solution.variables["produce_A"] || 0) * 1.0, 2)} units (profit: $#{Float.round(10 * (solution.variables["produce_A"] || 0) * 1.0, 2)})"
+)
+
+IO.puts(
+  "Product B: #{Float.round((solution.variables["produce_B"] || 0) * 1.0, 2)} units (profit: $#{Float.round(15 * (solution.variables["produce_B"] || 0) * 1.0, 2)})"
+)
+
 IO.puts("")
 
 # Calculate resource utilization
-labor_used = 2 * (solution.variables["produce_A"] || 0) + 3 * (solution.variables["produce_B"] || 0)
-material_used = 1 * (solution.variables["produce_A"] || 0) + 2 * (solution.variables["produce_B"] || 0)
+labor_used =
+  2 * (solution.variables["produce_A"] || 0) + 3 * (solution.variables["produce_B"] || 0)
+
+material_used =
+  1 * (solution.variables["produce_A"] || 0) + 2 * (solution.variables["produce_B"] || 0)
 
 IO.puts("Resource Utilization:")
-IO.puts("Labor: #{Float.round(labor_used * 1.0, 2)} / 40 hours (#{Float.round(100 * labor_used / 40, 1)}%)")
-IO.puts("Material: #{Float.round(material_used * 1.0, 2)} / 20 units (#{Float.round(100 * material_used / 20, 1)}%)")
+
+IO.puts(
+  "Labor: #{Float.round(labor_used * 1.0, 2)} / 40 hours (#{Float.round(100 * labor_used / 40, 1)}%)"
+)
+
+IO.puts(
+  "Material: #{Float.round(material_used * 1.0, 2)} / 20 units (#{Float.round(100 * material_used / 20, 1)}%)"
+)
+
 IO.puts("")
 
 # Validation
 labor_ok = labor_used <= 40.01
 material_ok = material_used <= 20.01
-profit_correct = abs((10 * (solution.variables["produce_A"] || 0) + 15 * (solution.variables["produce_B"] || 0)) - objective_value) < 0.01
+
+profit_correct =
+  abs(
+    10 * (solution.variables["produce_A"] || 0) + 15 * (solution.variables["produce_B"] || 0) -
+      objective_value
+  ) < 0.01
 
 IO.puts("Validation:")
 IO.puts("✓ Labor constraint satisfied: #{labor_ok}")
 IO.puts("✓ Material constraint satisfied: #{material_ok}")
 IO.puts("✓ Profit calculation correct: #{profit_correct}")
-IO.puts("✓ All variables non-negative: #{(solution.variables["produce_A"] || 0) >= -0.001 && (solution.variables["produce_B"] || 0) >= -0.001}")
+
+IO.puts(
+  "✓ All variables non-negative: #{(solution.variables["produce_A"] || 0) >= -0.001 && (solution.variables["produce_B"] || 0) >= -0.001}"
+)
 
 IO.puts("")
 IO.puts("LEARNING INSIGHTS:")
