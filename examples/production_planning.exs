@@ -2,11 +2,79 @@
 
 # Production Planning Problem Example
 #
-# Problem: A company needs to plan production over 4 time periods to meet
-# varying demand while minimizing production and inventory holding costs.
-# We can produce different amounts each period and carry inventory forward.
+# BUSINESS CONTEXT:
+# A manufacturing company needs to plan production over multiple time periods
+# to meet varying customer demand while minimizing total costs. The company
+# can produce different amounts each period and carry inventory forward to
+# future periods. This balances production costs (which may vary by period)
+# against inventory holding costs. This is a classic production planning and
+# inventory management problem found in manufacturing, supply chain optimization,
+# and operations research.
 #
-# This is a classic production planning problem with inventory management.
+# Real-world applications:
+# - Manufacturing production scheduling
+# - Supply chain inventory management
+# - Seasonal demand planning
+# - Capacity planning with inventory buffers
+# - Multi-period resource allocation
+# - Just-in-time vs. inventory holding trade-offs
+# - Warehouse and distribution center planning
+#
+# Key decisions:
+# - How much to produce in each time period
+# - How much inventory to carry forward to the next period
+# - Trade-off between production costs and inventory holding costs
+#
+# MATHEMATICAL FORMULATION:
+# Variables:
+#   production[t] = units produced in period t (continuous, ≥ 0, ≤ max_production)
+#   inventory[t] = units in inventory at end of period t (continuous, ≥ 0)
+#
+# Constraints:
+#   Period 1: initial_inventory + production[1] - demand[1] = inventory[1]
+#   Period t (t > 1): inventory[t-1] + production[t] - demand[t] = inventory[t]
+#   production[t] ≤ max_production for all t (capacity constraint)
+#   inventory[t] ≥ 0 for all t (non-negativity)
+#
+# Objective: Minimize Σ (production[t] × production_cost[t] + inventory[t] × holding_cost)
+#
+# DSL SYNTAX EXPLANATION:
+# - Model parameters: Pass data via model_parameters: %{...} for clean separation
+#   of problem data from problem structure. Parameters are accessible directly by
+#   name (e.g., demand, production_cost) in expressions.
+# - Pattern-based variables: variables("production", [t <- time_periods], :continuous, ...)
+#   creates variables for each time period using generator syntax.
+# - Variable bounds: min_bound: 0.0, max_bound: max_production enforces capacity
+#   constraints directly on variables (more efficient than explicit constraints).
+# - Infinity bounds: max_bound: :infinity allows unbounded inventory (no storage limit).
+#   Note: :infinity is handled specially and cannot be converted to Polynomial constants.
+# - Inventory balance constraints: Link inventory[t-1] + production[t] - demand[t] = inventory[t]
+#   to ensure inventory flows correctly across periods.
+# - Sum expressions: sum(for t <- time_periods, do: ...) aggregates costs across
+#   all periods in the objective function.
+# - Variable access: production(t), inventory(t) access variables in expressions.
+# - Model parameter access: demand[t], production_cost[t] access constants from
+#   model_parameters in expressions.
+#
+# COMMON GOTCHAS:
+# 1. **Period 1 Constraint**: Period 1 is special - uses initial_inventory (given data)
+#    instead of inventory[0] (which doesn't exist). The constraint is rearranged as:
+#    production(1) - demand[1] == -initial_inventory + inventory(1).
+# 2. **Parser Limitations**: Constraints for periods 2-4 are written individually because
+#    the parser doesn't yet support arithmetic in generator ranges (e.g., [t <- [2..max_periods]])
+#    or variable indexing with arithmetic (e.g., inventory(t-1)).
+# 3. **Future Improvements**: TODO - Future parser improvements will support:
+#    constraints([t <- [2..max_periods]], inventory(t-1) + production(t) - demand[t] == inventory(t)).
+# 4. **Variable Naming**: Variable names are auto-generated: production_1, production_2, inventory_1, etc.
+#    Access them in solution using these generated names.
+# 5. **Model Parameter Access**: Model parameters are accessed directly by name (demand,
+#    production_cost) not via params.demand syntax. String keys are automatically
+#    converted to atom keys when accessing maps.
+# 6. **Infinity Bounds**: Infinity bounds (:infinity) are handled specially and cannot
+#    be converted to Polynomial constants. They must be passed directly to variable
+#    bounds or constraint right-hand sides.
+# 7. **Objective Syntax**: The objective uses a for comprehension inside sum() to iterate
+#    over time periods. Each term multiplies variables by model parameters.
 
 require Dantzig.Problem, as: Problem
 require Dantzig.Problem.DSL, as: DSL
@@ -87,9 +155,12 @@ problem =
       description: "Minimize production and inventory costs over 4 periods"
     )
 
-    # Production variables: produce[t] = units produced in period t
+    # Production variables: production[t] = units produced in period t
+    # Note: max_bound uses model parameter max_production directly
+    # The capacity constraint is enforced via variable bounds (more efficient than
+    # explicit constraints)
     variables(
-      "produce",
+      "production",
       [t <- time_periods],
       :continuous,
       min_bound: 0.0,
@@ -98,6 +169,8 @@ problem =
     )
 
     # Inventory variables: inventory[t] = units in inventory at end of period t
+    # Note: max_bound: :infinity allows unlimited inventory (no storage capacity limit)
+    # Non-negativity is enforced via min_bound: 0.0
     variables(
       "inventory",
       [t <- time_periods],
@@ -107,36 +180,45 @@ problem =
       description: "Units in inventory at end of period"
     )
 
-    # Inventory balance constraints using pattern-based syntax
-    # For period 1: initial_inventory + produce[1] - demand[1] = inventory[1]
+    # Inventory balance constraints: ensure inventory flows correctly across periods
+    #
+    # Period 1 is special: uses initial_inventory (given data) instead of
+    # inventory[0] (which doesn't exist). Rearranged as:
+    #   production(1) - demand[1] == -initial_inventory + inventory(1)
+    # Which simplifies to: production(1) - demand[1] + initial_inventory == inventory(1)
+    # Or equivalently: production(1) - demand[1] == inventory(1) - initial_inventory
     constraints(
       [t <- [1]],
-      produce(t) - demand[1] == -initial_inventory,
+      production(t) - demand[1] == -initial_inventory,
       "Inventory balance for period 1"
     )
 
     # For periods 2-4: inventory[t-1] + produce[t] - demand[t] = inventory[t]
-    # Model parameters not yet supported for variable access, so hardcode values
-
-    # TODO: Improve Parser to write:
-    # constraints(
-    #   [t <- [1..max_periods-1]] # or [t <- [1..(max_periods-1)]]
-    #   inventory(t) + produce(t+1) - 150 == 0,
-    #   "Inventory balance for period #{t}"
-    # )
-
+    # Note: Currently written individually because parser doesn't yet support:
+    #   - Arithmetic in generator ranges: [t <- [2..max_periods]]
+    #   - Variable indexing with arithmetic: inventory(t-1)
+    #   - Model parameter access in constraints: demand[t] (though this works in objectives)
+    #
+    # TODO: Future parser improvements will allow:
+    #   constraints(
+    #     [t <- [2..max_periods]],
+    #     inventory(t-1) + production(t) - demand[t] == inventory(t),
+    #     "Inventory balance for period #{t}"
+    #   )
+    #
+    # For now, we write each period explicitly and use hardcoded demand values:
     constraints(
-      inventory(1) + produce(2) - 150 == 0,
+      inventory(1) + production(2) - 150 == 0,
       "Inventory balance for period 2"
     )
 
     constraints(
-      inventory(2) + produce(3) - 80 == 0,
+      inventory(2) + production(3) - 80 == 0,
       "Inventory balance for period 3"
     )
 
     constraints(
-      inventory(3) + produce(4) - 200 == 0,
+      inventory(3) + production(4) - 200 == 0,
       "Inventory balance for period 4"
     )
 
@@ -144,16 +226,23 @@ problem =
     # Inventory cannot be negative (already handled by variable bounds)
 
     # Objective: minimize total production + holding costs
+    # Note: Uses sum() with a for comprehension to iterate over all time periods
+    # Each term: production(t) * production_cost[t] + inventory(t) * holding_cost
+    #   - production(t): variable access (units produced in period t)
+    #   - production_cost[t]: model parameter access (cost per unit in period t)
+    #   - inventory(t): variable access (ending inventory in period t)
+    #   - holding_cost: model parameter (constant holding cost per unit per period)
+    # The sum aggregates costs across all periods to get total cost
     objective(
       sum(
-        for t <- time_periods, do: produce(t) * production_cost[t] + inventory(t) * holding_cost
+        for t <- time_periods, do: production(t) * production_cost[t] + inventory(t) * holding_cost
       ),
       direction: :minimize
     )
   end
 
 IO.puts("Solving the production planning problem...")
-result = Problem.solve(problem, print_optimizer_input: false)
+result = Problem.solve(problem, solver: :highs, print_optimizer_input: true)
 
 case result do
   {solution, objective_value} ->
@@ -168,10 +257,10 @@ case result do
 
     # Display production and inventory for each period
     Enum.each(time_periods, fn period ->
-      produce_var = "produce_#{period}"
-      inventory_var = "inventory_#{period}"
+      production_var = "production(#{period})"
+      inventory_var = "inventory(#{period})"
 
-      produced = solution.variables[produce_var]
+      produced = solution.variables[production_var]
       inventory = solution.variables[inventory_var]
 
       production_cost = produced * production_cost[period]
@@ -214,19 +303,19 @@ case result do
     IO.puts("Inventory Balance Validation:")
 
     # Period 1: initial + produced - demand should equal ending inventory
-    period1_balance = initial_inventory + solution.variables["produce_1"] - demand[1]
-    period1_valid = abs(period1_balance - solution.variables["inventory_1"]) < 0.001
+    period1_balance = initial_inventory + solution.variables["production(1)"] - demand[1]
+    period1_valid = abs(period1_balance - solution.variables["inventory(1)"]) < 0.001
 
     IO.puts(
-      "  Period 1: #{initial_inventory} + #{Float.round(solution.variables["produce_1"], 2)} - #{demand[1]} = #{Float.round(period1_balance, 2)} (inventory: #{Float.round(solution.variables["inventory_1"], 2)}) #{if period1_valid, do: "✅ OK", else: "❌ VIOLATED"}"
+      "  Period 1: #{initial_inventory} + #{Float.round(solution.variables["production(1)"], 2)} - #{demand[1]} = #{Float.round(period1_balance, 2)} (inventory: #{Float.round(solution.variables["inventory(1)"], 2)}) #{if period1_valid, do: "✅ OK", else: "❌ VIOLATED"}"
     )
 
     # Periods 2-4: previous inventory + produced - demand should equal ending inventory
     Enum.each(2..4, fn period ->
-      prev_inventory = solution.variables["inventory_#{period - 1}"]
-      produced = solution.variables["produce_#{period}"]
+      prev_inventory = solution.variables["inventory(#{period - 1})"]
+      produced = solution.variables["production(#{period})"]
       balance = prev_inventory + produced - demand[period]
-      current_inventory = solution.variables["inventory_#{period}"]
+      current_inventory = solution.variables["inventory(#{period})"]
       valid = abs(balance - current_inventory) < 0.001
 
       IO.puts(
@@ -237,7 +326,7 @@ case result do
     # Check that all production is within capacity
     production_validation =
       Enum.map(time_periods, fn period ->
-        produced = solution.variables["produce_#{period}"]
+        produced = solution.variables["production(#{period})"]
         {period, produced, max_production}
       end)
 
@@ -261,8 +350,8 @@ case result do
         [period1_valid] ++
           Enum.map(2..4, fn t ->
             abs(
-              solution.variables["inventory_#{t - 1}"] + solution.variables["produce_#{t}"] -
-                demand[t] - solution.variables["inventory_#{t}"]
+              solution.variables["inventory(#{t - 1})"] + solution.variables["production(#{t})"] -
+                demand[t] - solution.variables["inventory(#{t})"]
             ) < 0.001
           end),
         fn valid -> not valid end
@@ -285,3 +374,4 @@ case result do
     IO.puts("Please check the problem formulation and try again.")
     System.halt(1)
 end
+
