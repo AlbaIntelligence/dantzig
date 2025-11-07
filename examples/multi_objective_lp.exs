@@ -182,7 +182,7 @@ products = %{
 product_names = Map.keys(products)
 
 # Resource names (needed for constraint generation)
-resource_names = ["labour", "material", "machine_hours"]
+resource_names = [:labour, :material, :machine_hours]
 
 # Count products and resources (needed for display)
 num_products = map_size(products)
@@ -202,11 +202,9 @@ resource_capacities = %{
 profit_weight = 0.6
 emission_weight = 0.4
 
-# Normalize objectives for fair comparison
-# Scale profit to 0-1 range (assuming max profit around 10000)
-max_profit_estimate = 10000.0
-# Scale emissions to 0-1 range (assuming max emissions around 2000)
-max_emissions_estimate = 2000.0
+# Emission cost per kg CO2 (to make emissions comparable to profit in dollars)
+# This represents the cost/penalty of emissions in monetary terms
+emission_cost_per_kg = 10.0
 
 IO.puts("=" <> String.duplicate("=", 79))
 IO.puts("Multi-Objective Production Planning Problem")
@@ -222,11 +220,12 @@ IO.puts("\n" <> String.duplicate("-", 79))
 problem =
   Problem.define model_parameters: %{
                    products: products,
+                   product_names: product_names,
                    resource_names: resource_names,
+                   resource_capacities: resource_capacities,
                    profit_weight: profit_weight,
                    emission_weight: emission_weight,
-                   max_profit_estimate: max_profit_estimate,
-                   max_emissions_estimate: max_emissions_estimate
+                   emission_cost_per_kg: emission_cost_per_kg
                  } do
     new(name: "Multi-Objective Production Planning", direction: :minimize)
 
@@ -257,24 +256,27 @@ problem =
       "Maximum demand constraint for #{product}"
     )
 
-    # Multi-objective function: weighted sum
-    # minimize: -profit_weight * (normalized_profit) + emission_weight * (normalized_emissions)
-    # Note: Negative sign on profit because we're minimizing (to maximize profit)
-    objective(
-      -profit_weight *
+  # Multi-objective function: weighted sum
+  # minimize: -profit_weight * profit + emission_weight * emissions
+  # Note: Negative sign on profit because we're minimizing (to maximize profit)
+  # Scale emissions by a factor to make it comparable to profit (e.g., $10 per kg CO2)
+  emission_cost_per_kg = 10.0
+  
+  objective(
+    -profit_weight *
+      sum(
+        for product <- product_names do
+          produce(product) * products[product].profit
+        end
+      ) +
+      emission_weight *
         sum(
           for product <- product_names do
-            produce(product) * products[product].profit / max_profit_estimate
+            produce(product) * products[product].emissions * emission_cost_per_kg
           end
-        ) +
-        emission_weight *
-          sum(
-            for product <- product_names do
-              produce(product) * products[product].emissions / max_emissions_estimate
-            end
-          ),
-      :minimize
-    )
+        ),
+    :minimize
+  )
   end
 
 # Solve the problem
