@@ -282,6 +282,122 @@ Based on educational value and real-world applicability:
 - `and(x1, x2, ..., xn)` requires 1 binary auxiliary variable + (n+1) constraints
 - `or(x1, x2, ..., xn)` requires 1 binary auxiliary variable + (n+1) constraints
 
+## Additional Ideas from JuMP Tutorials
+
+### From JuMP Linear Programming Tutorials:
+
+#### 17. **Factory Schedule with Fixed Costs** (max/and function)
+**Source**: `factory_schedule.jl` from JuMP tutorials
+**Problem**: Schedule factory production with fixed costs that are incurred only when factory runs.
+
+**Use Case**: Production planning where opening a factory has a fixed cost, but production has variable costs.
+
+**Mathematical Formulation**:
+- Variables: `produce[m,f]` = production in month m at factory f, `run[m,f]` = 1 if factory runs
+- Constraints: `produce[m,f] <= capacity[f] * run[m,f]` (can use max or and logic)
+- Objective: Minimize `sum(fixed_cost[f] * run[m,f] + variable_cost[f] * produce[m,f])`
+
+**DSL Application**: Could use `and()` or `max()` to model the fixed cost logic, or demonstrate conditional constraints.
+
+#### 18. **Short-Term Financing** (abs function potential)
+**Source**: `finance.jl` from JuMP tutorials
+**Problem**: Manage cash flow over time with borrowing, investing, and commercial paper options.
+
+**Use Case**: Corporate cash flow management with multiple financing sources.
+
+**Mathematical Formulation**:
+- Variables: Line of credit draws, commercial paper issues, excess funds invested
+- Constraints: Cash balance equations over time periods
+- Objective: Maximize final wealth
+
+**DSL Application**: Could use `abs()` to minimize deviation from target cash levels or model absolute borrowing amounts.
+
+#### 19. **Combinatorial Auctions** (and/or functions)
+**Source**: `finance.jl` from JuMP tutorials
+**Problem**: Auctioneer selects winning bids on item combinations to maximize revenue.
+
+**Use Case**: Auctions where bidders value combinations of items (not just individual items).
+
+**Mathematical Formulation**:
+- Variables: Binary variables for accepting each bid
+- Constraints: Each item sold at most once: `sum(bids containing item i) <= 1`
+- Objective: Maximize total revenue from accepted bids
+
+**DSL Application**: Could use `and()` to model bid requirements (all items in bid must be available) or `or()` for alternative bid acceptance.
+
+#### 20. **Geographic Clustering** (min/max functions)
+**Source**: `geographic_clustering.jl` from JuMP tutorials
+**Problem**: Cluster cities into groups minimizing total pairwise distance while balancing population.
+
+**Use Case**: Regional planning, sales territory design, service area allocation.
+
+**Mathematical Formulation**:
+- Variables: Binary assignment of cities to clusters
+- Objective: Minimize `sum(distance[i,j] * same_cluster[i,j])` for all city pairs
+- Constraints: Population balance, each city in exactly one cluster
+
+**DSL Application**: Could use `max()` to minimize maximum cluster diameter or `min()` to maximize minimum inter-cluster distance.
+
+#### 21. **Multi-Objective Optimization** (Multiple objectives)
+**Source**: `multi_objective_examples.jl`, `multi_objective_knapsack.jl` from JuMP tutorials
+**Problem**: Optimize multiple conflicting objectives simultaneously.
+
+**Use Case**: Knapsack with profit AND desirability, assignment with cost AND time.
+
+**Mathematical Formulation**:
+- Variables: Decision variables
+- Objectives: Multiple objectives (e.g., maximize profit AND maximize desirability)
+- Solution: Pareto frontier of non-dominated solutions
+
+**DSL Application**: Demonstrates `objective()` with multiple criteria, could use `max()` or `min()` to create composite objectives.
+
+#### 22. **Cannery Problem (Transshipment)** (Standard LP, but good example)
+**Source**: `cannery.jl` from JuMP tutorials
+**Problem**: Ship cases from production plants to markets minimizing transportation distance.
+
+**Use Case**: Distribution network optimization.
+
+**Mathematical Formulation**:
+- Variables: Shipment quantities from plants to markets
+- Constraints: Plant capacity, market demand
+- Objective: Minimize total transportation distance
+
+**DSL Application**: Good example for pattern-based constraints and model parameters with nested data structures.
+
+#### 23. **Piecewise Linear Approximation** (Advanced, demonstrates linearization)
+**Source**: `piecewise_linear.jl` from JuMP tutorials
+**Problem**: Approximate non-linear functions using piecewise linear segments.
+
+**Use Case**: When you need to model non-linear relationships in a linear program.
+
+**Mathematical Formulation**:
+- Variables: Convex combination weights for breakpoints
+- Constraints: SOS2 constraints (special ordered sets)
+- Objective: Approximate non-linear function value
+
+**DSL Application**: Advanced example showing how Dantzig's automatic linearization works internally (educational).
+
+## Updated Priority Recommendations
+
+### High Priority (Should Create):
+1. **Minimax Scheduling** (max function) - Clear, visualizable, common problem
+2. **Target Tracking** (abs function) - Simple, intuitive, widely applicable
+3. **Multi-Objective Knapsack** (multiple objectives) - From JuMP, well-documented
+4. **Factory Schedule with Fixed Costs** (max/and function) - From JuMP, practical
+
+### Medium Priority:
+5. **Minimize Absolute Deviation** (abs function) - Statistical application
+6. **Facility Location - Minimize Maximum Distance** (max function) - Practical
+7. **Fair Resource Allocation** (min function) - Social/ethical applications
+8. **Short-Term Financing** (abs function potential) - From JuMP, financial
+
+### Lower Priority (Can Demonstrate in Tutorial):
+9. **Geographic Clustering** (min/max functions) - From JuMP, interesting but complex
+10. **Combinatorial Auctions** (and/or function) - From JuMP, specialized
+11. **Conditional Constraints** (and function) - Logical modeling
+12. **Alternative Constraints** (or function) - Similar to conditional
+13. **Combined Functions** - Advanced, can be in tutorial
+
 ## References
 
 These problem types are standard in optimization literature:
@@ -289,3 +405,4 @@ These problem types are standard in optimization literature:
 - Linear Programming textbooks (Vanderbei, Chvatal)
 - Optimization modeling books (Williams, Fourer et al.)
 - Robust optimization literature (Ben-Tal & Nemirovski)
+- **JuMP Tutorials** (docs/JuMP_tutorials/linear/) - Additional examples and formulations
