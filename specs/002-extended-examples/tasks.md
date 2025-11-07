@@ -119,29 +119,44 @@
 
 #### Task 3.1: Create Portfolio Optimization Example
 
-**Status**: ✅ COMPLETED - Fixed with working objective
+**Status**: ✅ COMPLETED - Fixed syntax issues and validated
 **Description**: Create a new example demonstrating portfolio optimization with complex objectives
-**Files**: `examples/portfolio_optimization.exs` (NEW)
+**Files**: `examples/portfolio_optimization.exs`
+**Improvements Made**:
+
+- ✅ Fixed variable bounds syntax: `min:`/`max:` → `min_bound:` (removed per-variable max_bound, used constraints instead)
+- ✅ Fixed objective syntax: `direction: :maximize` → `:maximize`
+- ✅ Fixed variable reassignment: Changed `Enum.each` to `Enum.reduce` for accumulating values
+- ✅ Fixed Float.round type issues: Ensured all values are floats before rounding
+- ✅ Example now compiles and executes successfully
+
 **Acceptance Criteria**:
 
-- [ ] New example file with comprehensive documentation
-- [ ] Demonstrates parameter arrays and complex objectives
-- [ ] 5-8 investment options with budget and risk constraints
-- [ ] Financial application with realistic data
-- [ ] Compiles and executes successfully
+- [x] New example file with comprehensive documentation
+- [x] Demonstrates parameter arrays and complex objectives
+- [x] 5-8 investment options with budget and risk constraints (5 assets: US_Stocks, International_Stocks, Bonds, REITs, Commodities)
+- [x] Financial application with realistic data
+- [x] Compiles and executes successfully
 
 #### Task 3.2: Create Project Selection Example
 
-**Status**: ✅ COMPLETED - Fixed with working objective
+**Status**: ⚠️ PARTIAL - resource_allocation.exs exists but project_selection.exs does not
 **Description**: Create a new example demonstrating binary decision problems
-**Files**: `examples/project_selection.exs` (NEW)
+**Files**: `examples/resource_allocation.exs` (exists), `examples/project_selection.exs` (missing)
+**Current Status**:
+
+- ✅ `resource_allocation.exs` exists and demonstrates binary project selection with budget constraints
+- ⚠️ Only has 3 projects (needs 5-8 per acceptance criteria)
+- ⚠️ Does not demonstrate project dependencies
+- ❌ `project_selection.exs` file does not exist as specified
+
 **Acceptance Criteria**:
 
-- [ ] New example file with comprehensive documentation
-- [ ] Demonstrates binary variables and budget constraints
-- [ ] 5-8 projects with costs and dependencies
-- [ ] Binary integer programming capabilities
-- [ ] Compiles and executes successfully
+- [x] New example file with comprehensive documentation (resource_allocation.exs exists)
+- [x] Demonstrates binary variables and budget constraints
+- [ ] 5-8 projects with costs and dependencies (only 3 projects, no dependencies)
+- [x] Binary integer programming capabilities
+- [x] Compiles and executes successfully
 
 ### 🔴 Phase 4: Implement Advanced-Level Examples
 
@@ -397,29 +412,44 @@ This task breakdown provides a clear implementation roadmap for creating a compr
 
 #### Task 3.1: Create Portfolio Optimization Example
 
-**Status**: ✅ COMPLETED - Fixed with working objective
+**Status**: ✅ COMPLETED - Fixed syntax issues and validated
 **Description**: Create a new example demonstrating portfolio optimization with complex objectives
-**Files**: `examples/portfolio_optimization.exs` (NEW)
+**Files**: `examples/portfolio_optimization.exs`
+**Improvements Made**:
+
+- ✅ Fixed variable bounds syntax: `min:`/`max:` → `min_bound:` (removed per-variable max_bound, used constraints instead)
+- ✅ Fixed objective syntax: `direction: :maximize` → `:maximize`
+- ✅ Fixed variable reassignment: Changed `Enum.each` to `Enum.reduce` for accumulating values
+- ✅ Fixed Float.round type issues: Ensured all values are floats before rounding
+- ✅ Example now compiles and executes successfully
+
 **Acceptance Criteria**:
 
-- [ ] New example file with comprehensive documentation
-- [ ] Demonstrates parameter arrays and complex objectives
-- [ ] 5-8 investment options with budget and risk constraints
-- [ ] Financial application with realistic data
-- [ ] Compiles and executes successfully
+- [x] New example file with comprehensive documentation
+- [x] Demonstrates parameter arrays and complex objectives
+- [x] 5-8 investment options with budget and risk constraints (5 assets: US_Stocks, International_Stocks, Bonds, REITs, Commodities)
+- [x] Financial application with realistic data
+- [x] Compiles and executes successfully
 
 #### Task 3.2: Create Project Selection Example
 
-**Status**: ✅ COMPLETED - Fixed with working objective
+**Status**: ⚠️ PARTIAL - resource_allocation.exs exists but project_selection.exs does not
 **Description**: Create a new example demonstrating binary decision problems
-**Files**: `examples/project_selection.exs` (NEW)
+**Files**: `examples/resource_allocation.exs` (exists), `examples/project_selection.exs` (missing)
+**Current Status**:
+
+- ✅ `resource_allocation.exs` exists and demonstrates binary project selection with budget constraints
+- ⚠️ Only has 3 projects (needs 5-8 per acceptance criteria)
+- ⚠️ Does not demonstrate project dependencies
+- ❌ `project_selection.exs` file does not exist as specified
+
 **Acceptance Criteria**:
 
-- [ ] New example file with comprehensive documentation
-- [ ] Demonstrates binary variables and budget constraints
-- [ ] 5-8 projects with costs and dependencies
-- [ ] Binary integer programming capabilities
-- [ ] Compiles and executes successfully
+- [x] New example file with comprehensive documentation (resource_allocation.exs exists)
+- [x] Demonstrates binary variables and budget constraints
+- [ ] 5-8 projects with costs and dependencies (only 3 projects, no dependencies)
+- [x] Binary integer programming capabilities
+- [x] Compiles and executes successfully
 
 ### 🔴 Phase 4: Implement Advanced-Level Examples
 
@@ -616,29 +646,44 @@ This task breakdown provides a clear implementation roadmap for creating a compr
 
 #### Task 3.1: Create Portfolio Optimization Example
 
-**Status**: ✅ COMPLETED - Fixed with working objective
+**Status**: ✅ COMPLETED - Fixed syntax issues and validated
 **Description**: Create a new example demonstrating portfolio optimization with complex objectives
-**Files**: `examples/portfolio_optimization.exs` (NEW)
+**Files**: `examples/portfolio_optimization.exs`
+**Improvements Made**:
+
+- ✅ Fixed variable bounds syntax: `min:`/`max:` → `min_bound:` (removed per-variable max_bound, used constraints instead)
+- ✅ Fixed objective syntax: `direction: :maximize` → `:maximize`
+- ✅ Fixed variable reassignment: Changed `Enum.each` to `Enum.reduce` for accumulating values
+- ✅ Fixed Float.round type issues: Ensured all values are floats before rounding
+- ✅ Example now compiles and executes successfully
+
 **Acceptance Criteria**:
 
-- [ ] New example file with comprehensive documentation
-- [ ] Demonstrates parameter arrays and complex objectives
-- [ ] 5-8 investment options with budget and risk constraints
-- [ ] Financial application with realistic data
-- [ ] Compiles and executes successfully
+- [x] New example file with comprehensive documentation
+- [x] Demonstrates parameter arrays and complex objectives
+- [x] 5-8 investment options with budget and risk constraints (5 assets: US_Stocks, International_Stocks, Bonds, REITs, Commodities)
+- [x] Financial application with realistic data
+- [x] Compiles and executes successfully
 
 #### Task 3.2: Create Project Selection Example
 
-**Status**: ✅ COMPLETED - Fixed with working objective
+**Status**: ⚠️ PARTIAL - resource_allocation.exs exists but project_selection.exs does not
 **Description**: Create a new example demonstrating binary decision problems
-**Files**: `examples/project_selection.exs` (NEW)
+**Files**: `examples/resource_allocation.exs` (exists), `examples/project_selection.exs` (missing)
+**Current Status**:
+
+- ✅ `resource_allocation.exs` exists and demonstrates binary project selection with budget constraints
+- ⚠️ Only has 3 projects (needs 5-8 per acceptance criteria)
+- ⚠️ Does not demonstrate project dependencies
+- ❌ `project_selection.exs` file does not exist as specified
+
 **Acceptance Criteria**:
 
-- [ ] New example file with comprehensive documentation
-- [ ] Demonstrates binary variables and budget constraints
-- [ ] 5-8 projects with costs and dependencies
-- [ ] Binary integer programming capabilities
-- [ ] Compiles and executes successfully
+- [x] New example file with comprehensive documentation (resource_allocation.exs exists)
+- [x] Demonstrates binary variables and budget constraints
+- [ ] 5-8 projects with costs and dependencies (only 3 projects, no dependencies)
+- [x] Binary integer programming capabilities
+- [x] Compiles and executes successfully
 
 ### 🔴 Phase 4: Implement Advanced-Level Examples
 
