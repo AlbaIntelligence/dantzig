@@ -96,11 +96,11 @@
 **Files**: `examples/two_variable_lp.exs` (NEW)
 **Acceptance Criteria**:
 
-- [ ] New example file with comprehensive documentation
-- [ ] Demonstrates basic DSL syntax (variables, constraints, objective)
-- [ ] 2 continuous variables with 3-4 linear constraints
-- [ ] Simple, visualizable problem that perfect for introduction
-- [ ] Compiles and executes successfully
+- [x] New example file with comprehensive documentation
+- [x] Demonstrates basic DSL syntax (variables, constraints, objective)
+- [x] 2 continuous variables with 3-4 linear constraints
+- [x] Simple, visualizable problem that perfect for introduction
+- [x] Compiles and executes successfully
 
 #### Task 2.2: Create Resource Allocation Example
 
@@ -109,11 +109,11 @@
 **Files**: `examples/resource_allocation.exs` (NEW)
 **Acceptance Criteria**:
 
-- [ ] New example file with comprehensive documentation
-- [ ] Demonstrates model parameters and pattern-based constraints
-- [ ] 2-3 activities with resource limits
-- [ ] Practical business scenario
-- [ ] Compiles and executes successfully
+- [x] New example file with comprehensive documentation
+- [x] Demonstrates model parameters and pattern-based constraints
+- [x] 2-3 activities with resource limits
+- [x] Practical business scenario
+- [x] Compiles and executes successfully
 
 ### 🟡 Phase 3: Implement Intermediate-Level Examples
 
@@ -216,7 +216,7 @@
 ### Critical Path (Must Complete in Order):
 
 1. Phase 1: Fix existing examples (1.1 ✅ → 1.2 ✅ → 1.3 ✅ → 1.4 ✅)
-2. Phase 2: Beginner examples (2.1 → 2.2)
+2. Phase 2: Beginner examples (2.1 ✅ → 2.2 ✅)
 3. Phase 3: Intermediate examples (3.1 → 3.2)
 4. Phase 4: Advanced examples (4.1 → 4.2)
 5. Phase 5: Validation and documentation (5.1 → 5.2 → 5.3)
@@ -266,6 +266,8 @@
 2. **knapsack_problem.exs**: Perfect pattern-based variable generation using wildcard syntax
 3. **transportation_problem.exs**: Complete rewrite with proper wildcard constraints and variable access patterns
 4. **assignment_problem.exs**: Fixed objective calculation using model parameters with proper DSL syntax
+5. **two_variable_lp.exs**: New beginner example demonstrating basic 2-variable LP with production optimization
+6. **resource_allocation.exs**: New intermediate example showing binary project selection with budget constraints
 
 ### Key DSL Patterns Established:
 
@@ -372,11 +374,11 @@ This task breakdown provides a clear implementation roadmap for creating a compr
 **Files**: `examples/two_variable_lp.exs` (NEW)
 **Acceptance Criteria**:
 
-- [ ] New example file with comprehensive documentation
-- [ ] Demonstrates basic DSL syntax (variables, constraints, objective)
-- [ ] 2 continuous variables with 3-4 linear constraints
-- [ ] Simple, visualizable problem that perfect for introduction
-- [ ] Compiles and executes successfully
+- [x] New example file with comprehensive documentation
+- [x] Demonstrates basic DSL syntax (variables, constraints, objective)
+- [x] 2 continuous variables with 3-4 linear constraints
+- [x] Simple, visualizable problem that perfect for introduction
+- [x] Compiles and executes successfully
 
 #### Task 2.2: Create Resource Allocation Example
 
@@ -385,11 +387,11 @@ This task breakdown provides a clear implementation roadmap for creating a compr
 **Files**: `examples/resource_allocation.exs` (NEW)
 **Acceptance Criteria**:
 
-- [ ] New example file with comprehensive documentation
-- [ ] Demonstrates model parameters and pattern-based constraints
-- [ ] 2-3 activities with resource limits
-- [ ] Practical business scenario
-- [ ] Compiles and executes successfully
+- [x] New example file with comprehensive documentation
+- [x] Demonstrates model parameters and pattern-based constraints
+- [x] 2-3 activities with resource limits
+- [x] Practical business scenario
+- [x] Compiles and executes successfully
 
 ### 🟡 Phase 3: Implement Intermediate-Level Examples
 
@@ -492,7 +494,7 @@ This task breakdown provides a clear implementation roadmap for creating a compr
 ### Critical Path (Must Complete in Order):
 
 1. Phase 1: Fix existing examples (1.1 ✅ → 1.2 ✅ → 1.3 ✅ → 1.4 ✅)
-2. Phase 2: Beginner examples (2.1 → 2.2)
+2. Phase 2: Beginner examples (2.1 ✅ → 2.2 ✅)
 3. Phase 3: Intermediate examples (3.1 → 3.2)
 4. Phase 4: Advanced examples (4.1 → 4.2)
 5. Phase 5: Validation and documentation (5.1 → 5.2 → 5.3)
@@ -542,6 +544,8 @@ This task breakdown provides a clear implementation roadmap for creating a compr
 2. **knapsack_problem.exs**: Perfect pattern-based variable generation using wildcard syntax
 3. **transportation_problem.exs**: Complete rewrite with proper wildcard constraints and variable access patterns
 4. **assignment_problem.exs**: Fixed objective calculation using model parameters with proper DSL syntax
+5. **two_variable_lp.exs**: New beginner example demonstrating basic 2-variable LP with production optimization
+6. **resource_allocation.exs**: New intermediate example showing binary project selection with budget constraints
 
 ### Key DSL Patterns Established:
 
@@ -589,11 +593,11 @@ This task breakdown provides a clear implementation roadmap for creating a compr
 **Files**: `examples/two_variable_lp.exs` (NEW)
 **Acceptance Criteria**:
 
-- [ ] New example file with comprehensive documentation
-- [ ] Demonstrates basic DSL syntax (variables, constraints, objective)
-- [ ] 2 continuous variables with 3-4 linear constraints
-- [ ] Simple, visualizable problem that perfect for introduction
-- [ ] Compiles and executes successfully
+- [x] New example file with comprehensive documentation
+- [x] Demonstrates basic DSL syntax (variables, constraints, objective)
+- [x] 2 continuous variables with 3-4 linear constraints
+- [x] Simple, visualizable problem that perfect for introduction
+- [x] Compiles and executes successfully
 
 #### Task 2.2: Create Resource Allocation Example
 
@@ -602,11 +606,11 @@ This task breakdown provides a clear implementation roadmap for creating a compr
 **Files**: `examples/resource_allocation.exs` (NEW)
 **Acceptance Criteria**:
 
-- [ ] New example file with comprehensive documentation
-- [ ] Demonstrates model parameters and pattern-based constraints
-- [ ] 2-3 activities with resource limits
-- [ ] Practical business scenario
-- [ ] Compiles and executes successfully
+- [x] New example file with comprehensive documentation
+- [x] Demonstrates model parameters and pattern-based constraints
+- [x] 2-3 activities with resource limits
+- [x] Practical business scenario
+- [x] Compiles and executes successfully
 
 ### 🟡 Phase 3: Implement Intermediate-Level Examples
 
