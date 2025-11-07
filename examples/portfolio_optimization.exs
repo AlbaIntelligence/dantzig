@@ -149,8 +149,7 @@ problem =
       "weight",
       [asset <- assets],
       :continuous,
-      min: 0.0,
-      max: max_allocation[asset],
+      min_bound: 0.0,
       description: "Portfolio weight for each asset"
     )
 
@@ -160,7 +159,14 @@ problem =
       "Total allocation equals 100%"
     )
 
-    # Constraint 2: Risk constraint - portfolio risk cannot exceed tolerance
+    # Constraint 2: Maximum allocation constraints per asset
+    constraints(
+      [asset <- assets],
+      weight(asset) <= max_allocation[asset],
+      "Maximum allocation limit for #{asset}"
+    )
+
+    # Constraint 3: Risk constraint - portfolio risk cannot exceed tolerance
     # Simplified linear approximation of portfolio variance
     # (True variance requires quadratic terms: Σ Σ covariance * x[i] * x[j])
     constraints(
@@ -179,7 +185,7 @@ problem =
           weight(asset) * expected_returns[asset] / 100.0
         end
       ),
-      direction: :maximize
+      :maximize
     )
   end
 
@@ -195,34 +201,39 @@ case result do
 
     IO.puts("Optimal Portfolio Allocation:")
     total_value = 1_000_000
-    total_return_value = 0
-    portfolio_risk = 0
 
-    Enum.each(assets, fn asset ->
-      var_name = "weight_#{asset}"
-      weight = solution.variables[var_name] || 0
-      asset_value = total_value * weight
-      return_rate = expected_returns[asset]
+    {total_return_value, portfolio_risk} =
+      Enum.reduce(assets, {0, 0}, fn asset, {acc_return, acc_risk} ->
+        var_name = "weight_#{asset}"
+        weight = solution.variables[var_name] || 0
+        asset_value = total_value * weight
+        return_rate = expected_returns[asset]
 
-      total_return_value = total_return_value + asset_value * (return_rate / 100.0)
-      portfolio_risk = portfolio_risk + weight * (risk_levels[asset] / 100.0)
+        new_return = acc_return + asset_value * (return_rate / 100.0)
+        new_risk = acc_risk + weight * (risk_levels[asset] / 100.0)
 
-      if weight > 0.001 do
-        IO.puts(
-          "  #{asset}: #{Float.round(weight * 100, 1)}% ($#{Float.round(asset_value, 0)}) - Expected Return: #{return_rate}%"
-        )
-      end
-    end)
+        if weight > 0.001 do
+          IO.puts(
+            "  #{asset}: #{Float.round(weight * 100, 1)}% ($#{Float.round(asset_value, 0)}) - Expected Return: #{return_rate}%"
+          )
+        end
+
+        {new_return, new_risk}
+      end)
 
     IO.puts("")
     IO.puts("Portfolio Analysis:")
-    IO.puts("  Total Value: $#{Float.round(total_value, 0)}")
+    IO.puts("  Total Value: $#{Float.round(total_value * 1.0, 0)}")
     IO.puts("  Expected Annual Return: $#{Float.round(total_return_value, 0)}")
     IO.puts("  Portfolio Risk Level: #{Float.round(portfolio_risk * 100, 2)}%")
 
-    IO.puts(
-      "  Return per Dollar Risk: #{Float.round(total_return_value / total_value / portfolio_risk, 2)}"
-    )
+    if portfolio_risk > 0 do
+      IO.puts(
+        "  Return per Dollar Risk: #{Float.round(total_return_value / total_value / portfolio_risk, 2)}"
+      )
+    else
+      IO.puts("  Return per Dollar Risk: N/A (no risk)")
+    end
 
     # Validation
     IO.puts("")
@@ -230,9 +241,9 @@ case result do
 
     # Check budget constraint
     total_weight =
-      Enum.reduce(assets, 0, fn asset, acc ->
+      Enum.reduce(assets, 0.0, fn asset, acc ->
         var_name = "weight_#{asset}"
-        weight = solution.variables[var_name] || 0
+        weight = solution.variables[var_name] || 0.0
         acc + weight
       end)
 
@@ -274,12 +285,14 @@ case result do
         weight > 0.05
       end)
 
-    top_3_weight =
-      Enum.reduce(assets, 0, fn asset, acc ->
+    weights_list =
+      Enum.map(assets, fn asset ->
         var_name = "weight_#{asset}"
-        weight = solution.variables[var_name] || 0
-        weight + acc
+        solution.variables[var_name] || 0.0
       end)
+
+    top_3_weight =
+      weights_list
       |> Enum.sort(:desc)
       |> Enum.take(3)
       |> Enum.sum()
