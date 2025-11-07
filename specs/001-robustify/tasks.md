@@ -176,7 +176,7 @@
 - [x] T060 [US3] Enhance documentation for examples/network_flow.exs (create if missing, or document why excluded)
 - [x] T061 [US3] Enhance documentation for examples/nqueens_dsl_working.exs
 - [x] T062 [US3] Enhance documentation for examples/production_planning.exs
-- [ ] T063 [US3] Enhance documentation for examples/transportation_problem.exs
+- [x] T063 [US3] Enhance documentation for examples/transportation_problem.exs
 - [ ] T064 [US3] Enhance documentation for examples/working_example.exs
 - [ ] T065 [P] [US3] Add business context explanations to all examples
 - [ ] T065a [P] [US3] Systematically check the problem as defined against the output in LP syntax for all examples
