@@ -279,7 +279,7 @@ calculate_total_cost = fn solution, workers, tasks, cost_matrix ->
       worker_assignments =
         Enum.reduce(tasks, {[], 0}, fn task, {task_list, task_cost} ->
           # Construct variable name from indices
-          var_name = "assign_#{worker}_#{task}"
+          var_name = "assign(#{worker},#{task})"
           assigned = solution.variables[var_name]
 
           # Check if this assignment is active (value > 0.5 for binary)
@@ -347,12 +347,19 @@ problem = Problem.modify(problem) do
   # Update objective to minimize total assignment cost
   # For each worker-task pair, multiply assignment variable by cost
   # Sum all products to get total cost
-  # Model parameters not yet supported for variable access, so hardcode costs
+  # Note: Nested map access cost_matrix[w][t] with variables from for-comprehension
+  # doesn't work correctly, so using explicit terms for now
   objective(
-  assign("Alice", "Task1") * 2 + assign("Alice", "Task2") * 3 + assign("Alice", "Task3") * 1 +
-    assign("Bob", "Task1") * 4 + assign("Bob", "Task2") * 2 + assign("Bob", "Task3") * 3 +
-    assign("Charlie", "Task1") * 3 + assign("Charlie", "Task2") * 1 + assign("Charlie", "Task3") * 4,
-    direction: :minimize
+  assign("Alice", "Task1") * cost_matrix["Alice"]["Task1"] +
+    assign("Alice", "Task2") * cost_matrix["Alice"]["Task2"] +
+    assign("Alice", "Task3") * cost_matrix["Alice"]["Task3"] +
+    assign("Bob", "Task1") * cost_matrix["Bob"]["Task1"] +
+    assign("Bob", "Task2") * cost_matrix["Bob"]["Task2"] +
+    assign("Bob", "Task3") * cost_matrix["Bob"]["Task3"] +
+    assign("Charlie", "Task1") * cost_matrix["Charlie"]["Task1"] +
+    assign("Charlie", "Task2") * cost_matrix["Charlie"]["Task2"] +
+    assign("Charlie", "Task3") * cost_matrix["Charlie"]["Task3"],
+    :minimize
   )
 end
 
