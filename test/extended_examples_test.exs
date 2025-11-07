@@ -41,7 +41,8 @@ defmodule ExtendedExamplesTest do
 
   # Examples with known issues
   @examples_with_issues [
-    "facility_location.exs"  # DSL syntax error with variable-to-variable constraints
+    # DSL syntax error with variable-to-variable constraints
+    "facility_location.exs"
   ]
 
   # Examples that don't exist yet
@@ -219,7 +220,8 @@ defmodule ExtendedExamplesTest do
         if result.success do
           # If execution succeeds, assume memory usage is reasonable
           # More sophisticated memory monitoring can be added later
-          assert true, "Example #{example} executed successfully (memory usage assumed reasonable)"
+          assert true,
+                 "Example #{example} executed successfully (memory usage assumed reasonable)"
         end
       end
     end

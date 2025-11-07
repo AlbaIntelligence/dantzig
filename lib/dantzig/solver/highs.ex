@@ -137,7 +137,8 @@ defmodule Dantzig.HiGHS do
       # Replace prohibited characters (exponential notation 'E', '+', '-', '*', '^', '[', ']')
       # Only replace 'e' or 'E' when followed by a digit (scientific notation) or at start of name
       # Pattern: 'e' or 'E' at start OR 'e'/'E' followed by digit (scientific notation)
-      |> String.replace(~r/^[eE]|[eE](?=\d)/, "x_")
+      |> String.replace(~r/^[e]|[e](?=\d)/, "x_e")
+      |> String.replace(~r/^[E]|[E](?=\d)/, "x_E")
       |> String.replace(~r/[\+\-\*\^\[\]]/, "_")
       # Replace prohibited characters with underscore
       |> String.replace(~r/[^A-Za-z0-9_!"#\$%&()\,\.\;\?@_'~]/, "_")
@@ -158,7 +159,14 @@ defmodule Dantzig.HiGHS do
           # Must start with letter or underscore
           first =~ ~r/[A-Za-z_]/ ->
             # Emit warning for significant changes
-            if String.length(name) > 255 or name =~ ~r/[eE\+*\^\[\]]/ do
+            # Only warn if length was truncated, or if 'e'/'E' at start/followed by digit was replaced
+            # or if other prohibited characters were replaced
+            should_warn =
+              String.length(name) > 255 or
+                name =~ ~r/^[eE]|[eE](?=\d)/ or
+                name =~ ~r/[\+\-\*\^\[\]]/
+
+            if should_warn do
               IO.warn(
                 "LP format: variable/constraint name '#{name}' was modified to '#{sanitized}' for solver compatibility"
               )
