@@ -175,9 +175,14 @@
 
 #### Task 4.2: Create Multi-Objective LP Example
 
-**Status**: ✅ COMPLETED - Fixed with working objective
+**Status**: ❌ NOT CREATED
 **Description**: Create a new example demonstrating multi-objective optimization
-**Files**: `examples/multi_objective_lp.exs` (NEW)
+**Files**: `examples/multi_objective_lp.exs` (does not exist)
+**Current Status**:
+
+- ❌ File does not exist
+- ❌ Multi-objective optimization example needs to be created
+
 **Acceptance Criteria**:
 
 - [ ] New example file with comprehensive documentation
@@ -468,9 +473,14 @@ This task breakdown provides a clear implementation roadmap for creating a compr
 
 #### Task 4.2: Create Multi-Objective LP Example
 
-**Status**: ✅ COMPLETED - Fixed with working objective
+**Status**: ❌ NOT CREATED
 **Description**: Create a new example demonstrating multi-objective optimization
-**Files**: `examples/multi_objective_lp.exs` (NEW)
+**Files**: `examples/multi_objective_lp.exs` (does not exist)
+**Current Status**:
+
+- ❌ File does not exist
+- ❌ Multi-objective optimization example needs to be created
+
 **Acceptance Criteria**:
 
 - [ ] New example file with comprehensive documentation
@@ -702,9 +712,14 @@ This task breakdown provides a clear implementation roadmap for creating a compr
 
 #### Task 4.2: Create Multi-Objective LP Example
 
-**Status**: ✅ COMPLETED - Fixed with working objective
+**Status**: ❌ NOT CREATED
 **Description**: Create a new example demonstrating multi-objective optimization
-**Files**: `examples/multi_objective_lp.exs` (NEW)
+**Files**: `examples/multi_objective_lp.exs` (does not exist)
+**Current Status**:
+
+- ❌ File does not exist
+- ❌ Multi-objective optimization example needs to be created
+
 **Acceptance Criteria**:
 
 - [ ] New example file with comprehensive documentation
