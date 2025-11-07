@@ -135,10 +135,9 @@ defmodule Dantzig.HiGHS do
     sanitized =
       name
       # Replace prohibited characters (exponential notation 'E', '+', '-', '*', '^', '[', ']')
-      # 'e' followed by non-letter -> 'x_'
-      |> String.replace(~r/[eE](?![a-zA-Z_])/, "x_")
-      # Standalone 'e' or 'E'
-      |> String.replace(~r/[eE]+/, "x_")
+      # Only replace 'e' or 'E' when followed by a digit (scientific notation) or at start of name
+      # Pattern: 'e' or 'E' at start OR 'e'/'E' followed by digit (scientific notation)
+      |> String.replace(~r/^[eE]|[eE](?=\d)/, "x_")
       |> String.replace(~r/[\+\-\*\^\[\]]/, "_")
       # Replace prohibited characters with underscore
       |> String.replace(~r/[^A-Za-z0-9_!"#\$%&()\,\.\;\?@_'~]/, "_")
@@ -222,7 +221,7 @@ defmodule Dantzig.HiGHS do
         "  0 <= #{v.name} <= 1\n"
 
       _ ->
-      case {v.min_bound, v.max_bound} do
+        case {v.min_bound, v.max_bound} do
           {nil, nil} ->
             "  #{v.name} free\n"
 
