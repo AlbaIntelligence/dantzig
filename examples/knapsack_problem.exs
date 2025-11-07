@@ -31,16 +31,15 @@ require Dantzig.Problem, as: Problem
 require Dantzig.Problem.DSL, as: DSL
 
 # Define the problem data
-items = [
-  %{name: "laptop", weight: 3, value: 10},
-  %{name: "book", weight: 1, value: 3},
-  %{name: "camera", weight: 2, value: 6},
-  %{name: "phone", weight: 1, value: 4},
-  %{name: "headphones", weight: 1, value: 2}
-]
+items = %{
+  "laptop" => %{name: "laptop", weight: 3, value: 10},
+  "book" => %{name: "book", weight: 1, value: 3},
+  "camera" => %{name: "camera", weight: 2, value: 6},
+  "phone" => %{name: "phone", weight: 1, value: 4},
+  "headphones" => %{name: "headphones", weight: 1, value: 2}
+}
 
-item_names = for item <- items, do: item.name
-items_dict = for item <- items, into: %{}, do: {item.name, item}
+item_names = Map.keys(items)
 
 capacity = 5
 
@@ -48,7 +47,7 @@ IO.puts("Knapsack Problem")
 IO.puts("================")
 IO.puts("Items:")
 
-Enum.each(items, fn item ->
+Enum.each(items, fn {_name, item} ->
   IO.puts("  #{item.name}: weight=#{item.weight}, value=#{item.value}")
 end)
 
@@ -57,28 +56,24 @@ IO.puts("")
 
 # Create the optimization problem
 problem =
-  Problem.define do
+  Problem.define model_parameters: %{items: items, item_names: item_names} do
     new(
       name: "Knapsack Problem",
       description: "Select items to maximize value while respecting weight constraint"
     )
 
     # Binary variables: x[i] = 1 if item i is selected, 0 otherwise
-    variables("select_laptop", :binary, "Whether to select laptop")
-    variables("select_book", :binary, "Whether to select book")
-    variables("select_camera", :binary, "Whether to select camera")
-    variables("select_phone", :binary, "Whether to select phone")
-    variables("select_headphones", :binary, "Whether to select headphones")
+    variables("select", [i <- item_names], :binary, "Whether to select a given item")
 
     # Constraint: total weight must not exceed capacity
     constraints(
-      select_laptop * 3 + select_book * 1 + select_camera * 2 + select_phone * 1 + select_headphones * 1 <= capacity,
+      sum(for i <- item_names, do: select(i) * items[i].weight) <= capacity,
       "Weight constraint"
     )
 
     # Objective: maximize total value
     objective(
-      select_laptop * 10 + select_book * 3 + select_camera * 6 + select_phone * 4 + select_headphones * 2,
+      sum(for i <- item_names, do: select(i) * items[i].value),
       direction: :maximize
     )
   end
@@ -94,8 +89,8 @@ IO.puts("")
 IO.puts("Selected items:")
 
 {total_weight, total_value} =
-  Enum.reduce(items, {0, 0}, fn item, {acc_weight, acc_value} ->
-    var_name = "select_#{item.name}"
+  Enum.reduce(items, {0, 0}, fn {_name, item}, {acc_weight, acc_value} ->
+    var_name = "select(#{item.name})"
     selected = solution.variables[var_name] || 0
 
     if selected > 0.5 do
@@ -128,8 +123,12 @@ end
 # Enhanced validation
 IO.puts("")
 IO.puts("Solution Analysis:")
-optimal_items = ["laptop", "book", "phone"]  # Should be selected: 3+1+1=5w, 10+3+4=17v
-selected_items = for item <- items, solution.variables["select_#{item.name}"] > 0.5, do: item.name
+# Should be selected: 3+1+1=5w, 10+3+4=17v
+optimal_items = ["laptop", "book", "phone"]
+
+selected_items =
+  for {_name, item} <- items, solution.variables["select(#{item.name})"] > 0.5, do: item.name
+
 optimal_selected = Enum.sort(selected_items) == Enum.sort(optimal_items)
 
 IO.puts("  Selected items: #{Enum.join(selected_items, ", ")}")

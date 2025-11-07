@@ -147,54 +147,23 @@ problem =
     )
 
     # Constraint: supply limits - each supplier cannot ship more than their capacity
-    # Model parameters not yet supported for variable access, so hardcode values
     constraints(
-      sum(for c <- customers, do: ship("Supplier1", c)) <= 20,
-      "Supplier capacity limit"
-    )
-
-    constraints(
-      sum(for c <- customers, do: ship("Supplier2", c)) <= 25,
-      "Supplier capacity limit"
-    )
-
-    constraints(
-      sum(for c <- customers, do: ship("Supplier3", c)) <= 15,
-      "Supplier capacity limit"
+      [s <- suppliers],
+      sum(ship(s, :_)) <= supply[s],
+      "Supplier capacity #{s}"
     )
 
     # Constraint: demand requirements - each customer must receive exactly their demand
-    # Model parameters not yet supported for variable access, so hardcode values
     constraints(
-      sum(for s <- suppliers, do: ship(s, "Customer1")) == 15,
-      "Customer demand requirement"
-    )
-
-    constraints(
-      sum(for s <- suppliers, do: ship(s, "Customer2")) == 20,
-      "Customer demand requirement"
-    )
-
-    constraints(
-      sum(for s <- suppliers, do: ship(s, "Customer3")) == 15,
-      "Customer demand requirement"
-    )
-
-    constraints(
-      sum(for s <- suppliers, do: ship(s, "Customer4")) == 10,
-      "Customer demand requirement"
+      [c <- customers],
+      sum(ship(:_, c)) == demand[c],
+      "Customer demand #{c}"
     )
 
     # Objective: minimize total shipping cost
-    # Model parameters not yet supported for variable access, so hardcode costs
     objective(
-      ship("Supplier1", "Customer1") * 2 + ship("Supplier1", "Customer2") * 3 +
-        ship("Supplier1", "Customer3") * 1 + ship("Supplier1", "Customer4") * 4 +
-        ship("Supplier2", "Customer1") * 3 + ship("Supplier2", "Customer2") * 2 +
-        ship("Supplier2", "Customer3") * 4 + ship("Supplier2", "Customer4") * 1 +
-        ship("Supplier3", "Customer1") * 1 + ship("Supplier3", "Customer2") * 4 +
-        ship("Supplier3", "Customer3") * 3 + ship("Supplier3", "Customer4") * 2,
-      direction: :minimize
+      sum(for s <- suppliers, c <- customers, do: ship(s, c) * cost_matrix[s][c]),
+      :minimize
     )
   end
 
@@ -228,37 +197,36 @@ IO.puts("=========")
 IO.puts("Objective value: #{objective_value}")
 IO.puts("")
 
-# Debug: Show solution variables
-IO.puts("Solution variables (first 5):")
-solution.variables |> Map.take(Enum.take(Map.keys(solution.variables), 5)) |> IO.inspect()
-
 IO.puts("Shipping Plan:")
-total_cost = 0
-
 # Display the shipping plan and calculate total cost
-Enum.each(suppliers, fn supplier ->
-  IO.puts("#{supplier}:")
+{total_cost, _} =
+  Enum.reduce(suppliers, {0, solution.variables}, fn supplier, {acc_cost, vars} ->
+    IO.puts("#{supplier}:")
 
-  Enum.each(customers, fn customer ->
-    var_name = "ship(#{supplier},#{customer})"
-    units_shipped = Map.get(solution.variables, var_name, 0)
+    Enum.reduce(customers, {acc_cost, vars}, fn customer, {inner_acc, inner_vars} ->
+      var_name = "ship(#{supplier},#{customer})"
+      units_shipped = Map.get(inner_vars, var_name, 0)
 
-    # Only show non-zero shipments
-    if units_shipped > 0.001 do
-      unit_cost = cost_matrix[supplier][customer]
-      shipment_cost = units_shipped * unit_cost
-      total_cost = total_cost + shipment_cost
+      # Only show non-zero shipments
+      if units_shipped > 0.001 do
+        unit_cost = cost_matrix[supplier][customer]
+        shipment_cost = units_shipped * unit_cost
+        new_acc = inner_acc + shipment_cost
 
-      IO.puts(
-        "  → #{customer}: #{Float.round(units_shipped, 2)} units (cost: #{Float.round(shipment_cost, 2)})"
-      )
-    end
+        IO.puts(
+          "  → #{customer}: #{Float.round(units_shipped * 1.0, 2)} units (cost: $#{Float.round(shipment_cost * 1.0, 2)})"
+        )
+
+        {new_acc, inner_vars}
+      else
+        {inner_acc, inner_vars}
+      end
+    end)
   end)
-end)
 
 IO.puts("")
 IO.puts("Summary:")
-IO.puts("  Total shipping cost: #{Float.round(total_cost * 1.0, 2)}")
+IO.puts("  Total shipping cost: $#{Float.round(total_cost * 1.0, 2)}")
 IO.puts("  Reported objective: #{objective_value}")
 IO.puts("  Cost matches objective: #{abs(total_cost - objective_value) < 0.001}")
 
@@ -273,7 +241,7 @@ supplier_validation =
   Enum.map(suppliers, fn supplier ->
     total_shipped =
       Enum.reduce(customers, 0, fn customer, acc ->
-        var_name = "ship(#{supplier},#{customer})"
+        var_name = "ship_#{supplier}_#{customer}"
         acc + Map.get(solution.variables, var_name, 0)
       end)
 
@@ -291,7 +259,7 @@ Enum.each(supplier_validation, fn {supplier, shipped, capacity} ->
       "❌ VIOLATED"
     end
 
-  IO.puts("  #{supplier}: #{Float.round(shipped * 1.0, 2)}/#{capacity} units #{status}")
+  IO.puts("  #{supplier}: #{Float.round(shipped, 2)}/#{capacity} units #{status}")
 end)
 
 # Check that each customer's demand is met exactly
@@ -299,7 +267,7 @@ customer_validation =
   Enum.map(customers, fn customer ->
     total_received =
       Enum.reduce(suppliers, 0, fn supplier, acc ->
-        var_name = "ship(#{supplier},#{customer})"
+        var_name = "ship_#{supplier}_#{customer}"
         acc + Map.get(solution.variables, var_name, 0)
       end)
 
@@ -317,7 +285,7 @@ Enum.each(customer_validation, fn {customer, received, required} ->
       "❌ VIOLATED"
     end
 
-  IO.puts("  #{customer}: #{Float.round(received * 1.0, 2)}/#{required} units #{status}")
+  IO.puts("  #{customer}: #{Float.round(received, 2)}/#{required} units #{status}")
 end)
 
 # Check for any validation errors

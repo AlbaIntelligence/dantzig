@@ -222,7 +222,7 @@ defmodule Dantzig.HiGHS do
         "  0 <= #{v.name} <= 1\n"
 
       _ ->
-        case {v.min, v.max} do
+      case {v.min_bound, v.max_bound} do
           {nil, nil} ->
             "  #{v.name} free\n"
 

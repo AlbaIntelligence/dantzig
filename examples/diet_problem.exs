@@ -37,12 +37,12 @@
 #   Creates continuous variables for each food with non-negativity constraints
 # - constraints([limit <- limits_names], sum(...) <= limits_dict[limit].max)
 #   Uses pattern-based constraints to enforce nutritional limits
-# - sum(for food <- food_names, do: qty(food) * foods_dict[food][limit])
+# - sum(for food <- food_names, do: qty(food) * foods[food][limit])
 #   Weighted sum expressions to calculate total nutrients
 #
 # COMMON GOTCHAS:
 # 1. **Food Names**: Convert food names to use underscores for valid variable names
-# 2. **Dictionary Access**: Use foods_dict[food][limit] for nested map access
+# 2. **Dictionary Access**: Use foods[food][limit] for nested map access
 # 3. **Nutritional Limits**: Handle :infinity for unbounded nutrients (like protein minimum)
 # 4. **Variable Bounds**: :continuous variables default to non-negative (min_bound: 0.0)
 # 5. **Model Parameters**: Data must be passed via model_parameters for DSL access
@@ -61,22 +61,32 @@ IO.puts("Problem Setup:")
 IO.puts("==============")
 
 # Food data with nutritional information and costs
-foods = [
-  %{name: "hamburger", cost: 2.49, calories: 410, protein: 24, fat: 26, sodium: 730},
-  %{name: "chicken", cost: 2.89, calories: 420, protein: 32, fat: 10, sodium: 1190},
-  %{name: "hot dog", cost: 1.50, calories: 560, protein: 20, fat: 32, sodium: 1800},
-  %{name: "fries", cost: 1.89, calories: 380, protein: 4, fat: 19, sodium: 270},
-  %{name: "macaroni", cost: 2.09, calories: 320, protein: 12, fat: 10, sodium: 930},
-  %{name: "pizza", cost: 1.99, calories: 320, protein: 15, fat: 12, sodium: 820},
-  %{name: "salad", cost: 2.49, calories: 320, protein: 31, fat: 12, sodium: 1230},
-  %{name: "milk", cost: 0.89, calories: 100, protein: 8, fat: 2.5, sodium: 125},
-  %{name: "ice cream", cost: 1.59, calories: 330, protein: 8, fat: 10, sodium: 180}
-]
+foods = %{
+  "hamburger" => %{
+    name: "hamburger",
+    cost: 2.49,
+    calories: 410,
+    protein: 24,
+    fat: 26,
+    sodium: 730
+  },
+  "chicken" => %{name: "chicken", cost: 2.89, calories: 420, protein: 32, fat: 10, sodium: 1190},
+  "hot dog" => %{name: "hot dog", cost: 1.50, calories: 560, protein: 20, fat: 32, sodium: 1800},
+  "fries" => %{name: "fries", cost: 1.89, calories: 380, protein: 4, fat: 19, sodium: 270},
+  "macaroni" => %{name: "macaroni", cost: 2.09, calories: 320, protein: 12, fat: 10, sodium: 930},
+  "pizza" => %{name: "pizza", cost: 1.99, calories: 320, protein: 15, fat: 12, sodium: 820},
+  "salad" => %{name: "salad", cost: 2.49, calories: 320, protein: 31, fat: 12, sodium: 1230},
+  "milk" => %{name: "milk", cost: 0.89, calories: 100, protein: 8, fat: 2.5, sodium: 125},
+  "ice cream" => %{name: "ice cream", cost: 1.59, calories: 330, protein: 8, fat: 10, sodium: 180}
+}
+
+# Convert food names to use underscores for valid variable names
+food_names = Map.keys(foods)
 
 # Display food information
 IO.puts("Available Foods:")
 
-Enum.each(foods, fn food ->
+Enum.each(foods, fn {_name, food} ->
   IO.puts("  #{food.name}: $#{food.cost}/unit")
 
   IO.puts(
@@ -84,37 +94,32 @@ Enum.each(foods, fn food ->
   )
 end)
 
-# Convert food names to use underscores for valid variable names
-food_names = Enum.map(foods, & &1.name)
-foods_dict = for food_entry <- foods, into: %{}, do: {food_entry.name, food_entry}
-
 # Nutritional requirements
-limits = [
-  %{nutrient: "calories", min_bound: 1800, max_bound: 2200},
-  %{nutrient: "protein", min_bound: 91, max_bound: :infinity},
-  %{nutrient: "fat", min_bound: 0, max_bound: 65},
-  %{nutrient: "sodium", min_bound: 0, max_bound: 1779}
-]
+nutrient_limits = %{
+  "calories" => %{nutrient: "calories", min_bound: 1800, max_bound: 2200},
+  "protein" => %{nutrient: "protein", min_bound: 91, max_bound: :infinity},
+  "fat" => %{nutrient: "fat", min_bound: 0, max_bound: 65},
+  "sodium" => %{nutrient: "sodium", min_bound: 0, max_bound: 1779}
+}
+
+nutrient_names = Map.keys(nutrient_limits)
 
 # Display nutritional requirements
 IO.puts("")
 IO.puts("Daily Nutritional Requirements:")
 
-Enum.each(limits, fn limit ->
-  max_str = if limit.max == :infinity, do: "unlimited", else: "#{limit.max}"
-  IO.puts("  #{limit.nutrient}: #{limit.min} - #{max_str}")
+Enum.each(nutrient_limits, fn {_nutrient, limit} ->
+  max_str = if limit.max_bound == :infinity, do: "unlimited", else: "#{limit.max_bound}"
+  IO.puts("  #{limit.nutrient}: #{limit.min_bound} - #{max_str}")
 end)
-
-limits_names = Enum.map(limits, & &1.nutrient)
-limits_dict = for limit_entry <- limits, into: %{}, do: {limit_entry.nutrient, limit_entry}
 
 # Create the problem
 problem_diet =
   Problem.define model_parameters: %{
-                   foods_dict: foods_dict,
-                   limits_dict: limits_dict,
+                   foods: foods,
+                   nutrient_limits: nutrient_limits,
                    food_names: food_names,
-                   limits_names: limits_names
+                   nutrient_names: nutrient_names
                  } do
     new(
       name: "Diet Problem",
@@ -130,16 +135,22 @@ problem_diet =
       description: "Amount of food to buy"
     )
 
-    # Nutritional constraints
+    # Nutritional constraints - Not too much of this for each nutrient
     constraints(
-      [limit <- limits_names],
-      sum(for food <- food_names, do: qty(food) * foods_dict[food][limit]) <=
-        limits_dict[limit].max,
-      "Max #{limit}"
+      [nutrient <- nutrient_names],
+      sum(qty(:_) * foods[:_][nutrient]) <= nutrient_limits[nutrient].max_bound,
+      "Max #{nutrient}"
+    )
+
+    # Nutritional constraints - Not too little of that for each nutrient
+    constraints(
+      [nutrient <- nutrient_names],
+      sum(qty(:_) * foods[:_][nutrient]) >= nutrient_limits[nutrient].min_bound,
+      "Min #{nutrient}"
     )
 
     objective(
-      sum(for food <- food_names, do: qty(food) * foods_dict[food].cost),
+      sum(for food <- food_names, do: qty(food) * foods[food].cost),
       direction: :minimize
     )
   end
@@ -169,11 +180,10 @@ case result do
       sodium: 0
     }
 
-    Enum.each(foods, fn food ->
-      # Try multiple possible variable name formats
-      var_name1 = "qty_#{food.name}"
-      var_name2 = "qty(#{food.name})"
-      quantity = solution.variables[var_name1] || solution.variables[var_name2] || 0
+    Enum.each(foods, fn {_name, food} ->
+      # Variable names are generated as "qty_foodname" by the DSL
+      var_name = "qty_#{food.name}"
+      quantity = solution.variables[var_name] || 0
 
       if quantity > 0.001 do
         food_cost = quantity * food.cost
@@ -196,22 +206,22 @@ case result do
     IO.puts("")
     IO.puts("Nutritional Analysis:")
     IO.puts("  Total calories: #{Float.round(total_nutrients.calories, 0)}")
-    IO.puts("  Total protein: #{Float.round(total_nutrients.protein, 1)}g")
-    IO.puts("  Total fat: #{Float.round(total_nutrients.fat, 1)}g")
-    IO.puts("  Total sodium: #{Float.round(total_nutrients.sodium, 0)}mg")
+    IO.puts("  Total protein: #{Float.round(total_nutrients.protein * 1.0, 1)}g")
+    IO.puts("  Total fat: #{Float.round(total_nutrients.fat * 1.0, 1)}g")
+    IO.puts("  Total sodium: #{Float.round(total_nutrients.sodium * 1.0, 0)}mg")
 
     IO.puts("")
     IO.puts("Validation:")
 
     all_constraints_satisfied =
-      Enum.all?(limits, fn limit ->
-        current_amount = total_nutrients[String.to_atom(limit.nutrient)]
+    Enum.all?(nutrient_limits, fn {_nutrient_name, limit} ->
+    current_amount = total_nutrients[String.to_atom(limit.nutrient)]
 
-        case limit.max do
-          :infinity -> current_amount >= limit.min
-          max -> current_amount >= limit.min and current_amount <= max
-        end
-      end)
+    case limit.max_bound do
+    :infinity -> current_amount >= limit.min_bound
+    max -> current_amount >= limit.min_bound and current_amount <= max
+    end
+    end)
 
     if all_constraints_satisfied do
       IO.puts("  ✅ All nutritional requirements satisfied")
