@@ -161,7 +161,6 @@
 
 
 
-### 🔴 Phase 5: Implement Advanced-Level Examples
 
 #### Task 4.1: Create Facility Location Example
 
@@ -509,6 +508,8 @@ This task breakdown provides a clear implementation roadmap for creating a compr
 - Update `examples/diet_problem.exs` to demonstrate both syntaxes side-by-side
 - Consider future Einstein notation enhancement for automatic index matching
 
+
+### 🔴 Phase 5: Implement Advanced-Level Examples
 
 #### Task 4.1: Create Facility Location Example
 
