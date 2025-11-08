@@ -2,879 +2,510 @@
 
 **GOLDEN REFERENCE - DO NOT MODIFY WITHOUT EXPLICIT APPROVAL**
 
-This document serves as the **canonical, unbreakable reference** for Dantzig DSL syntax. All implementations must support the syntax patterns documented here exactly as specified.
+This document is the **canonical, self-contained reference** for Dantzig DSL syntax. It provides complete and succinct syntax rules, including disallowed patterns.
 
-## Source of Truth
+## Quick Reference
 
-This reference is based on:
+### Function Signatures
 
-1. **`test/dantzig/dsl/experimental/simple_generator_test.exs`** - Marked as golden syntax
-2. **`examples/nqueens_dsl.exs`** - Marked as golden syntax
+| Context        | Function                   | Signature                                              | Generators?            |
+| -------------- | -------------------------- | ------------------------------------------------------ | ---------------------- |
+| Inside blocks  | `variables/3`              | `variables("name", :type, "description")`              | ❌ No                  |
+| Inside blocks  | `variables/4`              | `variables("name", [gens], :type, "description")`      | ✅ Yes                 |
+| Inside blocks  | `constraints/2`            | `constraints(expression, "description")`               | ❌ No                  |
+| Inside blocks  | `constraints/3`            | `constraints([gens], expression, "description")`       | ✅ Yes                 |
+| Inside blocks  | `objective/2`              | `objective(expression, :direction)`                    | ✅ Yes (in expression) |
+| Outside blocks | `Problem.add_variable/4`   | `Problem.add_variable(problem, "name", :type, "desc")` | ❌ No                  |
+| Outside blocks | `Problem.add_constraint/3` | `Problem.add_constraint(problem, expr, "desc")`        | ❌ No                  |
+| Outside blocks | `Problem.set_objective/3`  | `Problem.set_objective(problem, expr, :direction)`     | ❌ No                  |
 
-## Quick Start
+**Key Rule**: Generators `[i <- 1..4]` are **only allowed** inside `Problem.define` and `Problem.modify` blocks.
 
-### Basic Problem Definition
+---
 
-```elixir
-# Simple problem with variables and constraints
-problem = Problem.define do
-  new(name: "My Problem", description: "A simple optimization problem")
+## Problem Definition
 
-  # Add variables
-  variables("x", [i <- 1..3], :continuous, "Decision variables")
+### `Problem.define`
 
-  # Add constraints
-  constraints([i <- 1..3], x(i) >= 0, "Non-negative constraint #{i}")
+Creates a new optimization problem.
 
-  # Set objective
-  objective(sum(x(:_)), :maximize)
-end
-```
-
-### When to Use Each Syntax
-
-- **`Problem.define`**: Create new problems from scratch and add variables/constraints to existing problems
-- **`Problem.modify`**: Amend existing problems with new or replacement variables/constraints/objectives
-- **`Problem.add_variable`**: Add a single variable outside blocks
-- **`Problem.add_constraint`**: Add a single constraint outside blocks
-- **`Problem.set_objective`**: Set or replace the optimization objective outside blocks
-
-## Core DSL Syntax
-
-### Problem Definition
+**Syntax:**
 
 ```elixir
 problem = Problem.define do
-  new(name: "Problem Name", description: "Problem description")
-  # ... variables, constraints, objectives
+  new(name: "Name", description: "Description")
+  # variables, constraints, objective
 end
 ```
 
-### Problem change
-
-Once a problem has been defined, it can be amended with new variables, constraints, and objectives.
+**With model parameters:**
 
 ```elixir
-problem = Problem.modify(problem) do
-  # list of variables, constraints, objective
-end
-```
-
-A problem can also be modified with new variables, constraints, and objectives outside of a `Problem.define` block with identical syntax. `Problem.modify()` can also modify existing variables, existing constraints (identified by their generated names). In this case, there is no creation of additional variables or constraints. A warning is issued if a variable or constraint with the same name already exists.
-
-A `Problem.modify()` cannot contain a `new()` statement.
-
-```elixir
-problem = Problem.modify(problem) do
-  new(name: "Problem Name", description: "Problem description") # Error: new() not allowed in Problem.modify()
-end
-```
-
-`Problem.modify()` returns a new problem with the modifications applied.
-
-`Problem.modify()` can also be called with parameters provided as a dictionary map with identical syntax:
-
-```elixir
-problem = Problem.modify(problem, model_parameters: model_parameters) do
-  # list of variables, constraints, objective
-end
-```
-
-### Variable Creation
-
-#### Basic Variables (No Generators)
-
-##### Definition in a single block
-
-`variables/3` is used to define _individual_ variables one by one within a `Problem.define` or a `Problem.modify` block. `variables/3` cannot accept iterators.
-
-(Note: `variables/3` is equivalent to `variables/4`, which can accept generators (see below) with an empty generator list: `variables("name", [], :type, "description")`. The empty generator list is equivalent to no generators provided. `variables/3` and `variables/4`, having different arities, are different functions.)
-
-Variable deifinitions can include a minimum bound and/or a maximum bound provided as parameters for integer or continuous variables. The type of the variable dictates the type of the bounds. Infinity is denoted as:
-
-- positive infinity: `:infinity`, `:infty`, `:inf`, `:pos_infinity`, `:pos_infty`, `:pos_inf`
-- negative infinity: `:neg_infinity`, `:neg_infty`, `:neg_inf`
-
-```elixir
-problem = Problem.define do
-  new(name: "Problem Name", description: "Problem description")
-
-  # variables/3 takes a variable name, a type and a description
-  variables("var_int_1", :integer, "Description")
-  variables("var_int_2", :integer, "Desciption", min_bound: 0, max_bound: 100)
-  variables("var_int_3", :integer, "Desciption", min_bound: 0, max_bound: :infinity)
-  variables("var_int_4", :integer, "Desciption", min_bound: :neg_infty, max_bound: 13)
-
-  variables("var_bin_1", :binary, "Description")
-
-  variables("var_float_1", :continuous, "Description")
-  variables("var_float_2", :continuous, "Desciption", min_bound: 0, max_bound: 100)
-  variables("var_float_3", :continuous, "Desciption", min_bound: 0, max_bound: :infinity)
-  variables("var_float_4", :continuous, "Desciption", min_bound: :neg_infty, max_bound: 13)
-  variables("var_float_2", :continuous, "Desciption", min_bound: 0.889, max_bound: 100.864)
-  variables("var_float_3", :continuous, "Desciption", min_bound: -235.12, max_bound: :infinity)
-  variables("var_float_4", :continuous, "Desciption", min_bound: :neg_infty, max_bound: 13.29345)
-end
-```
-
-The following statements generate errors.
-
-```elixir
-problem = Problem.define do
-  new(name: "Problem Name", description: "Problem description")
-
-  variables("var_int_1", :integer, "Description", min_bound: 0.0, max_bound: 100e5) # No floating point values allowed for integers
-
-  variables("var_bin_1", :binary, "Description", min_bound: 0) # Binary variables have no bounds
-  variables("var_bin_2", :binary, "Description", max_bound: :inf) # Binary variables have no bounds
-end
-```
-
-##### Basic Variables - Definition in a separate block
-
-```elixir
-problem = Problem.define do
-  new(name: "Problem Name", description: "Problem description")
-end
-
-problem = Problem.modify(problem) do
-  variables("var_name_1", :binary, "Description")
-  variables("var_name_2", :continuous, "Description")
-end
-```
-
-#### Generator Variables (Single Dimension)
-
-`variables/4` is used to define _multiple_ variables at once within a `Problem.define` or a `Problem.modify` block. `variables/4` can accept iterators.
-
-Generators are always in the form of `[variable <- list]` or `[variable <- generator]`, or a combination of both provided as a list: `[variable_1 <- list, variable_2 <- generator, {var3, var4} <- generator_map]`.
-
-For example:
-
-- `[food <- ["bread", "milk"]]`
-- `[i <- 1..4]`
-- `[i <- 1..4, j <- 1..4]`
-- `[i <- 1..4, j <- 1..4 where i != j]` (In a future extension)
-- `food_names = ["bread", "milk"]` and `[food <- food_names]`
-- `[{k, v} <- [{"bread", 1}, {"milk", 2}]]`
-
-Internally those are converted to quoted expressions like `quote(do: [food <- ["bread", "milk"]])` or `quote(do: [i <- 1..4])` or `[quote(do: i) <- 1..4, quote(do: j) <- 1..4]`. But that syntax with `quote(do: ...)` is not allowed in the DSL.
-
-An empty generator list such as `variables("var_name", [], :binary, "Description")` is equivalent to `variables("var_name", :binary, "Description")`. This is a special case equivalent to `variables/3`.
-
-##### Single Generator Variables - Definition in a single block
-
-```elixir
-problem = Problem.define do
-  new(name: "Problem Name", description: "Problem description")
-
-  # Using literal lists
-  # variables/4 takes a variable name, a list of generators, a type and a description
-  # It would generate a list of variables/3 for each combination of the generators
-  # For example, if food_names = ["bread", "milk"], it would generate:
-  # variables("qty_bread", :continuous, "Amount of bread")
-  # variables("qty_milk", :continuous, "Amount of milk")
-  variables("qty", [food <- ["bread", "milk"]], :continuous, "Amount of food")
-end
-```
-
-##### Single Generator Variables - Definition in a separate block
-
-```elixir
-problem = Problem.define do
-  new(name: "Problem Name", description: "Problem description")
-end
-
-problem = Problem.modify(problem) do
-  # variables/4 takes a variable name, a list of generators, a type and a description
-  variables("qty", [food <- ["bread", "milk"]], :continuous, "Amount of food")
-end
-
-```
-
-##### Definition of a model providing parameters as a map
-
-```elixir
-modelParameters = %{food_names: ["bread", "milk"]}
-
-problem = Problem.define(model_parameters: model_parameters) do
-  new(name: "Problem Name", description: "Problem description")
-  variables("qty", [food <- food_names], :continuous, "Amount of food")
-end
-```
-
-or, equivalently in multiple blocks:
-
-```elixir
-problem = Problem.define do
-  new(name: "Problem Name", description: "Problem description")
-end
-
-modelParameters = %{food_names: ["bread", "milk"]}
-problem = Problem.modify(problem, model_parameters: model_parameters) do
-  variables("qty", [food <- food_names], :continuous, "Amount of food")
-end
-```
-
-#### Generator Variables (Multiple Dimensions)
-
-```elixir
-# 2D variables
-problem = Problem.define do
-  new(name: "2D Example", description: "2D variables example")
-  variables("queen2d", [i <- 1..4, j <- 1..4], :binary, "Queen position")
-  # It would generate 16 variables/3 like:
-  # variables("queen2d_1_1", :binary, "Queen position 1,1")
-  # variables("queen2d_1_2", :binary, "Queen position 1,2")
+problem = Problem.define(model_parameters: %{key: value}) do
   # ...
-  # variables("queen2d_4_4", :binary, "Queen position 4,4")
 end
 ```
 
-```elixir
-# 3D variables
-problem = Problem.define do
-  new(name: "3D Example", description: "3D variables example")
-  variables("queen3d", [i <- 1..4, j <- 1..4, k <- 1..4], :binary, "Queen position")
-end
-```
+**Rules:**
 
-##### Definition using a model parameters map
+- ✅ Must contain exactly one `new()` call
+- ✅ Can contain multiple `variables()`, `constraints()`, and one `objective()`
+- ❌ Cannot be nested
 
-```elixir
-modelParameters = %{max_i: 4, max_j: 4, max_k: 4}
+### `Problem.modify`
 
-problem = Problem.define(model_parameters: model_parameters) do
-  new(name: "3D Example", description: "3D variables example")
-  variables("queen3d", [i <- 1..max_i, j <- 1..max_j, k <- 1..max_k], :binary, "Queen position")
-  # It would generate max_i x max_j x max_k variables/3 statements like:
-  # variables("queen3d_1_1_1", :binary, "Queen position 1,1,1")
-  # variables("queen3d_1_1_2", :binary, "Queen position 1,1,2")
-  # ...
-  # variables("queen3d_1_1_#{max_k}", :binary, "Queen position 1,1,#{max_k}")
-  # variables("queen3d_1_2_1", :binary, "Queen position 1,2,1")
-  # ...
-  # variables("queen3d_1_2_#{max_k}", :binary, "Queen position 1,2,#{max_k}")
-  # variables("queen3d_1_3_1", :binary, "Queen position 1,3,1")
-  # ...
-  # variables("queen3d_1_#{max_j}_#{max_k}", :binary, "Queen position 1,#{max_j},#{max_k}")
-  # ...
-  # variables("queen3d_#{max_i}_#{max_j}_#{max_k}", :binary, "Queen position #{max_i},#{max_j},#{max_k}")
-end
-```
+Amends an existing problem.
 
-#### Variables - Adding variables to a problem
-
-When adding one or several variables outside a `Problem.define` block to an existing problem, we use 2 approaches:
-
-- use a `Problem.modify` block with `variables()` as above.
-- use `Problem.add_variable()` one by one outside of a block. In this case, there cannot be any generators
-
-The following 2 examples should behave the same way and should produce the same result.
-
-##### Approach 1: Using a `Problem.modify` block
+**Syntax:**
 
 ```elixir
-# Defining variables within the problem definition
-problem = Problem.define do
-  new(name: "Adding variables to a problem", description: "Adding variables to a problem")
-end
-
 problem = Problem.modify(problem) do
-  variables("x", [i <- 1..4], :binary, "X variables")
-  variables("y", [i <- 1..4], :binary, "Y variables")
+  # variables, constraints, objective
 end
 ```
 
-##### Approach 2: Using `Problem.add_variable()` one by one
+**With model parameters:**
 
 ```elixir
-# 2D variables
-problem = Problem.define do
-  new(name: "Adding variables to a problem", description: "Adding variables to a problem")
-  variables("x", [i <- 1..4], :binary, "X variables")
-end
-
-problem = Problem.add_variable(problem, "y_1", :binary, "Y variables 1")
-problem = Problem.add_variable(problem, "y_2", :binary, "Y variables 2")
-problem = Problem.add_variable(problem, "y_3", :binary, "Y variables 3")
-problem = Problem.add_variable(problem, "y_4", :binary, "Y variables 4")
-```
-
-Note that we internally transform the former syntax to the latter syntax when adding variables to a problem.
-
-### Constraint Creation
-
-`constraints/2` is used to define _individual_ constraints one by one within a `Problem.define` or a `Problem.modify` block. `constraints/2` cannot accept iterators.
-
-(Note: `constraints/2` is equivalent to `constraints/3`, which can accept generators (see below) with an empty generator list: `constraints([], expression, "description")`. The empty generator list is equivalent to no generators provided.)
-
-#### Simple Constraints (No Generators)
-
-`constraints/2` is used to define _individual_ constraints one by one within a `Problem.define` or a `Problem.modify` block. `constraints/2` cannot accept iterators.
-
-```elixir
-problem = Problem.define do
-  new(name: "Adding variables to a problem", description: "Adding variables to a problem")
-
-  variables("queen2d", [i <- 1..4, j <- 1..4], :binary, "Queen position")
-
-  # constraints/2 takes a constraint and a description
-  constraints(queen2d_1_1 + queen2d_1_2 + queen2d_1_3 + queen2d_1_4 == 1, "One queen per row 1")
-  constraints(queen2d_2_1 + queen2d_2_2 + queen2d_2_3 + queen2d_2_4 == 1, "One queen per row 2")
-  constraints(queen2d_3_1 + queen2d_3_2 + queen2d_3_3 + queen2d_3_4 == 1, "One queen per row 3")
-  constraints(queen2d_4_1 + queen2d_4_2 + queen2d_4_3 + queen2d_4_4 == 1, "One queen per row 4")
+problem = Problem.modify(problem, model_parameters: %{key: value}) do
+  # ...
 end
 ```
 
-#### Constraint with automatic indexing
+**Rules:**
 
-With numerical ranges:
+- ✅ Can add/modify variables, constraints, objectives
+- ❌ Cannot contain `new()` statement
+- ⚠️ Warning issued if variable/constraint name already exists
+
+---
+
+## Variables
+
+### Basic Variables (`variables/3`)
+
+**Syntax:**
 
 ```elixir
-problem = Problem.define do
-  new(name: "Adding variables to a problem", description: "Adding variables to a problem")
-
-  variables("queen2d", [i <- 1..4, j <- 1..4], :binary, "Queen position")
-
-  # constraints/2 takes a constraint and a description
-  # :_ is a wildcard for any value of anindex
-  # In this case,
-  #   sum(queen2d(:_, :_)) means something like:
-  #   1) create a list of all possible indices:
-  #      listIndices = list of tuples (i, j) where i and j are integers between 1 and 4
-  #   2) create a list of all possible queen2d variables:
-  #      listVariables = list of queen2d(i, j) where i and j are integers between 1 and 4
-  #   3) sum all the queen2d variables.
-
-  # The constraints/2 has no iterators like constraints/3 (see below). This statement
-  # creates a SINGLE constraint summing ALL the queen2d variables.
-  constraints(sum(queen2d(:_, :_)) == 4, "4 queens in total")
-  # It would generate a single constraint/2 statement like:
-  # constraints(
-  #     queen2d_1_1 + queen2d_1_2 + queen2d_1_3 + queen2d_1_4 +
-  #     queen2d_2_1 + queen2d_2_2 + queen2d_2_3 + queen2d_2_4 +
-  #     queen2d_3_1 + queen2d_3_2 + queen2d_3_3 + queen2d_3_4 +
-  #     queen2d_4_1 + queen2d_4_2 + queen2d_4_3 + queen2d_4_4 == 4, "4 queens in total")
-end
+variables("name", :type, "description")
+variables("name", :type, "description", min_bound: value, max_bound: value)
 ```
 
-With user supplied iterators:
+**Types:**
+
+- `:continuous` - Real numbers
+- `:integer` - Integers
+- `:binary` - 0 or 1
+
+**Bounds:**
+
+- ✅ `min_bound` and `max_bound` allowed for `:continuous` and `:integer`
+- ✅ Infinity values: `:infinity`, `:infty`, `:inf`, `:pos_infinity`, `:pos_infty`, `:pos_inf`, `:neg_infinity`, `:neg_infty`, `:neg_inf`
+- ❌ Bounds **not allowed** for `:binary` variables
+- ❌ Floating-point bounds **not allowed** for `:integer` variables
+
+**Examples:**
 
 ```elixir
-iterators = %{var_1: iterator_1, var_2: iterator_2}
-
-problem = Problem.define(modelParameters: iterators) do
-  new(name: "Adding variables to a problem", description: "Adding variables to a problem")
-
-  variables("val", [var_1 <- iterator_1, var_2 <- iterator_2], :binary, "Variable description")
-
-  constraints(sum(val(:_, :_)) == 4, "sum of all vals across all var_1 and var_2 possibilities")
-end
+variables("x", :continuous, "Decision variable")
+variables("x", :continuous, "Bounded", min_bound: 0, max_bound: 100)
+variables("x", :integer, "Integer", min_bound: 0, max_bound: :infinity)
 ```
 
-#### Generator Constraints
+### Generator Variables (`variables/4`)
+
+**Syntax:**
 
 ```elixir
-problem = Problem.define do
-  new(name: "Adding variables to a problem", description: "Adding variables to a problem")
-
-  variables("queen2d", [i <- 1..4, j <- 1..4], :binary, "Queen position")
-
-  # constraints/3 takes a list of generators, a constraint and a description
-  # Here the generator will create one constraints/2 for each combination of the generators
-  constraints([i <- 1..4], sum(queen2d(i, :_)) == 1, "One queen per row")
-  # This will generate 4 constraints/2 like:
-  # constraints(sum(queen2d(1, :_)) == 1, "One queen per row 1")
-  # constraints(sum(queen2d(2, :_)) == 1, "One queen per row 2")
-  # constraints(sum(queen2d(3, :_)) == 1, "One queen per row 3")
-  # constraints(sum(queen2d(4, :_)) == 1, "One queen per row 4")
-
-  # In turn, the constraints/2 will generate:
-  # constraints(queen2d_1_1 + queen2d_1_2 + queen2d_1_3 + queen2d_1_4 == 1, "One queen per row 1")
-  # constraints(queen2d_2_1 + queen2d_2_2 + queen2d_2_3 + queen2d_2_4 == 1, "One queen per row 2")
-  # constraints(queen2d_3_1 + queen2d_3_2 + queen2d_3_3 + queen2d_3_4 == 1, "One queen per row 3")
-  # constraints(queen2d_4_1 + queen2d_4_2 + queen2d_4_3 + queen2d_4_4 == 1, "One queen per row 4")
-end
+variables("name", [generators], :type, "description")
 ```
 
-#### Multiple generators
+**Generator Syntax:**
 
 ```elixir
-problem = Problem.define do
-  new(name: "Adding variables to a problem", description: "Adding variables to a problem")
-  variables("queen3d", [i <- 1..2, j <- 1..2, k <- 1..3], :binary, "Queen position")
-
-  # Multiple generators
-  # In the following statement, we have 2 generators: i <- 1..2 and k <- 1..3.
-  constraints([i <- 1..2, k <- 1..3], sum(queen3d(i, :_, k)) == 1, "One queen on first axis #{i} and 3rd axis #{k}")
-  # The statement will create 6 constraints/2 like:
-  # constraints(sum(queen3d(1, :_, 1)) == 1, "One queen on first axis 1 and 3rd axis 1")
-  # constraints(sum(queen3d(1, :_, 2)) == 1, "One queen on first axis 1 and 3rd axis 2")
-  # constraints(sum(queen3d(1, :_, 3)) == 1, "One queen on first axis 1 and 3rd axis 3")
-  # constraints(sum(queen3d(2, :_, 1)) == 1, "One queen on first axis 2 and 3rd axis 1")
-  # constraints(sum(queen3d(2, :_, 2)) == 1, "One queen on first axis 2 and 3rd axis 2")
-  # constraints(sum(queen3d(2, :_, 3)) == 1, "One queen on first axis 2 and 3rd axis 3")
-  #
-  # In turn, the 6 constraints/2 will respectively generate:
-  # constraints(queen3d_1_1_1 + queen3d_1_2_1 == 1, "One queen on first axis 1 and 3rd axis 1")
-  # constraints(queen3d_1_1_2 + queen3d_1_2_2 == 1, "One queen on first axis 1 and 3rd axis 2")
-  # constraints(queen3d_1_1_3 + queen3d_1_2_3 == 1, "One queen on first axis 1 and 3rd axis 3")
-  # constraints(queen3d_2_1_1 + queen3d_2_2_1 == 1, "One queen on first axis 2 and 3rd axis 1")
-  # constraints(queen3d_2_1_2 + queen3d_2_2_2 == 1, "One queen on first axis 2 and 3rd axis 2")
-  # constraints(queen3d_2_1_3 + queen3d_2_2_3 == 1, "One queen on first axis 2 and 3rd axis 3")
-
-end
+[variable <- domain]
+[variable_1 <- domain_1, variable_2 <- domain_2, ...]
 ```
 
-#### Constraints - Adding constraints to a problem
+**Domain Types:**
 
-The following 2 examples should behave the same way and should produce the same result.
+- ✅ Literal lists: `[food <- ["bread", "milk"]]`
+- ✅ Ranges: `[i <- 1..4]`
+- ✅ Model parameters: `[food <- food_names]` (looked up in `model_parameters`)
+- ✅ Multiple dimensions: `[i <- 1..4, j <- 1..4]`
+
+**Rules:**
+
+- ✅ Empty generator list `[]` is equivalent to `variables/3`
+- ✅ Generators create cross-product of all combinations
+- ❌ Generators **not allowed** outside `Problem.define`/`Problem.modify` blocks
+
+**Examples:**
 
 ```elixir
-# Defining constraints within the problem definition
-problem = Problem.define do
-  # new(...)
-  variables("queen2d", [i <- 1..4, j <- 1..4], :binary, "Queen position")
-
-  # Single generator
-  constraints([i <- 1..4], sum(queen2d(i, :_)) == 1, "One queen per row")
-  constraints([j <- 1..4], sum(queen2d(:_, j)) == 1, "One queen per column")
-end
+variables("qty", [food <- ["bread", "milk"]], :continuous, "Quantity")
+variables("x", [i <- 1..4], :binary, "Binary variable")
+variables("queen", [i <- 1..4, j <- 1..4], :binary, "Queen position")
 ```
 
+### Variable Redefinition
+
+**Rules:**
+
+- ❌ **Error**: Redefining same variable with identical generator ranges
+- ✅ **Allowed**: Same variable name with different generator ranges (non-overlapping indices)
+
+**Examples:**
+
 ```elixir
-problem = Problem.define do
+# ❌ ERROR: Duplicate definition
+variables("x", [i <- 1..4], :binary, "X")
+variables("x", [i <- 1..4], :binary, "X")
 
-  # new(...)
-  variables("queen2d", [i <- 1..4, j <- 1..4], :binary, "Queen position")
-
-  # Single generator
-  constraints([i <- 1..4], sum(queen2d(i, :_)) == 1, "One queen per row")
-end
-
-problem = Problem.modify(problem) do
-  constraints([j <- 1..4], sum(queen2d(:_, j)) == 1, "One queen per column")
-end
+# ✅ OK: Different ranges (non-overlapping)
+variables("x", [i <- 1..4], :binary, "X")
+variables("x", [i <- 5..8], :binary, "X")
 ```
 
-#### Adding constraints to a problem one constraint at a time
+### Adding Variables Outside Blocks
 
-Similarly to `Problem.add_variable()`, it is possible to add constraints one at a time, outside of a `Problem.define` or a `Problem.modify` block. As with `Problem.add_variable()`, `Problem.add_constraint()` cannot contain generators.
+**Syntax:**
 
 ```elixir
-# Create problem with variables
-problem = Problem.define do
-  new(name: "Constraint Example", description: "Adding constraints one by one")
-  variables("queen2d", [i <- 1..2, j <- 1..2], :binary, "Queen position")
-end
-
-# Add constraints one by one (no generators allowed)
-problem = Problem.add_constraint(problem, queen2d_1_1 + queen2d_1_2 == 1, "Row 1 constraint")
-problem = Problem.add_constraint(problem, queen2d_2_1 + queen2d_2_2 == 1, "Row 2 constraint")
-problem = Problem.add_constraint(problem, queen2d_1_1 + queen2d_2_1 == 1, "Column 1 constraint")
-problem = Problem.add_constraint(problem, queen2d_1_2 + queen2d_2_2 == 1, "Column 2 constraint")
+Problem.add_variable(problem, "name", :type, "description")
 ```
 
-`Problem.add_constraint()` returns a new problem with the constraint added.
+**Rules:**
 
-**Note**: The expression `queen2d_1_1 + queen2d_1_2 == 1` must use the actual names (e.g., `queen2d_1_1`) that were generated by the `variables()` call, not the pattern generator syntax like `queen2d(1, :_)`.
+- ❌ **No generators allowed** - must use actual variable names
+- ✅ Use `Problem.modify` block if generators needed
 
-### Objective Functions
+---
 
-#### Simple Objectives
+## Constraints
+
+### Simple Constraints (`constraints/2`)
+
+**Syntax:**
 
 ```elixir
-problem = Problem.define do
-  # new(...)
-  variables("queen2d", [i <- 1..4, j <- 1..4], :binary, "Queen position")
-
-  objective(queen2d_1_1 + queen2d_1_2 + queen2d_2_1 + queen2d_2_2, :maximize)
-end
+constraints(expression, "description")
 ```
 
-`objective()` MUST specify the direction of the optimization (either `:minimize` or `:maximize`). No default is provided.
+**Operators:**
 
-#### Generator Objectives
+- ✅ `==`, `<=`, `>=`, `<`, `>`
+- ✅ Arithmetic: `+`, `-`, `*`, `/`
+- ✅ Variable access: `var_name(index1, index2, ...)`
+- ✅ Wildcards: `var_name(:_, index)` (see Wildcards section)
 
-##### Single Generator
+**Examples:**
 
 ```elixir
-problem = Problem.define do
-  # new(...)
-  variables("queen2d", [i <- 1..4, j <- 1..4], :binary, "Queen position")
-
-  # Using sum with patterns
-  objective(sum(queen2d(:_, :_)), :maximize)
-  # It would generate a single objective/2 statement like:
-  objective(
-    queen2d_1_1 + queen2d_1_2 + queen2d_1_3 + queen2d_1_4 +
-    queen2d_2_1 + queen2d_2_2 + queen2d_2_3 + queen2d_2_4 +
-    queen2d_3_1 + queen2d_3_2 + queen2d_3_3 + queen2d_3_4 +
-    queen2d_4_1 + queen2d_4_2 + queen2d_4_3 + queen2d_4_4,
-    :maximize)
-end
+constraints(x >= 0, "Non-negative")
+constraints(queen2d_1_1 + queen2d_1_2 == 1, "Row 1")
+constraints(sum(queen2d(:_, :_)) == 4, "Total queens")
 ```
 
-Note that a define block can only contain one objective function.
+### Generator Constraints (`constraints/3`)
+
+**Syntax:**
 
 ```elixir
-problem = Problem.define do
-  # new(...)
-  variables("queen2d", [i <- 1..4, j <- 1..4], :binary, "Queen position")
-
-  # Using sum with patterns
-  objective(sum(queen2d(:_, :_)), :maximize)
-
-  # Add another objective
-  objective(sum(queen2d(:_, :_)), :maximize) # <-- This triggers an error even if the objective is identical.>
-end
+constraints([generators], expression, "description")
 ```
 
-But an objective can always be set outside a `Problem.define` block with `Problem.set_objective()`. If there was a previously existing objective, only a warning is triggered, not an error.
+**Description Interpolation:**
+
+- ✅ String interpolation: `"Constraint #{i}"` expands to `"Constraint 1"`, `"Constraint 2"`, etc.
+
+**Examples:**
 
 ```elixir
-problem = Problem.define do
-  new(name: "Adding variables to a problem", description: "Adding variables to a problem")
-  variables("queen2d", [i <- 1..4, j <- 1..4], :binary, "Queen position")
-end
-
-# First definition of an objective (none specified in the `Problem.define()` block)
-problem = Problem.set_objective(
-  problem,
-  queen2d_1_1 + queen2d_1_2 + queen2d_1_3 + queen2d_1_4 +
-  queen2d_2_1 + queen2d_2_2 + queen2d_2_3 + queen2d_2_4 +
-  queen2d_3_1 + queen2d_3_2 + queen2d_3_3 + queen2d_3_4 +
-  queen2d_4_1 + queen2d_4_2 + queen2d_4_3 + queen2d_4_4,
-  :maximize
-) # <-- This triggers a warning about redefining the problem objective
-
-problem = Problem.set_objective(
-  problem,
-  sum(queen2d(:_, :_)), # <-- ERROR: Not allowed because iterators are not allowed outside of Problem.define or Problem.modify
-  :maximize
-)
+constraints([i <- 1..4], sum(queen2d(i, :_)) == 1, "Row #{i}")
+constraints([i <- 1..2, k <- 1..3], sum(queen3d(i, :_, k)) == 1, "Axis #{i},#{k}")
 ```
 
-`Problem.set_objective()` returns a new problem with the objective set. It requires `:minimize` or `:maximize` to be specified as an argument.
+**Rules:**
 
-`Problem.set_objective()` cannot include any generator.
+- ✅ Empty generator list `[]` is equivalent to `constraints/2`
+- ❌ Generator variables **not accessible** outside constraint expression (only in description interpolation)
 
-##### Multiple Generators
+### Adding Constraints Outside Blocks
 
-The following 3 examples should be supported and should produce the same result:
+**Syntax:**
 
 ```elixir
-problem = Problem.define do
-  # new(...)
-  variables("qty", [food <- food_names], :continuous, "Amount of food")
-
-  # Using sum with patterns
-  objective(sum(qty(:_)), :minimize)
-end
+Problem.add_constraint(problem, expression, "description")
 ```
 
-```elixir
-problem = Problem.define do
-  # new(...)
-  variables("qty", [food <- food_names], :continuous, "Amount of food")
+**Rules:**
 
-  # Using for comprehensions
-  objective(sum(for food <- food_names, do: qty(food)), :minimize)
-end
+- ❌ **No generators allowed** - must use actual variable names (e.g., `queen2d_1_1`, not `queen2d(1, :_)`)
+- ✅ Use `Problem.modify` block if generators needed
+
+---
+
+## Objectives
+
+### `objective/2`
+
+**Syntax:**
+
+```elixir
+objective(expression, :direction)
 ```
 
-```elixir
-problem = Problem.define do
-  # new(...)
-  variables("qty", [food <- food_names], :continuous, "Amount of food")
-end
+**Direction:**
 
-# Using for comprehensions
-problem = Problem.set_objective(
-  problem,
-  sum(for food <- food_names, do: qty(food)),
-  :minimize
-)
+- ✅ `:minimize` or `:maximize` (required, no default)
+
+**Rules:**
+
+- ✅ Only **one** `objective()` allowed per `Problem.define` block
+- ❌ **Error**: Multiple `objective()` calls in same block
+- ⚠️ **Warning**: Redefining objective with `Problem.set_objective()` (not error)
+
+**Examples:**
+
+```elixir
+objective(sum(x(:_)), :maximize)
+objective(sum(for food <- food_names, do: qty(food)), :minimize)
 ```
 
-##### Generator redefinition
+### `Problem.set_objective/3`
 
-In the following example, the second definition of "queen2d" should trigger an error and should not be allowed. An error message should be generated indicating that that redefining a variable is not allowed and the problem should not be created.
+**Syntax:**
 
 ```elixir
-problem = Problem.define do
-  # new(...)
-  variables("queen2d", [i <- 1..4, j <- 1..4], :binary, "Queen position")
-  variables("queen2d", [i <- 1..4, j <- 1..4], :binary, "Queen position") # <--- THIS TRIGGERS AN ERROR>
-end
+Problem.set_objective(problem, expression, :direction)
 ```
 
-Note that the following would be OK as the final generated variable names have different indices (and actual name in the problem definition).
+**Rules:**
+
+- ❌ **No generators allowed** in expression (must use `for` comprehensions or actual variable names)
+- ⚠️ Warning (not error) if objective already exists
+
+---
+
+## Generators
+
+### Generator Syntax
+
+**Format:**
 
 ```elixir
-problem = Problem.define do
-  # new(...)
-  variables("queen2d", [i <- 1..4, j <- 1..4], :binary, "Queen position")
-  variables("queen2d", [i <- 5..8, j <- 5..8], :binary, "Queen position") # <--- THIS DOES NOT TRIGGER AN ERROR
-  variables("queen2d", [i <- 1..4, j <- 5..8], :binary, "Queen position") # <--- THIS DOES NOT TRIGGER AN ERROR
-  variables("queen2d", [i <- 5..8, j <- 1..4], :binary, "Queen position") # <--- THIS DOES NOT TRIGGER AN ERROR
+[variable <- domain]
+[variable_1 <- domain_1, variable_2 <- domain_2, ...]
 ```
 
-## Related Documentation
+**Domain Types:**
 
-- **[Complete Working Examples](DSL_SYNTAX_EXAMPLES.md)** - Golden reference examples and code samples
-- **[Advanced Topics](DSL_SYNTAX_ADVANCED.md)** - Implementation requirements, error handling, troubleshooting, performance
+- ✅ Literal lists: `["bread", "milk"]`
+- ✅ Ranges: `1..4`
+- ✅ Model parameters: `food_names` (looked up in `model_parameters`)
+- ✅ Variables from outer scope (evaluated at macro expansion time)
 
-## Function Signatures
+**Rules:**
 
-### Inside Problem.define and Problem.modify blocks
+- ✅ Multiple generators create cross-product
+- ✅ Generator variables available in block expressions and description interpolation
+- ❌ Generator variables **not available** outside `Problem.define`/`Problem.modify` blocks
+- ❌ Complex expressions in domain that cannot be evaluated at compile time
 
-- `variables("name", :type, "description")` - single variable (variables/3)
-- `variables("name", [generators], :type, "description")` - multiple variables (variables/4)
-- `constraints(expression, "description")` - single constraint (constraints/2)
-- `constraints([generators], expression, "description")` - multiple constraints (constraints/3)
-- `objective(expression, :direction)` - objective function (objective/2)
-
-### Outside blocks (imperative)
-
-- `Problem.add_variable(problem, "name", :type, "description")` - single variable
-- `Problem.add_constraint(problem, expression, "description")` - single constraint
-- `Problem.set_objective(problem, expression, :direction)` - objective function
-
-### Key Differences
-
-- **Inside blocks**: Can use generators `[i <- 1..4]`
-- **Outside blocks**: Cannot use generators - must be singular
-
-## Key Syntax Rules
-
-**Note**: For wildcard access with nested maps, see [DSL_SYNTAX_ADVANCED.md](DSL_SYNTAX_ADVANCED.md#7-wildcard-access-with-nested-maps).
-
-### 1. Generator Syntax
-
-- **Format**: `[variable <- list]` or `[variable <- generator]`
-- **Multiple dimensions**: `[i <- 1..4, j <- 1..4]` or `[var_1 <- generator_1, var_2 <- generator_2]`
-- **Provided model parameters**: Must be supported (e.g., `[food <- food_names]`) - food_names should be identified as an unknown symbol and looked up in the model parameters
-- **Literal lists**: Must be supported (e.g., `[food <- ["bread", "milk"]]`)
-
-### 2. Variable Access
-
-`:_` is a special symbol that means "_iterate through all values_".
-
-If a symbol is used instead of `:_`, it means "_for each value of the symbol generate a statement_".
-
-- **Pattern matching**: `queen2d(i, :_)` means "_for each value of i generate a statement where all the values of the second iterator (j) are used_".
-- **Pattern matching**: `queen2d(:_, j)` means "_for each value of the second iterator (j) generate a statement where all the values of the first iterator (i) are used_".
-- **All variables**: `queen2d(:_, :_)` means "_generate a single statement where all the values of the first iterator (i) and the second iterator (j) are used_".
-
-### 3. Sum Functions
-
-- **Pattern sums**: `sum(queen2d(i, :_))` means "_create a sum statement for each value of the first iterator (i) where all the values of the second iterator (j) are summed_".
-- **For comprehensions**: `sum(for food <- food_names, do: qty(food))` means "_create a sum statement for each value of the food iterator (food) where the value of the `qty`'s variables are summed_".
-- **All variables**: `sum(queen2d(:_, :_))` means "_create a single sum statement where all the values of the `queen2d`'s variables (every cross product of the first iterator (i) and the second iterator (j)) are summed_".
-
-### 4. Pattern Functions
-
-The DSL supports several pattern functions that expand expressions with wildcards:
-
-#### Sum Function
-
-- **Pattern sums**: `sum(queen2d(i, :_))` expands to `queen2d_1_1 + queen2d_1_2 + queen2d_1_3 + queen2d_1_4` for each value of `i`
-- **All variables**: `sum(queen2d(:_, :_))` expands to a single sum of all queen2d variables
-- **Generator sums**: `sum(for food <- food_names, do: qty(food))` expands to `qty_bread + qty_milk`
-
-#### Max Function (Future Extension)
-
-- **Pattern max**: `max(queen2d(i, :_))` expands to `max(queen2d_1_1, queen2d_1_2, queen2d_1_3, queen2d_1_4)` for each value of `i`
-- **All variables**: `max(queen2d(:_, :_))` expands to `max(queen2d_1_1, queen2d_1_2, ..., queen2d_4_4)`
-
-#### Min Function (Future Extension)
-
-- **Pattern min**: `min(queen2d(i, :_))` expands to `min(queen2d_1_1, queen2d_1_2, queen2d_1_3, queen2d_1_4)` for each value of `i`
-- **All variables**: `min(queen2d(:_, :_))` expands to `min(queen2d_1_1, queen2d_1_2, ..., queen2d_4_4)`
-
-#### Count Function (Future Extension)
-
-- **Pattern count**: `count(queen2d(i, :_))` expands to `queen2d_1_1 + queen2d_1_2 + queen2d_1_3 + queen2d_1_4` for each value of `i` (same as sum for binary variables)
-- **All variables**: `count(queen2d(:_, :_))` expands to sum of all queen2d variables
-
-Note: `max()` and `min()` functions require linearization techniques for linear optimization solvers.
-
-### 5. Constraint Descriptions
-
-- **Static**: `"One queen per row"`
-- **Dynamic with interpolation**: `"One queen per row #{i}"` expands to:
-  - `"One queen per row 1"` for i=1
-  - `"One queen per row 2"` for i=2
-  - `"One queen per row 3"` for i=3
-  - `"One queen per row 4"` for i=4
-- **Multiple variable interpolation**: `"One queen on axis #{i} and #{k}"` expands to:
-  - `"One queen on axis 1 and 1"` for i=1, k=1
-  - `"One queen on axis 1 and 2"` for i=1, k=2
-  - etc.
-
-### 6. Access to Constants and to Enumerated Constants
-
-Constraint definitionas and objectives can access named constants and named enumerated constants. The constants are passed via the `model_parameters` dictionary argument of the `Problem.define()` or `Problem.modify()` macros.
-
-#### Named Constant
-
-A _Named constants_ is a single value (no index) passed as a single key in the `model_parameters` dictionary. Here are a list of valid examples.
-
-##### Named Constant _not_ used in the formulas
+**Examples:**
 
 ```elixir
-problem = Problem.define(model_parameters: %{max_queens: 8}) do
-  new(name: "Problem Name", description: "Problem description")
-  variables("queen2d", [i <- 1..max_queens, j <- 1..max_queens], :binary, "Queen position")
-end
-
-```
-
-##### Named Constant(s) used in the formulas
-
-```elixir
-# Example 1
-problem = Problem.define(model_parameters: %{multiplier: 7.0}) do
-  new(name: "Problem Name", description: "Problem description")
-  variables("x1", :continuous, "X1")
-  variables("x2", :continuous, "X2")
-
-  # The DSL identifies variables (here `x1` and `x2`) as variables, and constants (here `multiplier`)
-  constraints( x2 + multiplier * x1 <= 10, "Max constraint" )
-end
-```
-
-```elixir
-# Example 2
-problem = Problem.define(model_parameters: %{multiplier_1: 7.0, multiplier_2: -5.0}) do
-  new(name: "Problem Name", description: "Problem description")
-  variables("x1", :continuous, "X1")
-  variables("x2", :continuous, "X2")
-
-  # The DSL identifies variables (here `x1` and `x2`) as variables, and constants (here `multiplier`)
-  constraints( multiplier_1 * x1 - x2 * multiplier_2 <= 10, "Max constraint" )
-end
-```
-
-#### Enumerated (Indexed) Constants
-
-A _Named enumerated constants_ is an indexed set of values passed in the `model_parameters` dictionary. The index is either integer-like (like in the case of an array), or more general (as in a dictionary). The index can be multidimensional. Here are a list of valid examples.
-
-```elixir
-# Example 1: indexed list of constants - 1 dimension
-problem = Problem.define(model_parameters: %{multiplier: [4.0, 5.0, 6.0, 7.0]}) do
-  new(name: "Problem Name", description: "Problem description")
-  variables( "x", [i <- 1..4], :continuous, "Xs")
-
-  constraints( sum( for i <-  1..4, do: x(i) * multiplier[i]) <= 10, "Max constraint" )
-end
-```
-
-```elixir
-# Example 1: indexed list of constants - 1 dimension
-problem = Problem.define(model_parameters: %{matrix: [[4.0, 5.0, 6.0], [7.0, 8.0, 9.0]]}) do
-  new(name: "Problem Name", description: "Problem description")
-  variables( "x", [i <- 1..2, j <- 1..3], :continuous, "Xs")
-
-  constraints( sum( for i <-  1..2, j <- 1..3, do: x(i, j) * matrix[i][j]) <= 10, "Max constraint" )
-end
-```
-
-```elixir
-# Multidimensional indexed named constants
-# Cost matrix: cost[worker][task] = cost of assigning worker to task
-cost_matrix = %{
-  "Alice" => %{"Task1" => 2, "Task2" => 3, "Task3" => 1},
-  "Bob" => %{"Task1" => 4, "Task2" => 2, "Task3" => 3},
-  "Charlie" => %{"Task1" => 3, "Task2" => 1, "Task3" => 4}
-}
-
-workers = Enum.keys(cost_matrix)
-# Tasks is the set of all possible tasks across all workers
-tasks = Enum.flat_map(cost_matrix, fn {_, v} -> Map.keys(v) end) |> MapSet.new()
-
-problem = Problem.define(model_parameters: %{cost: cost_matrix, workers: workers, tasks: tasks}) do
-  new(name: "Assignment Problem", description: "Assign workers to tasks at minimum cost")
-  variables("assign", [worker <- workers, task <- tasks], :binary, "Assignment variable")
-  constraints(
-    [task <- tasks],
-    sum(for worker <- workers, do: assign(worker, task)) == 1,
-    "Each task assigned to exactly one worker #{task}"
-  )
-  constraints(
-    [worker <- workers],
-    sum(for task <- tasks, do: assign(worker, task)) <= 1,
-    "Each worker assigned to at most one task #{worker}"
-  )
-
-  # Objective: minimize total cost
-  objective(
-    sum(
-      for worker <- workers,
-          task <- tasks,
-          do: assign(worker, task) * cost[worker][task] # Note the use of normal brackets and square brackets!
-    ),
-    :minimize
-  )
-end
-```
-
-```elixir
-# Multidimensional indexed named constants in both constraints and objective
-# Cost matrix: cost[worker][task] = cost of assigning worker to task
-cost_matrix = %{
-  "Alice" => %{"Task1" => 2, "Task2" => 3, "Task3" => 1},
-  "Bob" => %{"Task1" => 4, "Task2" => 2, "Task3" => 3},
-  "Charlie" => %{"Task1" => 3, "Task2" => 1, "Task3" => 4}
-}
-
-workers = Enum.keys(cost_matrix)
-# Tasks is the set of all possible tasks across all workers
-tasks = Enum.flat_map(cost_matrix, fn {_, v} -> Map.keys(v) end) |> MapSet.new()
-
-problem = Problem.define(model_parameters: %{cost: cost_matrix, workers: workers, tasks: tasks}) do
-  new(name: "Assignment Problem", description: "Assign workers to tasks at minimum cost")
-  variables("assign", [worker <- workers, task <- tasks], :binary, "Assignment variable")
-  constraints(
-    [task <- tasks],
-    sum(for worker <- workers, do: assign(worker, task)) == 1,
-    "Each task assigned to exactly one worker #{task}"
-  )
-  constraints(
-    [worker <- workers],
-    sum(for task <- tasks, do: assign(worker, task)) <= 1,
-    "Each worker assigned to at most one task #{worker}"
-  )
-
-  constraints(
-    sum(
-      for worker <- workers,
-          task <- tasks,
-          do: assign(worker, task) * cost[worker][task]) >= 0,
-          "The overall cost is positive"
-  )
-
-  # Objective: minimize total cost
-  objective(
-    sum(
-      for worker <- workers,
-          task <- tasks,
-          do: assign(worker, task) * cost[worker][task] # Note the use of normal brackets and square brackets!
-    ),
-    :minimize
-  )
-end
+[food <- ["bread", "milk"]]
+[i <- 1..4]
+[i <- 1..4, j <- 1..4]
+[food <- food_names]  # food_names from model_parameters
 ```
 
 ---
 
-## Next Steps
+## Wildcards
 
-For complete working examples, see **[DSL_SYNTAX_EXAMPLES.md](DSL_SYNTAX_EXAMPLES.md)**.
+### Wildcard Symbol: `:_`
 
-For advanced topics including implementation requirements, error handling, troubleshooting, and performance considerations, see **[DSL_SYNTAX_ADVANCED.md](DSL_SYNTAX_ADVANCED.md)**.
+The `:_` symbol means "iterate through all values" for that dimension.
+
+### Variable Access Patterns
+
+**Syntax:**
+
+```elixir
+var_name(index1, :_, index3)    # Wildcard in second position
+var_name(:_, index2)             # Wildcard in first position
+var_name(:_, :_)                 # All variables
+```
+
+**Rules:**
+
+- ✅ `:_` expands to all values from variable's generator domain
+- ✅ Can mix explicit indices and wildcards
+- ✅ Multiple wildcards expand to cross-product
+
+**Examples:**
+
+```elixir
+queen2d(i, :_)      # All j values for fixed i
+queen2d(:_, j)      # All i values for fixed j
+queen2d(:_, :_)     # All (i, j) combinations
+```
+
+### Wildcard in Sum Functions
+
+**Syntax:**
+
+```elixir
+sum(var_name(i, :_))      # Sum over j for each i
+sum(var_name(:_, :_))     # Sum all variables
+sum(qty(:_) * cost[:_])   # With nested map access (see Constants)
+```
+
+**Rules:**
+
+- ✅ `sum()` expands wildcards to sum all matching variables
+- ✅ Can combine with generator constraints: `constraints([i <- 1..4], sum(x(i, :_)) == 1, "...")`
+
+---
+
+## Constants
+
+### Named Constants
+
+Single values passed via `model_parameters`.
+
+**Syntax:**
+
+```elixir
+Problem.define(model_parameters: %{multiplier: 7.0}) do
+  constraints(x1 + multiplier * x2 <= 10, "Constraint")
+end
+```
+
+**Rules:**
+
+- ✅ Constants identified automatically (not variables)
+- ✅ Can be used in expressions and generator domains
+
+### Enumerated Constants
+
+Indexed sets of values (arrays, maps).
+
+**Syntax:**
+
+```elixir
+# 1D array
+model_parameters: %{multiplier: [4.0, 5.0, 6.0]}
+constraints(sum(for i <- 1..3, do: x(i) * multiplier[i]) <= 10, "...")
+
+# 2D map
+model_parameters: %{cost: %{"Alice" => %{"Task1" => 2, "Task2" => 3}}}
+constraints(sum(for w <- workers, do: assign(w, t) * cost[w][t]) <= 10, "...")
+```
+
+**Access Patterns:**
+
+- ✅ Bracket notation: `cost[worker][task]` (recommended, most general)
+- ✅ Dot notation: `cost[worker].task` (only for simple atom keys)
+- ✅ Nested access: `foods[:_][nutrient]` (with wildcards, see Advanced)
+
+**Rules:**
+
+- ✅ String keys automatically converted to atom keys when accessing maps
+- ✅ Map keys can contain spaces/special characters (only used for constant lookup)
+- ❌ Dot notation fails for keys with spaces/special characters
+
+---
+
+## Restrictions
+
+### Disallowed Patterns
+
+#### Outside Blocks
+
+- ❌ **Generators not allowed** in `Problem.add_variable()`, `Problem.add_constraint()`, `Problem.set_objective()`
+- ❌ **Wildcard syntax not allowed** outside blocks (must use actual variable names)
+
+#### Variable Bounds
+
+- ❌ **No bounds** for `:binary` variables
+- ❌ **No floating-point bounds** for `:integer` variables
+
+#### Problem Definition
+
+- ❌ **No `new()`** in `Problem.modify()` blocks
+- ❌ **Multiple `objective()`** in same `Problem.define` block
+
+#### Generators
+
+- ❌ **Complex expressions** in generator domains that cannot be evaluated at compile time
+- ❌ **Nested generators** beyond documented patterns
+- ❌ **Generator variables** not accessible outside `Problem.define`/`Problem.modify` blocks
+
+#### Constraints
+
+- ❌ **Dynamic constraint names** that cannot be resolved at compile time
+- ❌ **Generator variables** in constraint expressions outside the generator scope
+
+### Limitations
+
+These limitations exist due to Elixir macro semantics:
+
+1. **No generator arguments to macros**: Cannot pass generators as arguments to functions outside blocks
+2. **Compile-time evaluation**: Generator domains must be evaluable at compile time
+3. **Scope restrictions**: Generator variables only available within their defining block
+
+---
+
+## Function Reference
+
+### Inside Blocks
+
+| Function      | Arity | Signature                                  | Description             |
+| ------------- | ----- | ------------------------------------------ | ----------------------- |
+| `new`         | 1     | `new(name: string, description: string)`   | Create problem metadata |
+| `variables`   | 3     | `variables("name", :type, "desc")`         | Single variable         |
+| `variables`   | 4     | `variables("name", [gens], :type, "desc")` | Multiple variables      |
+| `constraints` | 2     | `constraints(expr, "desc")`                | Single constraint       |
+| `constraints` | 3     | `constraints([gens], expr, "desc")`        | Multiple constraints    |
+| `objective`   | 2     | `objective(expr, :direction)`              | Objective function      |
+
+### Outside Blocks
+
+| Function                 | Arity | Signature                                              | Description           |
+| ------------------------ | ----- | ------------------------------------------------------ | --------------------- |
+| `Problem.add_variable`   | 4     | `Problem.add_variable(problem, "name", :type, "desc")` | Add single variable   |
+| `Problem.add_constraint` | 3     | `Problem.add_constraint(problem, expr, "desc")`        | Add single constraint |
+| `Problem.set_objective`  | 3     | `Problem.set_objective(problem, expr, :direction)`     | Set objective         |
+
+### Variable Types
+
+- `:continuous` - Real numbers
+- `:integer` - Integers
+- `:binary` - 0 or 1
+
+### Infinity Values
+
+- `:infinity`, `:infty`, `:inf`, `:pos_infinity`, `:pos_infty`, `:pos_inf` (positive infinity)
+- `:neg_infinity`, `:neg_infty`, `:neg_inf` (negative infinity)
+
+### Operators
+
+**Comparison:** `==`, `<=`, `>=`, `<`, `>`
+
+**Arithmetic:** `+`, `-`, `*`, `/`
+
+**Pattern Functions:** `sum(expression)` (see Wildcards section)
+
+---
+
+## Related Documentation
+
+- **[DSL_SYNTAX_EXAMPLES.md](DSL_SYNTAX_EXAMPLES.md)** - Complete working examples
+- **[DSL_SYNTAX_ADVANCED.md](DSL_SYNTAX_ADVANCED.md)** - Wildcard + nested maps, error handling, troubleshooting
 
 ---
 

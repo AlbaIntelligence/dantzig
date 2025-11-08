@@ -77,5 +77,6 @@ problem2d =
 ---
 
 **Navigation:**
+
 - [← Back to DSL Syntax Reference](DSL_SYNTAX_REFERENCE.md)
 - [→ Advanced Topics](DSL_SYNTAX_ADVANCED.md)
