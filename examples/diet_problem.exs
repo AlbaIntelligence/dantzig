@@ -135,18 +135,43 @@ problem_diet =
       description: "Amount of food to buy"
     )
 
-    # Nutritional constraints - Not too much of this for each nutrient
+    # Nutritional constraints - Maximum limits
     constraints(
-      [nutrient <- nutrient_names],
-      sum(qty(:_) * foods[:_][nutrient]) <= nutrient_limits[nutrient].max_bound,
-      "Max #{nutrient}"
+      sum(for food <- food_names, do: qty(food) * foods[food].calories) <= nutrient_limits["calories"].max_bound,
+      "Max calories"
+    )
+    
+    # Protein has no max limit (:infinity), so skip max constraint
+    
+    constraints(
+      sum(for food <- food_names, do: qty(food) * foods[food].fat) <= nutrient_limits["fat"].max_bound,
+      "Max fat"
+    )
+    
+    constraints(
+      sum(for food <- food_names, do: qty(food) * foods[food].sodium) <= nutrient_limits["sodium"].max_bound,
+      "Max sodium"
     )
 
-    # Nutritional constraints - Not too little of that for each nutrient
+    # Nutritional constraints - Minimum limits
     constraints(
-      [nutrient <- nutrient_names],
-      sum(qty(:_) * foods[:_][nutrient]) >= nutrient_limits[nutrient].min_bound,
-      "Min #{nutrient}"
+      sum(for food <- food_names, do: qty(food) * foods[food].calories) >= nutrient_limits["calories"].min_bound,
+      "Min calories"
+    )
+    
+    constraints(
+      sum(for food <- food_names, do: qty(food) * foods[food].protein) >= nutrient_limits["protein"].min_bound,
+      "Min protein"
+    )
+    
+    constraints(
+      sum(for food <- food_names, do: qty(food) * foods[food].fat) >= nutrient_limits["fat"].min_bound,
+      "Min fat"
+    )
+    
+    constraints(
+      sum(for food <- food_names, do: qty(food) * foods[food].sodium) >= nutrient_limits["sodium"].min_bound,
+      "Min sodium"
     )
 
     objective(
@@ -171,35 +196,29 @@ case result do
     IO.puts("")
 
     IO.puts("Optimal Food Selection:")
-    total_cost = 0
 
-    total_nutrients = %{
-      calories: 0,
-      protein: 0,
-      fat: 0,
-      sodium: 0
-    }
-
-    Enum.each(foods, fn {_name, food} ->
-      # Variable names are generated as "qty_foodname" by the DSL
-      var_name = "qty_#{food.name}"
+    {total_cost, total_nutrients} = Enum.reduce(foods, {0, %{calories: 0, protein: 0, fat: 0, sodium: 0}}, fn {_name, food}, {cost_acc, nutrients_acc} ->
+      # Variable names are generated as "qty(foodname)" by the DSL
+      var_name = "qty(#{food.name})"
       quantity = solution.variables[var_name] || 0
 
       if quantity > 0.001 do
         food_cost = quantity * food.cost
-        total_cost = total_cost + food_cost
 
         # Accumulate nutritional totals
-        total_nutrients =
-          Map.update!(total_nutrients, :calories, &(&1 + quantity * food.calories))
-
-        total_nutrients = Map.update!(total_nutrients, :protein, &(&1 + quantity * food.protein))
-        total_nutrients = Map.update!(total_nutrients, :fat, &(&1 + quantity * food.fat))
-        total_nutrients = Map.update!(total_nutrients, :sodium, &(&1 + quantity * food.sodium))
+        new_nutrients = nutrients_acc
+          |> Map.update!(:calories, &(&1 + quantity * food.calories))
+          |> Map.update!(:protein, &(&1 + quantity * food.protein))
+          |> Map.update!(:fat, &(&1 + quantity * food.fat))
+          |> Map.update!(:sodium, &(&1 + quantity * food.sodium))
 
         IO.puts(
           "  #{food.name}: #{Float.round(quantity, 2)} units (cost: $#{Float.round(food_cost, 2)})"
         )
+
+        {cost_acc + food_cost, new_nutrients}
+      else
+        {cost_acc, nutrients_acc}
       end
     end)
 

@@ -167,7 +167,7 @@ defmodule Dantzig.HiGHS do
                 name =~ ~r/[\+\-\*\^\[\]]/
 
             if should_warn do
-              IO.warn(
+              IO.info(
                 "LP format: variable/constraint name '#{name}' was modified to '#{sanitized}' for solver compatibility"
               )
             end
@@ -176,7 +176,7 @@ defmodule Dantzig.HiGHS do
 
           # Starts with digit or period - prepend underscore
           true ->
-            IO.warn(
+            IO.info(
               "LP format: variable/constraint name '#{name}' was modified to '#{sanitized}' (added underscore prefix)"
             )
 
@@ -185,7 +185,7 @@ defmodule Dantzig.HiGHS do
 
       _ ->
         # Empty after sanitization - use default
-        IO.warn(
+        IO.info(
           "LP format: variable/constraint name '#{name}' was modified to 'var_' (empty after sanitization)"
         )
 

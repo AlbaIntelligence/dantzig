@@ -30,10 +30,12 @@ IO.puts("")
 # Problem data
 profit_table = 30
 profit_chair = 10
+
 # hours per table
 time_table = 6
 # hours per chair
 time_chair = 3
+
 max_hours = 40
 
 # Demand constraint: chairs >= 3 * tables
@@ -56,13 +58,13 @@ problem =
     new(name: "1986 UG Exam - Carpenter Production")
 
     # Decision variables
-    variables("xT", :continuous,
+    variables("xT", :integer,
       min_bound: 0,
       max_bound: max_tables,
       description: "Number of tables to make"
     )
 
-    variables("xC", :continuous, min_bound: 0, description: "Number of chairs to make")
+    variables("xC", :integer, min_bound: 0, description: "Number of chairs to make")
 
     # Time constraint
     constraints(
@@ -79,7 +81,7 @@ problem =
     constraints(xT + 0.25 * xC <= 4, "Storage space limit")
 
     # Objective: maximize profit
-    objective(profit_table * xT + profit_chair * xC, direction: :maximize)
+    objective(profit_table * xT + profit_chair * xC, :maximize)
   end
 
 # Solve the problem

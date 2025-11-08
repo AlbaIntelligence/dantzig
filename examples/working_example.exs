@@ -159,6 +159,9 @@ IO.puts("Created #{map_size(problem2.constraints)} constraints for TSP")
 IO.puts("\n=== Classroom Scheduling ===")
 
 # Example 3: Classroom Scheduling using DSL
+# =========================================
+# This example demonstrates three-dimensional variables and complex constraint patterns
+# for scheduling problems with multiple resource dimensions.
 courses = 1..2
 times = 1..3
 rooms = 1..2
@@ -171,12 +174,20 @@ problem3 =
       direction: :minimize
     )
 
+    # Variables: x[c,t,r] = 1 if course c is scheduled at time t in room r
+    # Note: Three nested generators create 2 × 3 × 2 = 12 variables
+    # Order: course (c), time (t), room (r)
     variables("x", [c <- courses, t <- times, r <- rooms], :binary, "Course schedule")
 
     # Constraint: each course scheduled exactly once
+    # Note: sum(x(c, :_, :_)) uses double wildcard to sum over times and rooms
+    # for a given course c. This ensures each course has exactly one time-slot-room assignment.
     constraints([c <- courses], sum(x(c, :_, :_)) == 1, "Course scheduled once")
 
     # Constraint: no room double-booking
+    # Note: sum(x(:_, t, r)) sums over all courses for a given time t and room r.
+    # Using <= 1 ensures at most one course can use a room at a given time.
+    # The generator [t <- times, r <- rooms] creates one constraint per time-room pair.
     constraints([t <- times, r <- rooms], sum(x(:_, t, r)) <= 1, "No room double-booking")
   end
 

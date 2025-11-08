@@ -273,6 +273,8 @@ defmodule Dantzig.SolverTest do
 
   describe "Dantzig.solve/1 API" do
     test "solve/1 accepts problem and options" do
+      highs = Dantzig.Solver.HiGHS.new()
+
       problem =
         Problem.define do
           new(name: "Test", direction: :minimize)
@@ -283,13 +285,15 @@ defmodule Dantzig.SolverTest do
 
       # Test that the function accepts the problem
       # Note: This will fail if HiGHS solver is not available, but tests the API
-      result = Dantzig.solve(problem, solver: highs, print_optimizer_input:true)
+      result = Dantzig.solve(problem, solver: highs, print_optimizer_input: true)
 
       # Result should be either {:ok, solution} or :error
       assert result == :error or match?({:ok, _}, result)
     end
 
     test "solve/1 with print_optimizer_input option" do
+      highs = Dantzig.Solver.HiGHS.new()
+
       problem =
         Problem.define do
           new(name: "Test", direction: :minimize)
@@ -299,7 +303,7 @@ defmodule Dantzig.SolverTest do
         end
 
       # Test with print_optimizer_input enabled
-      result = Dantzig.solve(problem, solver: highs, print_optimizer_input:true)
+      result = Dantzig.solve(problem, solver: highs, print_optimizer_input: true)
 
       # Result should be either {:ok, solution} or :error
       assert result == :error or match?({:ok, _}, result)
