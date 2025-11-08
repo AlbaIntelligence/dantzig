@@ -158,7 +158,10 @@
 - [x] Binary integer programming capabilities
 - [x] Compiles and executes successfully
 
-### 🔴 Phase 4: Implement Advanced-Level Examples
+
+
+
+### 🔴 Phase 5: Implement Advanced-Level Examples
 
 #### Task 4.1: Create Facility Location Example
 
@@ -466,7 +469,46 @@ This task breakdown provides a clear implementation roadmap for creating a compr
 - [x] Binary integer programming capabilities
 - [x] Compiles and executes successfully
 
-### 🔴 Phase 4: Implement Advanced-Level Examples
+
+### 🔴 Phase 4: DSL Enhancement - Wildcard + Nested Access
+
+#### Task 4.0: Implement Wildcard + Nested Map Access Support
+
+**Status**: ✅ COMPLETED - Implemented with TDD approach
+**Description**: Enhanced DSL to support wildcard placeholders (`:_`) combined with nested map access, enabling concise syntax like `sum(qty(:_) * foods[:_][nutrient])`
+**Files**: 
+- `lib/dantzig/problem/dsl/expression_parser.ex` - Wildcard expansion logic
+- `test/dantzig/dsl/wildcard_nested_access_test.exs` - Comprehensive test suite
+- `docs/DSL_SYNTAX_REFERENCE.md` - Updated documentation with Section 7
+
+**Implementation Details**:
+- ✅ Added `contains_wildcard?/1` to detect wildcards in expressions
+- ✅ Added `expand_wildcard_sum/3` to expand wildcard expressions into explicit sums
+- ✅ Added `resolve_wildcard_domain/3` to infer domain from variables and map keys
+- ✅ Added `collect_var_domains_for_wildcard/2` to extract domains from variable indices
+- ✅ Added `collect_access_domains_for_wildcard/3` to extract domains from map access
+- ✅ Added `replace_wildcards/2` to substitute wildcards with concrete values
+- ✅ Enhanced `parse_sum_expression/3` to handle arithmetic expressions with wildcards
+- ✅ Updated operator pattern matching to exclude arithmetic operators from variable matching
+
+**Supported Syntaxes** (all equivalent):
+- Syntax A: `sum(for food <- food_names, do: qty(food) * foods[food][nutrient])` ✅
+- Syntax B: `sum(for food <- food_names, do: qty(food) * foods[food].nutrient)` ✅
+- Syntax C: `sum(qty(:_) * foods[:_][nutrient])` ✅ **NEW**
+- Syntax D: `sum(qty(:_) * foods[:_].nutrient)` ✅ **NEW**
+
+**Acceptance Criteria**:
+- [x] All four syntaxes produce identical LP formulations
+- [x] Wildcard expansion works in constraints
+- [x] Wildcard expansion works in objectives
+- [x] Nested map access with generator variables works correctly
+- [x] Comprehensive test suite with edge cases
+- [x] Documentation updated in DSL_SYNTAX_REFERENCE.md
+
+**Next Steps**:
+- Update `examples/diet_problem.exs` to demonstrate both syntaxes side-by-side
+- Consider future Einstein notation enhancement for automatic index matching
+
 
 #### Task 4.1: Create Facility Location Example
 
