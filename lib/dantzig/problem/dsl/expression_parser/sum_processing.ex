@@ -1,7 +1,7 @@
 defmodule Dantzig.Problem.DSL.ExpressionParser.SumProcessing do
   @moduledoc """
   Sum expression processing for DSL.
-  
+
   Handles:
   - For-comprehension expansion in sum/1
   - Variable wildcard expansion
@@ -36,12 +36,16 @@ defmodule Dantzig.Problem.DSL.ExpressionParser.SumProcessing do
         |> Enum.reduce(Polynomial.const(0), fn local_bindings, acc ->
           # Merge outer bindings with inner bindings (inner takes precedence)
           merged_bindings = Map.merge(bindings, local_bindings)
-          inner_poly = ExpressionParser.parse_expression_to_polynomial(body, merged_bindings, problem)
+
+          inner_poly =
+            ExpressionParser.parse_expression_to_polynomial(body, merged_bindings, problem)
+
           Polynomial.add(acc, inner_poly)
         end)
 
       {var_name, _, indices}
-      when is_list(indices) and is_atom(var_name) and var_name not in [:+, :-, :*, :/, :==, :<=, :>=, :<, :>] ->
+      when is_list(indices) and is_atom(var_name) and
+             var_name not in [:+, :-, :*, :/, :==, :<=, :>=, :<, :>] ->
         var_name_str =
           case var_name do
             str when is_binary(str) -> str
@@ -129,11 +133,27 @@ defmodule Dantzig.Problem.DSL.ExpressionParser.SumProcessing do
   end
 
   # Normalize sum AST to handle different sum/1 call patterns
+  # Handles both raw AST {{:., _, [Dantzig.Problem.DSL, :sum]}, _, [arg]} 
+  # and normalized {:sum, _, [arg]} patterns
   def normalize_sum_ast(expr) do
     case expr do
-      {:sum, _, [arg]} -> arg
-      {:sum, _, args} when is_list(args) -> List.first(args)
-      other -> other
+      # Raw AST from DSL macro: sum(expr)
+      {{:., _, [Dantzig.Problem.DSL, :sum]}, _, [arg]} ->
+        arg
+
+      # Already normalized: {:sum, _, [arg]}
+      {:sum, _, [arg]} ->
+        arg
+
+      # Multiple args (shouldn't happen, but handle it)
+      {{:., _, [Dantzig.Problem.DSL, :sum]}, _, args} when is_list(args) ->
+        List.first(args)
+
+      {:sum, _, args} when is_list(args) ->
+        List.first(args)
+
+      other ->
+        other
     end
   end
 end

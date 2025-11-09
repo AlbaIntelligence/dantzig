@@ -978,8 +978,8 @@ defmodule Dantzig.Core.ProblemTest do
         )
 
       var_def = updated_problem.variable_defs["x"]
-      assert var_def.min == -1
-      assert var_def.max == 1
+      assert var_def.min_bound == -1
+      assert var_def.max_bound == 1
     end
   end
 

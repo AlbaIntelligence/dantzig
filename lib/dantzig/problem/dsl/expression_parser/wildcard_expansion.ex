@@ -1,7 +1,7 @@
 defmodule Dantzig.Problem.DSL.ExpressionParser.WildcardExpansion do
   @moduledoc """
   Wildcard expansion for nested map access in DSL expressions.
-  
+
   Supports concise wildcard syntax like:
     sum(qty(:_) * foods[:_][nutrient])
   Instead of verbose for comprehensions:
@@ -31,7 +31,13 @@ defmodule Dantzig.Problem.DSL.ExpressionParser.WildcardExpansion do
     Enum.reduce(domain, Polynomial.const(0), fn value, acc ->
       inst_expr = replace_wildcards(expr, value)
       # Use the parent module to avoid circular dependency
-      term_poly = Dantzig.Problem.DSL.ExpressionParser.parse_expression_to_polynomial(inst_expr, bindings, problem)
+      term_poly =
+        Dantzig.Problem.DSL.ExpressionParser.parse_expression_to_polynomial(
+          inst_expr,
+          bindings,
+          problem
+        )
+
       Polynomial.add(acc, term_poly)
     end)
   end
@@ -121,11 +127,19 @@ defmodule Dantzig.Problem.DSL.ExpressionParser.WildcardExpansion do
             if key_ast == :_ do
               # Evaluate the container, which might be a constant from model_parameters
               container =
-                case Dantzig.Problem.DSL.ExpressionParser.try_evaluate_constant(container_ast, bindings) do
-                  {:ok, val} -> val
+                case Dantzig.Problem.DSL.ExpressionParser.try_evaluate_constant(
+                       container_ast,
+                       bindings
+                     ) do
+                  {:ok, val} ->
+                    val
+
                   :error ->
                     # If try_evaluate_constant fails, fall back to direct evaluation
-                    Dantzig.Problem.DSL.ExpressionParser.evaluate_expression_with_bindings(container_ast, bindings)
+                    Dantzig.Problem.DSL.ExpressionParser.evaluate_expression_with_bindings(
+                      container_ast,
+                      bindings
+                    )
                 end
 
               domain =

@@ -1,7 +1,7 @@
 defmodule Dantzig.Problem.DSL.ExpressionParser.ConstantEvaluation do
   @moduledoc """
   Constant evaluation for DSL expressions.
-  
+
   Handles evaluation of expressions to literal values, including:
   - Generator variable bindings
   - Model parameter lookup
@@ -56,7 +56,7 @@ defmodule Dantzig.Problem.DSL.ExpressionParser.ConstantEvaluation do
             v
 
           :error ->
-            case eval_with_env(atom) do
+            case eval_with_env({atom, [], nil}) do
               nil ->
                 raise ArgumentError,
                       "Cannot evaluate atom '#{atom}' - not found in model_parameters/environment"
