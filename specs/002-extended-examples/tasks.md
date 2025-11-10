@@ -513,34 +513,68 @@ This task breakdown provides a clear implementation roadmap for creating a compr
 
 #### Task 4.1: Create Facility Location Example
 
-**Status**: ✅ COMPLETED - Fixed with working objective
+**Status**: ⚠️ BLOCKED - DSL Limitation
 **Description**: Create a new example demonstrating mixed-integer programming
 **Files**: `examples/facility_location.exs` (NEW)
+**Current Status**:
+
+- ✅ File exists with comprehensive documentation
+- ✅ Demonstrates mixed-integer programming (binary facility location + continuous assignment)
+- ✅ Fixed costs and capacity constraints
+- ✅ Advanced modeling techniques
+- ❌ **BLOCKED**: Does not compile/execute due to DSL limitation
+
+**DSL Limitation Issue** (2025-01-27):
+- **Problem**: Variable-to-variable constraint `y(facility, customer) <= x(facility)` is not recognized by the DSL parser
+- **Error**: `error: undefined variable "x"` when parsing the right-hand side of the constraint
+- **Root Cause**: The constraint parser does not properly handle variable expressions on the right-hand side of comparison operators when using generator variables
+- **Location**: Constraint at line 164: `y(facility, customer) <= x(facility)`
+- **Workaround Options**:
+  1. **DSL Enhancement** (Recommended): Add support for variable-to-variable constraints in the constraint parser
+  2. **Reformulation**: Use big-M method or indicator constraints instead
+  3. **Alternative Syntax**: Check if different syntax works (e.g., using sum patterns)
+
+**Future DSL Enhancement Required**:
+- Enhance `lib/dantzig/problem/dsl/expression_parser.ex` to properly recognize variable expressions like `x(facility)` on the right-hand side of constraints
+- The parser should handle cases where generator variables are used as indices in variable expressions on both sides of comparison operators
+- Related to: `lib/dantzig/core/problem/ast.ex` - `parse_simple_expression_to_polynomial` function
+
 **Acceptance Criteria**:
 
-- [ ] New example file with comprehensive documentation
-- [ ] Demonstrates mixed-integer programming (binary facility location + continuous assignment)
-- [ ] Fixed costs and capacity constraints
-- [ ] Advanced modeling techniques
-- [ ] Compiles and executes successfully
+- [x] New example file with comprehensive documentation
+- [x] Demonstrates mixed-integer programming (binary facility location + continuous assignment)
+- [x] Fixed costs and capacity constraints
+- [x] Advanced modeling techniques
+- [ ] Compiles and executes successfully (BLOCKED by DSL limitation)
 
 #### Task 4.2: Create Multi-Objective LP Example
 
-**Status**: ❌ NOT CREATED
+**Status**: ✅ COMPLETED - Fixed and working
 **Description**: Create a new example demonstrating multi-objective optimization
-**Files**: `examples/multi_objective_lp.exs` (does not exist)
+**Files**: `examples/multi_objective_lp.exs`
 **Current Status**:
 
-- ❌ File does not exist
-- ❌ Multi-objective optimization example needs to be created
+- ✅ File exists and has been fixed
+- ✅ Multi-objective optimization example working
+- ✅ Fixed variable name mismatch (`production` → `produce`)
+- ✅ Fixed Enum.reduce pattern for map iteration
+- ✅ Fixed objective value access
+- ✅ Added proper float conversions
+
+**Fixes Applied** (2025-01-27):
+- Fixed variable name consistency: changed all `production(product)` to `produce(product)` to match variable definition
+- Fixed `Enum.reduce(products, ...)` to use `{product_name, product_data}` tuple pattern
+- Fixed objective value access: changed from `solution.objective_value` to destructured `objective_value`
+- Added float conversions for numeric operations (`* 1.0` to ensure float type)
+- Added string conversion for resource names in output
 
 **Acceptance Criteria**:
 
-- [ ] New example file with comprehensive documentation
-- [ ] Demonstrates multiple objective functions
-- [ ] 8-12 decision variables with conflicting objectives
-- [ ] Advanced optimization concepts
-- [ ] Compiles and executes successfully
+- [x] New example file with comprehensive documentation
+- [x] Demonstrates multiple objective functions
+- [x] 8-12 decision variables with conflicting objectives
+- [x] Advanced optimization concepts
+- [x] Compiles and executes successfully
 
 ### 🟣 Phase 5: Validation and Documentation
 
