@@ -357,4 +357,3 @@ case {solution, objective_value} do
     IO.puts("❌ Unexpected result: #{inspect(other)}")
     System.halt(1)
 end
-
