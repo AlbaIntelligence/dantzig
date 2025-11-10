@@ -100,7 +100,13 @@ IO.puts("")
 
 # Create the optimization problem
 problem =
-  Problem.define do
+  Problem.define model_parameters: %{
+    teachers: teachers,
+    subjects: subjects,
+    rooms: rooms,
+    time_slots: time_slots,
+    teacher_skills: teacher_skills
+  } do
     new(
       name: "School Timetabling Problem",
       description: "School scheduling with teachers, subjects, rooms, and time slots"
@@ -144,13 +150,6 @@ problem =
       "Teacher qualification constraint"
     )
 
-    # Constraint 5: Simplified for demonstration - focus on core scheduling
-    constraints(
-      [t <- teachers, s <- subjects, r <- rooms, m <- time_slots],
-      schedule(t, s, r, m) >= 0,
-      "Non-negative schedule constraint"
-    )
-
     # Objective: Minimize conflicts and maximize resource utilization
     # For now, we'll use a simplified objective
     objective(
@@ -191,7 +190,7 @@ Enum.each(time_slots, fn time_slot ->
     scheduled_classes =
       Enum.filter(teachers, fn teacher ->
         Enum.any?(subjects, fn subject ->
-          var_name = "schedule_#{teacher}_#{subject}_#{room}_#{time_slot}"
+          var_name = "schedule(#{teacher},#{subject},#{room},#{time_slot})"
           solution.variables[var_name] > 0.5
         end)
       end)
@@ -201,7 +200,7 @@ Enum.each(time_slots, fn time_slot ->
 
       subject =
         Enum.find(subjects, fn subj ->
-          var_name = "schedule_#{teacher}_#{subj}_#{room}_#{time_slot}"
+          var_name = "schedule(#{teacher},#{subj},#{room},#{time_slot})"
           solution.variables[var_name] > 0.5
         end)
 
@@ -234,7 +233,7 @@ teacher_conflicts =
       classes_at_time =
         Enum.count(rooms, fn room ->
           Enum.any?(subjects, fn subject ->
-            var_name = "schedule_#{teacher}_#{subject}_#{room}_#{time_slot}"
+            var_name = "schedule(#{teacher},#{subject},#{room},#{time_slot})"
             solution.variables[var_name] > 0.5
           end)
         end)
@@ -256,7 +255,7 @@ room_conflicts =
       classes_in_room =
         Enum.count(teachers, fn teacher ->
           Enum.any?(subjects, fn subject ->
-            var_name = "schedule_#{teacher}_#{subject}_#{room}_#{time_slot}"
+            var_name = "schedule(#{teacher},#{subject},#{room},#{time_slot})"
             solution.variables[var_name] > 0.5
           end)
         end)
@@ -278,7 +277,7 @@ subject_coverage =
       classes_teaching_subject =
         Enum.count(teachers, fn teacher ->
           Enum.any?(rooms, fn room ->
-            var_name = "schedule_#{teacher}_#{subject}_#{room}_#{time_slot}"
+            var_name = "schedule(#{teacher},#{subject},#{room},#{time_slot})"
             solution.variables[var_name] > 0.5
           end)
         end)

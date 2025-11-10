@@ -32,8 +32,9 @@ defmodule Dantzig.Problem.DSL.ExpressionParser.SumProcessing do
         end
 
         # Merge outer bindings with inner generator bindings to ensure both are available
-        enumerate_for_bindings(gens, bindings)
-        |> Enum.reduce(Polynomial.const(0), fn local_bindings, acc ->
+        all_bindings = enumerate_for_bindings(gens, bindings)
+        
+        Enum.reduce(all_bindings, Polynomial.const(0), fn local_bindings, acc ->
           # Merge outer bindings with inner bindings (inner takes precedence)
           merged_bindings = Map.merge(bindings, local_bindings)
 
@@ -113,11 +114,49 @@ defmodule Dantzig.Problem.DSL.ExpressionParser.SumProcessing do
       end
 
     # Use evaluate_expression_with_bindings to check environment for constants
-    domain_values = ConstantEvaluation.evaluate_expression_with_bindings(domain_ast, bindings)
+    # This should access the process dictionary (:dantzig_eval_env) if the variable
+    # is not in the bindings map
+    domain_values = 
+      try do
+        ConstantEvaluation.evaluate_expression_with_bindings(domain_ast, bindings)
+      rescue
+        e ->
+          # If evaluation fails, it means the variable is not accessible
+          env = Process.get(:dantzig_eval_env)
+          env_info = if env, do: "Environment has #{length(env)} items: #{inspect(Keyword.keys(env))}", else: "Environment NOT SET"
+          
+          raise ArgumentError,
+                """
+                Failed to evaluate generator domain: #{inspect(domain_ast)}
+                
+                Error: #{Exception.message(e)}
+                Current bindings: #{inspect(Map.keys(bindings))}
+                #{env_info}
+                
+                This usually means the variable (like 'subjects' or 'rooms') is not accessible.
+                Make sure:
+                1. The variable is defined in the outer scope before Problem.define
+                2. Or pass it via model_parameters: Problem.define model_parameters: %{subjects: subjects} do
+                """
+      end
 
     if not is_list(domain_values) do
+      env = Process.get(:dantzig_eval_env)
+      env_info = if env, do: "Environment has #{length(env)} items: #{inspect(Keyword.keys(env))}", else: "Environment NOT SET"
+      
       raise ArgumentError,
-            "Generator domain must evaluate to a list, got: #{inspect(domain_values)}"
+            """
+            Generator domain must evaluate to a list, got: #{inspect(domain_values)}
+            
+            Domain AST: #{inspect(domain_ast)}
+            Current bindings: #{inspect(Map.keys(bindings))}
+            #{env_info}
+            
+            This usually means the variable (like 'subjects' or 'rooms') is not accessible.
+            Make sure:
+            1. The variable is defined in the outer scope before Problem.define
+            2. Or pass it via model_parameters: Problem.define model_parameters: %{subjects: subjects} do
+            """
     end
 
     # For each value in the domain, create a binding and recurse

@@ -86,14 +86,17 @@ constraints(
 #### Wildcard Expansion Rules
 
 1. **Single wildcard with nested access:**
+
    - `foods[:_][nutrient]` expands to `foods[food_1][nutrient] + foods[food_2][nutrient] + ...`
    - Where `food_1, food_2, ...` are values from the variable generator
 
 2. **Multiple wildcards:**
+
    - `matrix[:_][:_]` expands to all combinations
    - Wildcards are matched positionally to variable generators
 
 3. **Mixed wildcards and explicit indices:**
+
    - `data[i][:_]` - second dimension uses wildcard, first is explicit
    - `data[:_][j]` - first dimension uses wildcard, second is explicit
 
@@ -201,6 +204,7 @@ ship(Tokyo_Main,Customer_1)
 Map keys used in nested access (e.g., `foods[:_][nutrient]`) are **only used for constant evaluation** at the Elixir level, not as symbolic names. Therefore, they can contain any valid map key characters.
 
 **Example:**
+
 ```elixir
 # Map keys with spaces and special characters are fine
 foods = %{
@@ -237,6 +241,7 @@ The DSL supports both bracket and dot notation for nested map access, but they h
 **Syntax:** `foods[:_][nutrient]`
 
 **Use when:**
+
 - Map keys contain spaces: `"total calories"`
 - Map keys contain special characters: `"protein (g)"`, `"fat %"`
 - Keys are strings (not atoms)
@@ -244,6 +249,7 @@ The DSL supports both bracket and dot notation for nested map access, but they h
 - Maximum flexibility needed
 
 **Example:**
+
 ```elixir
 nutrient_names = ["total calories", "protein (g)", "fat %"]
 foods = %{"bread" => %{"total calories": 100, "protein (g)": 3}}
@@ -257,11 +263,13 @@ sum(qty(:_) * foods[:_][nutrient])  # ✅
 **Syntax:** `foods[:_].nutrient`
 
 **Use when:**
+
 - Map keys are simple atoms: `:calories`, `:protein`, `:fat`
 - Keys have no spaces or special characters
 - Cleaner, more Elixir-idiomatic syntax desired
 
 **Example:**
+
 ```elixir
 nutrient_names = [:calories, :protein, :fat]  # Atoms, no spaces
 foods = %{bread: %{calories: 100, protein: 3}}
@@ -271,12 +279,14 @@ sum(qty(:_) * foods[:_].nutrient)  # ✅
 ```
 
 **Avoid dot notation when:**
+
 - Keys contain spaces or special chars
 - Would require quoted atom syntax: `.:"complex key"`
 
 **Equivalence (Simple Keys Only)**
 
 For simple atom keys, these are equivalent:
+
 ```elixir
 foods[:_].calories  ≡  foods[:_][:calories]
 foods[:_][nutrient] ≡  foods[:_].nutrient   # Only if nutrient is simple atom
@@ -287,27 +297,24 @@ foods[:_][nutrient] ≡  foods[:_].nutrient   # Only if nutrient is simple atom
 ##### When Sanitization Occurs
 
 The DSL sanitizes names automatically in these contexts:
+
 1. **Variable names** - When generating LP variable declarations
-2. **Constraint names** - When generating LP constraint declarations  
+2. **Constraint names** - When generating LP constraint declarations
 3. **Objective name** - When generating LP objective declaration
 
 **What is NOT sanitized:**
+
 - Map keys in `model_parameters` (used only for constant lookup)
 - Values in generator lists (used only for constant lookup)
 
 ##### Sanitization Rules
 
 The LP sanitization process:
+
 - Replaces spaces with underscores: `"Supplier A"` → `"Supplier_A"`
 - Removes special characters: `"Item #1"` → `"Item_1"`
 - Adds prefix if starts with digit: `"1st_item"` → `"x_1st_item"`
 - Truncates if too long (solver-dependent)
-
-**Warning:** If sanitization changes a name, the DSL issues a warning:
-```
-warning: LP format: variable/constraint name 'Supplier A' was modified to 
-'Supplier_A' for solver compatibility
-```
 
 #### Key Points
 
@@ -588,5 +595,6 @@ end
 ---
 
 **Navigation:**
+
 - [← Back to DSL Syntax Reference](DSL_SYNTAX_REFERENCE.md)
 - [← Examples](DSL_SYNTAX_EXAMPLES.md)

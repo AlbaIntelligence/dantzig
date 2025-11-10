@@ -177,8 +177,9 @@ total_fraction =
 
 blend_ok = abs(total_fraction - 1.0) < 0.001
 
+total_fraction_float = if is_integer(total_fraction), do: :erlang.float(total_fraction), else: total_fraction
 IO.puts(
-  "  Blend composition (sum = 1.0): #{Float.round(total_fraction, 4)} #{if blend_ok, do: "✅", else: "❌"}"
+  "  Blend composition (sum = 1.0): #{Float.round(total_fraction_float, 4)} #{if blend_ok, do: "✅", else: "❌"}"
 )
 
 # Check quality constraints

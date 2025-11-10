@@ -23,10 +23,6 @@ defmodule Dantzig.Problem.DSL.VariableManager do
         str
       end
 
-    if sanitized != str do
-      IO.warn("Index starting with 'e' or 'E' was modified: #{value} -> #{sanitized}")
-    end
-
     # Apply remaining LP format sanitization
     sanitized
     # Arithmetic and brackets

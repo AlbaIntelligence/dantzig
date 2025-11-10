@@ -137,8 +137,8 @@ defmodule Dantzig.HiGHS do
       # Replace prohibited characters (exponential notation 'E', '+', '-', '*', '^', '[', ']')
       # Only replace 'e' or 'E' when followed by a digit (scientific notation) or at start of name
       # Pattern: 'e' or 'E' at start OR 'e'/'E' followed by digit (scientific notation)
-      |> String.replace(~r/^[e]|[e](?=\d)/, "x_e")
-      |> String.replace(~r/^[E]|[E](?=\d)/, "x_E")
+      |> String.replace(~r/^[e]|[e](?=\d)/, "var_e")
+      |> String.replace(~r/^[E]|[E](?=\d)/, "var_E")
       |> String.replace(~r/[\+\-\*\^\[\]]/, "_")
       # Replace prohibited characters with underscore
       |> String.replace(~r/[^A-Za-z0-9_!"#\$%&()\,\.\;\?@_'~]/, "_")
@@ -154,47 +154,28 @@ defmodule Dantzig.HiGHS do
       end
 
     case sanitized do
-      <<first::binary-size(1), _rest::binary>> ->
-        cond do
-          # Must start with letter or underscore
-          first =~ ~r/[A-Za-z_]/ ->
-            # Emit warning for significant changes
-            # Only warn if length was truncated, or if 'e'/'E' at start/followed by digit was replaced
-            # or if other prohibited characters were replaced
-            should_warn =
-              String.length(name) > 255 or
-                name =~ ~r/^[eE]|[eE](?=\d)/ or
-                name =~ ~r/[\+\-\*\^\[\]]/
-
-            if should_warn do
-              IO.puts(
-                "LP format: variable/constraint name '#{name}' was modified to '#{sanitized}' for solver compatibility"
-              )
-            end
-
-            sanitized
-
-          # Starts with digit or period - prepend underscore
-          true ->
-            IO.puts(
-              "LP format: variable/constraint name '#{name}' was modified to '#{sanitized}' (added underscore prefix)"
-            )
-
-            sanitized
-        end
+      <<_first::binary-size(1), _rest::binary>> ->
+        sanitized
 
       _ ->
-        # Empty after sanitization - use default
-        IO.puts(
-          "LP format: variable/constraint name '#{name}' was modified to 'var_' (empty after sanitization)"
-        )
-
-        "var_"
+        # Create a new random name
+        "var_" <> generate_random_var_name()
     end
   end
 
+  defp generate_random_var_name() do
+    alphabet = Enum.concat(?A..?Z)
+    length = 8
+
+    Stream.repeatedly(fn -> Enum.random(alphabet) end)
+    |> Enum.take(length)
+    |> List.to_string()
+  end
+
   defp direction_to_iodata(:maximize), do: "Maximize"
+  defp direction_to_iodata(:maximise), do: "Maximize"
   defp direction_to_iodata(:minimize), do: "Minimize"
+  defp direction_to_iodata(:minimise), do: "Minimize"
 
   def to_lp_iodata(%Problem{} = problem) do
     constraints = Enum.sort(problem.constraints)

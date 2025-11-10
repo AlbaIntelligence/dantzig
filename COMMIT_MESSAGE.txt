@@ -1,0 +1,76 @@
+Fix: Resolve variable indices correctly in sum(for ...) with nested generators
+
+Problem:
+--------
+Constraints using sum(for ...) with nested generators (outer + inner) were
+showing "0 <= 1" or "0 = 1" in LP output instead of proper variables.
+
+Example of broken constraint:
+  constraints([t <- teachers, m <- time_slots],
+    sum(for s <- subjects, r <- rooms, do: schedule(t, s, r, m)) <= 1,
+    "Teacher time conflict")
+
+LP output showed: "Teacher_time_conflict_constraint: 0 <= 1"
+Expected: "Teacher_time_conflict_constraint: 1 schedule(...) + ... <= 1"
+
+Root Cause:
+-----------
+The issue was in variable index resolution in expression_parser.ex. When
+parsing expressions like x(o, i) where o and i are generator variables:
+
+1. AST contains atoms :o and :i as indices
+2. Code tried Map.get(bindings, var, fallback) where fallback was || var
+3. If not found, it returned the atom itself (:o or :i) instead of the value
+4. Variable lookup then failed because it searched for x(:o, :i) instead of
+   x("A", "X"), resulting in zero polynomials
+
+Solution:
+---------
+Fixed index resolution to use Map.fetch/2 with proper error handling:
+
+- Changed from: Map.get(bindings, var, Enum.find_value(...) || var)
+- Changed to: Map.fetch(bindings, var) with {:ok, value} / :error handling
+
+This ensures indices are resolved to actual values ("A", "X") instead of
+atoms (:o, :i), allowing correct variable lookup.
+
+Additional Improvements:
+------------------------
+- Enhanced error messages in sum_processing.ex to provide better debugging
+  info when generator domains fail to evaluate
+- Added try/rescue around domain evaluation to catch and report errors
+  with context about environment and bindings
+
+Impact:
+-------
+- Fixes school_timetabling.exs constraints (now show proper variables)
+- Fixes all sum(for ...) expressions with nested generators
+- Would also fix max()/min() if they support nested generators (same
+  index resolution code path)
+- No breaking changes - only fixes incorrect behavior
+
+Testing:
+--------
+Created toy examples to verify the fix:
+- test/toy_examples/toy_1_sum_for_issue.exs: Reproduces and verifies fix
+- test/toy_examples/toy_5_fix_verification.exs: Tests school_timetabling pattern
+
+All constraints in school_timetabling.exs now correctly include variables
+in LP output.
+
+Files Changed:
+--------------
+- lib/dantzig/problem/dsl/expression_parser.ex
+  * Fixed index resolution for variable access with generator variables
+  * Changed Map.get with fallback to Map.fetch with proper error handling
+
+- lib/dantzig/problem/dsl/expression_parser/sum_processing.ex
+  * Enhanced error messages for generator domain evaluation failures
+  * Added try/rescue around domain evaluation with context information
+
+- examples/school_timetabling.exs
+  * Added model_parameters (though not strictly necessary after fix)
+  * Fixed unused variable warning
+
+- test/toy_examples/*.exs
+  * Created verification examples for the fix

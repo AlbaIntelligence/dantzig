@@ -294,7 +294,9 @@ Enum.each(supplier_validation, fn {supplier, shipped, capacity} ->
       "❌ VIOLATED"
     end
 
-  IO.puts("  #{supplier}: #{Float.round(shipped, 2)}/#{capacity} units #{status}")
+  shipped_float = if is_integer(shipped), do: :erlang.float(shipped), else: shipped
+  capacity_float = if is_integer(capacity), do: :erlang.float(capacity), else: capacity
+  IO.puts("  #{supplier}: #{Float.round(shipped_float, 2)}/#{capacity_float} units #{status}")
 end)
 
 # Check that each customer's demand is met exactly
@@ -320,7 +322,9 @@ Enum.each(customer_validation, fn {customer, received, required} ->
       "❌ VIOLATED"
     end
 
-  IO.puts("  #{customer}: #{Float.round(received, 2)}/#{required} units #{status}")
+  received_float = if is_integer(received), do: :erlang.float(received), else: received
+  required_float = if is_integer(required), do: :erlang.float(required), else: required
+  IO.puts("  #{customer}: #{Float.round(received_float, 2)}/#{required_float} units #{status}")
 end)
 
 # Check for any validation errors

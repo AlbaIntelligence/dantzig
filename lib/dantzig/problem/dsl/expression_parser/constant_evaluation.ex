@@ -98,6 +98,15 @@ defmodule Dantzig.Problem.DSL.ExpressionParser.ConstantEvaluation do
       # Access.get handling with recursion
       # Handles nested Access.get: container[key] where container and/or key might themselves be Access.get expressions
       {{:., _, [Access, :get]}, _, [container_ast, key_ast]} ->
+        # If key is :_ (wildcard), we cannot evaluate this directly
+        # This should be handled by wildcard expansion, not constant evaluation
+        if key_ast == :_ do
+          raise ArgumentError,
+                "Cannot evaluate wildcard :_ in constant access. " <>
+                  "Wildcards must be expanded before constant evaluation. " <>
+                  "Use sum() with wildcard expansion or explicit for-comprehension."
+        end
+
         # Recursively evaluate container (might be nested Access.get like foods_dict[food])
         container = evaluate_expression_with_bindings(container_ast, bindings)
 
@@ -166,10 +175,11 @@ defmodule Dantzig.Problem.DSL.ExpressionParser.ConstantEvaluation do
 
     if env do
       try do
-        Code.eval_quoted(quoted, env)
-        |> elem(0)
+        {result, _} = Code.eval_quoted(quoted, env)
+        result
       rescue
-        _ -> nil
+        _e ->
+          nil
       catch
         _ -> nil
       end

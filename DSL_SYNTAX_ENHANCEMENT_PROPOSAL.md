@@ -453,13 +453,6 @@ The LP sanitization process:
 - Adds prefix if starts with digit: `"1st_item"` → `"x_1st_item"`
 - Truncates if too long (solver-dependent)
 
-**Warning:** If sanitization changes a name, the DSL issues an info warning:
-
-```
-info: LP format: variable/constraint name 'Supplier A' was modified to
-'Supplier_A' for solver compatibility
-```
-
 #### Key Points
 
 - **Dot vs Bracket:** Use bracket notation `[:_][key]` for robustness; dot notation only for simple atom keys

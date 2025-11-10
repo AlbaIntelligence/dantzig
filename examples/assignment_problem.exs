@@ -313,21 +313,26 @@ end
 IO.puts("Solving the simplified assignment problem...")
 IO.puts("(Objective: minimize number of assignments)")
 IO.puts("")
-{solution, objective_value} = Problem.solve(problem, solver: :highs, print_optimizer_input: true)
+case Problem.solve(problem, solver: :highs, print_optimizer_input: true) do
+  {solution, objective_value} ->
+    IO.puts("Solution:")
+    IO.puts("=========")
+    IO.puts("Objective value (simplified): #{objective_value}")
+    IO.puts("")
+    IO.puts("Assignments:")
 
-IO.puts("Solution:")
-IO.puts("=========")
-IO.puts("Objective value (simplified): #{objective_value}")
-IO.puts("")
-IO.puts("Assignments:")
+    total_cost = calculate_total_cost.(solution, workers, tasks, cost_matrix)
+    IO.puts("")
+    IO.puts("Summary:")
+    IO.puts("  Total cost (from cost matrix): #{total_cost}")
+    IO.puts("  Reported objective (simplified): #{objective_value}")
+    IO.puts("  Cost matches objective: #{abs(total_cost - objective_value) < 0.001}")
+    IO.puts("")
 
-total_cost = calculate_total_cost.(solution, workers, tasks, cost_matrix)
-IO.puts("")
-IO.puts("Summary:")
-IO.puts("  Total cost (from cost matrix): #{total_cost}")
-IO.puts("  Reported objective (simplified): #{objective_value}")
-IO.puts("  Cost matches objective: #{abs(total_cost - objective_value) < 0.001}")
-IO.puts("")
+  :error ->
+    IO.puts("❌ Failed to solve the problem")
+    System.halt(1)
+end
 
 # ============================================================================
 # Problem Modification: Update Objective with Actual Costs
@@ -374,19 +379,24 @@ problem =
 IO.puts("Solving the full assignment problem...")
 IO.puts("(Objective: minimize total assignment cost)")
 IO.puts("")
-{solution, objective_value} = Problem.solve(problem, solver: :highs, print_optimizer_input: true)
+case Problem.solve(problem, solver: :highs, print_optimizer_input: true) do
+  {solution, objective_value} ->
+    IO.puts("Solution:")
+    IO.puts("=========")
+    IO.puts("Objective value (total cost): #{objective_value}")
+    IO.puts("")
+    IO.puts("Assignments:")
 
-IO.puts("Solution:")
-IO.puts("=========")
-IO.puts("Objective value (total cost): #{objective_value}")
-IO.puts("")
-IO.puts("Assignments:")
+    total_cost = calculate_total_cost.(solution, workers, tasks, cost_matrix)
+    IO.puts("")
+    IO.puts("Summary:")
+    IO.puts("  Total cost (from cost matrix): #{total_cost}")
+    IO.puts("  Reported objective (from solver): #{objective_value}")
+    IO.puts("  Cost matches objective: #{abs(total_cost - objective_value) < 0.001}")
+    IO.puts("")
+    IO.puts("Optimal assignment found! ✓")
 
-total_cost = calculate_total_cost.(solution, workers, tasks, cost_matrix)
-IO.puts("")
-IO.puts("Summary:")
-IO.puts("  Total cost (from cost matrix): #{total_cost}")
-IO.puts("  Reported objective (from solver): #{objective_value}")
-IO.puts("  Cost matches objective: #{abs(total_cost - objective_value) < 0.001}")
-IO.puts("")
-IO.puts("Optimal assignment found! ✓")
+  :error ->
+    IO.puts("❌ Failed to solve the problem")
+    System.halt(1)
+end

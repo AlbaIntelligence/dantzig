@@ -126,20 +126,53 @@ defmodule Dantzig.Problem.DSL.ExpressionParser.WildcardExpansion do
           {{:., _, [Access, :get]}, _, [container_ast, key_ast]} = node, acc ->
             if key_ast == :_ do
               # Evaluate the container, which might be a constant from model_parameters
+              # Handle both simple atoms (e.g., {:foods, _, nil}) and nested Access.get
               container =
-                case Dantzig.Problem.DSL.ExpressionParser.try_evaluate_constant(
-                       container_ast,
-                       bindings
-                     ) do
-                  {:ok, val} ->
-                    val
+                case container_ast do
+                  # Simple atom reference (e.g., {:foods, _, nil})
+                  {container_name, _, _ctx} when is_atom(container_name) ->
+                    # Try to evaluate as constant from model_parameters
+                    case Dantzig.Problem.DSL.ExpressionParser.try_evaluate_constant(
+                           container_ast,
+                           bindings
+                         ) do
+                      {:ok, val} -> val
+                      :error ->
+                        # Fall back to direct evaluation
+                        Dantzig.Problem.DSL.ExpressionParser.evaluate_expression_with_bindings(
+                          container_ast,
+                          bindings
+                        )
+                    end
 
-                  :error ->
-                    # If try_evaluate_constant fails, fall back to direct evaluation
-                    Dantzig.Problem.DSL.ExpressionParser.evaluate_expression_with_bindings(
-                      container_ast,
-                      bindings
-                    )
+                  # Nested Access.get (e.g., foods[food][:_])
+                  {{:., _, [Access, :get]}, _, _} ->
+                    # Evaluate the nested access first
+                    case Dantzig.Problem.DSL.ExpressionParser.try_evaluate_constant(
+                           container_ast,
+                           bindings
+                         ) do
+                      {:ok, val} -> val
+                      :error ->
+                        Dantzig.Problem.DSL.ExpressionParser.evaluate_expression_with_bindings(
+                          container_ast,
+                          bindings
+                        )
+                    end
+
+                  # Other container expressions
+                  _ ->
+                    case Dantzig.Problem.DSL.ExpressionParser.try_evaluate_constant(
+                           container_ast,
+                           bindings
+                         ) do
+                      {:ok, val} -> val
+                      :error ->
+                        Dantzig.Problem.DSL.ExpressionParser.evaluate_expression_with_bindings(
+                          container_ast,
+                          bindings
+                        )
+                    end
                 end
 
               domain =

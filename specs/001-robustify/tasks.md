@@ -217,7 +217,7 @@
 - [ ] T082 [US4] Validate all examples cover 5+ distinct optimization problem domains
 - [ ] T083 [US4] Validate all examples demonstrate appropriate modeling techniques
 - [ ] T084 [US4] Validate all examples complete within reasonable time limits
-- [ ] T076a [US4] Add the examples from https://people.brunel.ac.uk/~mastjjb/jeb/or/lpmore.html with full attribution credits
+- [ ] T076a [US4] Add the examples from <https://people.brunel.ac.uk/~mastjjb/jeb/or/lpmore.html> with full attribution credits
 
 **Checkpoint**: All user stories should now be independently functional
 
