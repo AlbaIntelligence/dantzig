@@ -292,7 +292,17 @@
 
 ## Updated Implementation Notes
 
-### Recent Improvements (User-Implemented):
+### Recent Improvements (2025-01-27):
+
+1. **multi_objective_lp.exs**: ✅ FIXED - Fixed variable name mismatch (`production` → `produce`), Enum.reduce pattern for map iteration, objective value access, and added float conversions. Example now compiles and executes successfully.
+
+2. **project_selection.exs**: ✅ FIXED - Enhanced DSL parser to support string/atom indices in variable expressions for simple constraints. Added support for `select("mobile_app")` syntax in `constraints/2`. Example now compiles and executes successfully.
+
+3. **facility_location.exs**: ⚠️ DOCUMENTED - Identified DSL limitation: variable-to-variable constraints with generator variables (`y(facility, customer) <= x(facility)`) not supported. Documented issue and future enhancement requirements.
+
+4. **DSL Enhancement**: Added support for string/atom indices in `parse_simple_expression_to_polynomial` in `lib/dantzig/core/problem/ast.ex`, enabling variable expressions like `select("key")` in simple constraints.
+
+### Previous Improvements (User-Implemented):
 
 1. **diet_problem.exs**: Excellent conversion to map-based structure with pattern-based DSL syntax
 2. **knapsack_problem.exs**: Perfect pattern-based variable generation using wildcard syntax
@@ -681,7 +691,17 @@ This task breakdown provides a clear implementation roadmap for creating a compr
 
 ## Updated Implementation Notes
 
-### Recent Improvements (User-Implemented):
+### Recent Improvements (2025-01-27):
+
+1. **multi_objective_lp.exs**: ✅ FIXED - Fixed variable name mismatch (`production` → `produce`), Enum.reduce pattern for map iteration, objective value access, and added float conversions. Example now compiles and executes successfully.
+
+2. **project_selection.exs**: ✅ FIXED - Enhanced DSL parser to support string/atom indices in variable expressions for simple constraints. Added support for `select("mobile_app")` syntax in `constraints/2`. Example now compiles and executes successfully.
+
+3. **facility_location.exs**: ⚠️ DOCUMENTED - Identified DSL limitation: variable-to-variable constraints with generator variables (`y(facility, customer) <= x(facility)`) not supported. Documented issue and future enhancement requirements.
+
+4. **DSL Enhancement**: Added support for string/atom indices in `parse_simple_expression_to_polynomial` in `lib/dantzig/core/problem/ast.ex`, enabling variable expressions like `select("key")` in simple constraints.
+
+### Previous Improvements (User-Implemented):
 
 1. **diet_problem.exs**: Excellent conversion to map-based structure with pattern-based DSL syntax
 2. **knapsack_problem.exs**: Perfect pattern-based variable generation using wildcard syntax
