@@ -556,6 +556,37 @@ This task breakdown provides a clear implementation roadmap for creating a compr
 - [x] Advanced modeling techniques
 - [x] Compiles and executes successfully
 
+#### Task 1.3: Create Non-Linear Function Example (Minimax Scheduling)
+
+**Status**: ✅ COMPLETED - Created and working
+**Description**: Create a new example demonstrating non-linear functions (max, min, abs)
+**Files**: `examples/minimax_scheduling.exs` (NEW)
+**Current Status**:
+
+- ✅ File created with comprehensive documentation
+- ✅ Demonstrates `max()` function in constraints and objective
+- ✅ Shows automatic linearization of max() function
+- ✅ Minimax optimization pattern (minimize maximum completion time)
+- ✅ Compiles and executes successfully
+
+**Implementation Details** (2025-01-27):
+
+- Created minimax scheduling problem: minimize makespan (maximum completion time)
+- Demonstrates how `max()` is automatically linearized:
+  - Creates auxiliary variable (makespan)
+  - Adds constraints: makespan >= completion_time[j] for all jobs j
+  - Minimizing makespan finds the minimum maximum value
+- Includes Gantt chart visualization
+- Comprehensive validation and learning insights
+
+**Acceptance Criteria**:
+
+- [x] New example file with comprehensive documentation
+- [x] Demonstrates `max()`, `min()`, or `abs()` function in DSL (demonstrates max())
+- [x] Shows automatic linearization in action
+- [x] Compiles and executes successfully
+- [x] Solution validation included
+
 #### Task 4.2: Create Multi-Objective LP Example
 
 **Status**: ✅ COMPLETED - Fixed and working
