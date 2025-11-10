@@ -73,11 +73,13 @@ defmodule Dantzig.DSL.SumFunction do
   """
   def parse_sum_expression(ast) do
     case ast do
-      {:sum, expr} ->
-        {:pattern, expr}
-
+      # Check generator-based sum first (more specific pattern)
       {:sum, {:for, expr, generators}} ->
         {:generator, expr, generators}
+
+      # Then check pattern-based sum (general pattern)
+      {:sum, expr} ->
+        {:pattern, expr}
 
       _ ->
         raise ArgumentError, "Invalid sum expression: #{inspect(ast)}"
