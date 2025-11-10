@@ -587,6 +587,35 @@ This task breakdown provides a clear implementation roadmap for creating a compr
 - [x] Compiles and executes successfully
 - [x] Solution validation included
 
+#### Task 2.2: Create Integer Variable Example
+
+**Status**: ✅ COMPLETED - Created and working
+**Description**: Create a new example demonstrating integer variables (not just binary)
+**Files**: `examples/integer_programming.exs` (NEW)
+**Current Status**:
+
+- ✅ File created with comprehensive documentation
+- ✅ Demonstrates `:integer` variable type in production planning context
+- ✅ Shows difference from continuous variables (whole numbers only)
+- ✅ Clear business case: production quantities must be whole units
+- ✅ Compiles and executes successfully
+
+**Implementation Details** (2025-01-27):
+
+- Created production planning problem with integer variables
+- Demonstrates that integer variables must take whole-number values
+- Shows resource constraints with nested map access
+- Includes integer constraint verification
+- Comprehensive validation and learning insights
+- Solution shows integer values (e.g., 10 units, 20 units, not 10.5)
+
+**Acceptance Criteria**:
+
+- [x] Example demonstrates `:integer` variable type
+- [x] Clear business case for integer requirement (can't produce fractional units)
+- [x] Compiles and executes successfully
+- [x] Solution shows integer values
+
 #### Task 4.2: Create Multi-Objective LP Example
 
 **Status**: ✅ COMPLETED - Fixed and working
