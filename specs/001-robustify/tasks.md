@@ -178,7 +178,6 @@
 - [x] T062 [US3] Enhance documentation for examples/production_planning.exs
 - [x] T063 [US3] Enhance documentation for examples/transportation_problem.exs
 - [x] T064 [US3] Enhance documentation for examples/working_example.exs
-- [ ] T065 [P] [US3] Add business context explanations to all examples
 - [ ] T065a [P] [US3] Systematically check the problem as defined against the output in LP syntax for all examples
 - [ ] T066 [P] [US3] Add mathematical formulation explanations to all examples
 - [ ] T067 [P] [US3] Add DSL syntax explanations to all examples

@@ -274,7 +274,7 @@ defmodule Dantzig.Problem.DSL.ConstraintManager do
         Enum.reduce(bindings, description, fn {var_atom, value}, acc_desc ->
           var_name = to_string(var_atom)
           # Replace #{var_name} patterns - use simple string replacement
-          # Build pattern string by concatenating parts to avoid interpolation syntax issues  
+          # Build pattern string by concatenating parts to avoid interpolation syntax issues
           pattern_str =
             [35, 123]
             |> List.to_string()
