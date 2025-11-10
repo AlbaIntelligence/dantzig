@@ -164,7 +164,7 @@ problem =
       [t <- time_periods],
       :continuous,
       min_bound: 0.0,
-      max_bound: max_production,
+      max_bound: 250.0,
       description: "Units produced in period"
     )
 
@@ -183,13 +183,12 @@ problem =
     # Inventory balance constraints: ensure inventory flows correctly across periods
     #
     # Period 1 is special: uses initial_inventory (given data) instead of
-    # inventory[0] (which doesn't exist). Rearranged as:
-    #   production(1) - demand[1] == -initial_inventory + inventory(1)
-    # Which simplifies to: production(1) - demand[1] + initial_inventory == inventory(1)
-    # Or equivalently: production(1) - demand[1] == inventory(1) - initial_inventory
+    # inventory[0] (which doesn't exist). The balance equation is:
+    #   initial_inventory + production(1) - demand[1] == inventory(1)
+    # Rearranged: production(1) - demand[1] + initial_inventory == inventory(1)
     constraints(
       [t <- [1]],
-      production(t) - demand[1] == -initial_inventory,
+      production(t) - demand[1] + 50 == inventory(t),
       "Inventory balance for period 1"
     )
 
@@ -208,17 +207,17 @@ problem =
     #
     # For now, we write each period explicitly and use hardcoded demand values:
     constraints(
-      inventory(1) + production(2) - 150 == 0,
+      inventory(1) + production(2) - 150 == inventory(2),
       "Inventory balance for period 2"
     )
 
     constraints(
-      inventory(2) + production(3) - 80 == 0,
+      inventory(2) + production(3) - 80 == inventory(3),
       "Inventory balance for period 3"
     )
 
     constraints(
-      inventory(3) + production(4) - 200 == 0,
+      inventory(3) + production(4) - 200 == inventory(4),
       "Inventory balance for period 4"
     )
 
@@ -252,36 +251,29 @@ case result do
     IO.puts("")
 
     IO.puts("Production Plan:")
-    total_production_cost = 0
-    total_holding_cost = 0
+    {total_production_cost, total_holding_cost} =
+      Enum.reduce(time_periods, {0.0, 0.0}, fn period, {acc_prod, acc_hold} ->
+        production_var = "production(#{period})"
+        inventory_var = "inventory(#{period})"
 
-    # Display production and inventory for each period
-    Enum.each(time_periods, fn period ->
-      production_var = "production(#{period})"
-      inventory_var = "inventory(#{period})"
+        produced = solution.variables[production_var] || 0.0
+        inventory = solution.variables[inventory_var] || 0.0
 
-      produced = solution.variables[production_var]
-      inventory = solution.variables[inventory_var]
+        production_cost = produced * production_cost[period]
+        holding_cost_period = inventory * holding_cost
 
-      production_cost = produced * production_cost[period]
-      holding_cost_period = inventory * holding_cost
+        IO.puts("Period #{period}:")
+        IO.puts(
+          "  Production: #{Float.round(produced * 1.0, 2)} units (cost: $#{Float.round(production_cost * 1.0, 2)})"
+        )
+        IO.puts(
+          "  Ending Inventory: #{Float.round(inventory * 1.0, 2)} units (holding cost: $#{Float.round(holding_cost_period * 1.0, 2)})"
+        )
+        IO.puts("  Demand: #{demand[period]} units")
+        IO.puts("")
 
-      total_production_cost = total_production_cost + production_cost
-      total_holding_cost = total_holding_cost + holding_cost_period
-
-      IO.puts("Period #{period}:")
-
-      IO.puts(
-        "  Production: #{Float.round(produced * 1.0, 2)} units (cost: $#{Float.round(production_cost * 1.0, 2)})"
-      )
-
-      IO.puts(
-        "  Ending Inventory: #{Float.round(inventory * 1.0, 2)} units (holding cost: $#{Float.round(holding_cost_period * 1.0, 2)})"
-      )
-
-      IO.puts("  Demand: #{demand[period]} units")
-      IO.puts("")
-    end)
+        {acc_prod + production_cost, acc_hold + holding_cost_period}
+      end)
 
     total_cost = total_production_cost + total_holding_cost
 
@@ -307,26 +299,26 @@ case result do
     period1_valid = abs(period1_balance - solution.variables["inventory(1)"]) < 0.001
 
     IO.puts(
-      "  Period 1: #{initial_inventory} + #{Float.round(solution.variables["production(1)"], 2)} - #{demand[1]} = #{Float.round(period1_balance, 2)} (inventory: #{Float.round(solution.variables["inventory(1)"], 2)}) #{if period1_valid, do: "✅ OK", else: "❌ VIOLATED"}"
+      "  Period 1: #{initial_inventory} + #{Float.round((solution.variables["production(1)"] || 0.0) * 1.0, 2)} - #{demand[1]} = #{Float.round(period1_balance * 1.0, 2)} (inventory: #{Float.round((solution.variables["inventory(1)"] || 0.0) * 1.0, 2)}) #{if period1_valid, do: "✅ OK", else: "❌ VIOLATED"}"
     )
 
     # Periods 2-4: previous inventory + produced - demand should equal ending inventory
     Enum.each(2..4, fn period ->
-      prev_inventory = solution.variables["inventory(#{period - 1})"]
-      produced = solution.variables["production(#{period})"]
+      prev_inventory = (solution.variables["inventory(#{period - 1})"] || 0.0) * 1.0
+      produced = (solution.variables["production(#{period})"] || 0.0) * 1.0
       balance = prev_inventory + produced - demand[period]
-      current_inventory = solution.variables["inventory(#{period})"]
+      current_inventory = (solution.variables["inventory(#{period})"] || 0.0) * 1.0
       valid = abs(balance - current_inventory) < 0.001
 
       IO.puts(
-        "  Period #{period}: #{Float.round(prev_inventory * 1.0, 2)} + #{Float.round(produced * 1.0, 2)} - #{demand[period]} = #{Float.round(balance, 2)} (inventory: #{Float.round(current_inventory, 2)}) #{if valid, do: "✅ OK", else: "❌ VIOLATED"}"
+        "  Period #{period}: #{Float.round(prev_inventory, 2)} + #{Float.round(produced, 2)} - #{demand[period]} = #{Float.round(balance, 2)} (inventory: #{Float.round(current_inventory, 2)}) #{if valid, do: "✅ OK", else: "❌ VIOLATED"}"
       )
     end)
 
     # Check that all production is within capacity
     production_validation =
       Enum.map(time_periods, fn period ->
-        produced = solution.variables["production(#{period})"]
+        produced = (solution.variables["production(#{period})"] || 0.0) * 1.0
         {period, produced, max_production}
       end)
 
@@ -374,4 +366,3 @@ case result do
     IO.puts("Please check the problem formulation and try again.")
     System.halt(1)
 end
-

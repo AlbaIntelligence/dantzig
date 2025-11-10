@@ -130,18 +130,23 @@ defmodule Dantzig.Problem.DSL do
   # Variables with bounds - var_name, type, description, opts (4 args, no generators)
   defmacro variables(var_name, type, description, opts)
            when is_atom(type) and is_binary(description) and is_list(opts) do
-    quote do
-      min_bound = unquote(Keyword.get(opts, :min_bound))
-      max_bound = unquote(Keyword.get(opts, :max_bound))
+    min_bound = Keyword.get(opts, :min_bound)
+    max_bound = Keyword.get(opts, :max_bound)
 
+    bounds_list =
+      []
+      |> (fn acc -> if min_bound != nil, do: [{:min_bound, min_bound} | acc], else: acc end).()
+      |> (fn acc -> if max_bound != nil, do: [{:max_bound, max_bound} | acc], else: acc end).()
+      |> Enum.reverse()
+
+    quote do
       {:variables, [],
        [
          unquote(var_name),
          [],
-         unquote(type)
-         | [description: unquote(description)] ++
-             if(min_bound != nil, do: [min_bound: min_bound], else: []) ++
-             if(max_bound != nil, do: [max_bound: max_bound], else: [])
+         unquote(type),
+         unquote(description),
+         unquote(bounds_list)
        ]}
     end
   end

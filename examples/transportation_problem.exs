@@ -276,7 +276,7 @@ supplier_validation =
   Enum.map(suppliers, fn supplier ->
     total_shipped =
       Enum.reduce(customers, 0, fn customer, acc ->
-        var_name = "ship_#{supplier}_#{customer}"
+        var_name = "ship(#{supplier},#{customer})"
         acc + Map.get(solution.variables, var_name, 0)
       end)
 

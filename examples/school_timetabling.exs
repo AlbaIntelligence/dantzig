@@ -161,21 +161,25 @@ problem =
   end
 
 IO.puts("Solving the school timetabling problem...")
-solve_result = Problem.solve(problem, solver: :highs, print_optimizer_input: true)
+{solution, objective_value} = Problem.solve(problem, solver: :highs, print_optimizer_input: true)
 
-{objective_value, solution} =
-  case solve_result do
-    {:ok, sol} ->
-      {sol.objective, sol}
+case {solution, objective_value} do
+  {%Dantzig.Solution{} = sol, obj_val} ->
+    solution = sol
+    objective_value = obj_val
 
-    :error ->
-      IO.puts("Error solving problem: Unknown error")
-      System.halt(1)
-  end
+  {:error, reason} ->
+    IO.puts("Error solving problem: #{inspect(reason)}")
+    System.halt(1)
+
+  other ->
+    IO.puts("Unexpected result: #{inspect(other)}")
+    System.halt(1)
+end
 
 IO.puts("Solution:")
 IO.puts("=========")
-IO.puts("Classes scheduled: #{Float.round(objective_value, 0)}")
+IO.puts("Classes scheduled: #{Float.round(objective_value * 1.0, 0)}")
 IO.puts("")
 
 IO.puts("Timetable:")
@@ -216,7 +220,7 @@ end)
 
 IO.puts("Summary:")
 IO.puts("  Total classes scheduled: #{total_classes}")
-IO.puts("  Reported objective: #{Float.round(objective_value, 0)}")
+IO.puts("  Reported objective: #{Float.round(objective_value * 1.0, 0)}")
 
 IO.puts(
   "  Schedule efficiency: #{if total_classes > 0, do: Float.round(total_classes / (length(time_slots) * length(rooms)) * 100, 1), else: 0}%"
