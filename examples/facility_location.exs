@@ -192,39 +192,43 @@ case result do
     IO.puts("")
 
     IO.puts("Facilities to Open:")
-    total_fixed_cost = 0
+    total_fixed_cost =
+      Enum.reduce(facilities, 0, fn facility, acc ->
+        var_name = "x(#{facility})"
+        opened = solution.variables[var_name] || 0
 
-    Enum.each(facilities, fn facility ->
-      var_name = "x_#{facility}"
-      opened = solution.variables[var_name] || 0
-
-      if opened > 0.5 do
-        fixed_cost = fixed_costs[facility]
-        total_fixed_cost = total_fixed_cost + fixed_cost
-        IO.puts("  ✅ #{facility}: Open (fixed cost: $#{fixed_cost})")
-      else
-        IO.puts("  ❌ #{facility}: Closed")
-      end
-    end)
+        if opened > 0.5 do
+          fixed_cost = fixed_costs[facility]
+          IO.puts("  ✅ #{facility}: Open (fixed cost: $#{fixed_cost})")
+          acc + fixed_cost
+        else
+          IO.puts("  ❌ #{facility}: Closed")
+          acc
+        end
+      end)
 
     IO.puts("")
     IO.puts("Customer Assignments:")
-    total_transport_cost = 0
+    total_transport_cost =
+      Enum.reduce(customers, 0, fn customer, acc ->
+        IO.puts("  #{customer}:")
 
-    Enum.each(customers, fn customer ->
-      IO.puts("  #{customer}:")
+        customer_cost =
+          Enum.reduce(facilities, 0, fn facility, facility_acc ->
+            var_name = "y(#{facility},#{customer})"
+            assigned = solution.variables[var_name] || 0
 
-      Enum.each(facilities, fn facility ->
-        var_name = "y_#{facility}_#{customer}"
-        assigned = solution.variables[var_name] || 0
+            if assigned > 0.5 do
+              transport_cost = transport_costs[facility][customer]
+              IO.puts("    → Served by #{facility} (transport cost: $#{transport_cost})")
+              facility_acc + transport_cost
+            else
+              facility_acc
+            end
+          end)
 
-        if assigned > 0.5 do
-          transport_cost = transport_costs[facility][customer]
-          total_transport_cost = total_transport_cost + transport_cost
-          IO.puts("    → Served by #{facility} (transport cost: $#{transport_cost})")
-        end
+        acc + customer_cost
       end)
-    end)
 
     IO.puts("")
     IO.puts("Cost Breakdown:")
@@ -251,7 +255,7 @@ case result do
       Enum.map(customers, fn customer ->
         assignments =
           Enum.map(facilities, fn facility ->
-            var_name = "y_#{facility}_#{customer}"
+            var_name = "y(#{facility},#{customer})"
             solution.variables[var_name] || 0
           end)
 
@@ -274,14 +278,14 @@ case result do
     IO.puts("Facility Utilization Check:")
 
     Enum.each(facilities, fn facility ->
-      var_name = "x_#{facility}"
+      var_name = "x(#{facility})"
       opened = solution.variables[var_name] || 0
 
       if opened > 0.5 do
         # Check if this facility serves any customers
         served_customers =
           Enum.count(customers, fn customer ->
-            var_name = "y_#{facility}_#{customer}"
+            var_name = "y(#{facility},#{customer})"
             (solution.variables[var_name] || 0) > 0.5
           end)
 
@@ -290,7 +294,7 @@ case result do
         # Check that this facility serves no customers
         served_customers =
           Enum.count(customers, fn customer ->
-            var_name = "y_#{facility}_#{customer}"
+            var_name = "y(#{facility},#{customer})"
             (solution.variables[var_name] || 0) > 0.5
           end)
 

@@ -158,10 +158,6 @@
 - [x] Binary integer programming capabilities
 - [x] Compiles and executes successfully
 
-
-
-
-
 #### Task 4.1: Create Facility Location Example
 
 **Status**: ✅ COMPLETED - Fixed with working objective
@@ -245,7 +241,7 @@
 
 ## Dependencies and Order
 
-### Critical Path (Must Complete in Order):
+### Critical Path (Must Complete in Order)
 
 1. Phase 1: Fix existing examples (1.1 ✅ → 1.2 ✅ → 1.3 ✅ → 1.4 ✅)
 2. Phase 2: Beginner examples (2.1 ✅ → 2.2 ✅)
@@ -253,7 +249,7 @@
 4. Phase 4: Advanced examples (4.1 → 4.2)
 5. Phase 5: Validation and documentation (5.1 → 5.2 → 5.3)
 
-### Parallel Opportunities:
+### Parallel Opportunities
 
 - Task 2.1 and 2.2 can be developed in parallel
 - Task 3.1 and 3.2 can be developed in parallel
@@ -261,20 +257,20 @@
 
 ## Quality Gates
 
-### Before Each Task:
+### Before Each Task
 
 - [ ] Review relevant documentation and existing examples
 - [ ] Understand DSL syntax requirements
 - [ ] Ensure access to development environment
 
-### During Each Task:
+### During Each Task
 
 - [ ] Follow established example structure template
 - [ ] Include comprehensive header documentation
 - [ ] Implement proper validation and error checking
 - [ ] Test compilation and execution
 
-### After Each Task:
+### After Each Task
 
 - [ ] Verify acceptance criteria are met
 - [ ] Run existing tests to ensure no regressions
@@ -292,7 +288,7 @@
 
 ## Updated Implementation Notes
 
-### Recent Improvements (2025-01-27):
+### Recent Improvements (2025-01-27)
 
 1. **multi_objective_lp.exs**: ✅ FIXED - Fixed variable name mismatch (`production` → `produce`), Enum.reduce pattern for map iteration, objective value access, and added float conversions. Example now compiles and executes successfully.
 
@@ -302,7 +298,7 @@
 
 4. **DSL Enhancement**: Added support for string/atom indices in `parse_simple_expression_to_polynomial` in `lib/dantzig/core/problem/ast.ex`, enabling variable expressions like `select("key")` in simple constraints.
 
-### Previous Improvements (User-Implemented):
+### Previous Improvements (User-Implemented)
 
 1. **diet_problem.exs**: Excellent conversion to map-based structure with pattern-based DSL syntax
 2. **knapsack_problem.exs**: Perfect pattern-based variable generation using wildcard syntax
@@ -311,7 +307,7 @@
 5. **two_variable_lp.exs**: New beginner example demonstrating basic 2-variable LP with production optimization
 6. **resource_allocation.exs**: New intermediate example showing binary project selection with budget constraints
 
-### Key DSL Patterns Established:
+### Key DSL Patterns Established
 
 - Map-based data structures: `%{"key" => %{...}}`
 - Pattern-based variables: `variables("name", [i <- Map.keys(map)], :type, "description")`
@@ -471,6 +467,7 @@ This task breakdown provides a clear implementation roadmap for creating a compr
 - ✅ Compiles and executes successfully
 
 **Fixes Applied** (2025-01-27):
+
 - **DSL Enhancement**: Added support for string/atom indices in variable expressions for simple constraints
 - Enhanced `lib/dantzig/core/problem/ast.ex` - `parse_simple_expression_to_polynomial` to handle string indices
 - Now supports variable expressions like `select("mobile_app")` in simple constraints (constraints/2)
@@ -484,7 +481,6 @@ This task breakdown provides a clear implementation roadmap for creating a compr
 - [x] Binary integer programming capabilities
 - [x] Compiles and executes successfully
 
-
 ### 🔴 Phase 4: DSL Enhancement - Wildcard + Nested Access
 
 #### Task 4.0: Implement Wildcard + Nested Map Access Support
@@ -492,11 +488,13 @@ This task breakdown provides a clear implementation roadmap for creating a compr
 **Status**: ✅ COMPLETED - Implemented with TDD approach
 **Description**: Enhanced DSL to support wildcard placeholders (`:_`) combined with nested map access, enabling concise syntax like `sum(qty(:_) * foods[:_][nutrient])`
 **Files**:
+
 - `lib/dantzig/problem/dsl/expression_parser.ex` - Wildcard expansion logic
 - `test/dantzig/dsl/wildcard_nested_access_test.exs` - Comprehensive test suite
 - `docs/DSL_SYNTAX_REFERENCE.md` - Updated documentation with Section 7
 
 **Implementation Details**:
+
 - ✅ Added `contains_wildcard?/1` to detect wildcards in expressions
 - ✅ Added `expand_wildcard_sum/3` to expand wildcard expressions into explicit sums
 - ✅ Added `resolve_wildcard_domain/3` to infer domain from variables and map keys
@@ -507,12 +505,14 @@ This task breakdown provides a clear implementation roadmap for creating a compr
 - ✅ Updated operator pattern matching to exclude arithmetic operators from variable matching
 
 **Supported Syntaxes** (all equivalent):
+
 - Syntax A: `sum(for food <- food_names, do: qty(food) * foods[food][nutrient])` ✅
 - Syntax B: `sum(for food <- food_names, do: qty(food) * foods[food].nutrient)` ✅
 - Syntax C: `sum(qty(:_) * foods[:_][nutrient])` ✅ **NEW**
 - Syntax D: `sum(qty(:_) * foods[:_].nutrient)` ✅ **NEW**
 
 **Acceptance Criteria**:
+
 - [x] All four syntaxes produce identical LP formulations
 - [x] Wildcard expansion works in constraints
 - [x] Wildcard expansion works in objectives
@@ -521,15 +521,15 @@ This task breakdown provides a clear implementation roadmap for creating a compr
 - [x] Documentation updated in DSL_SYNTAX_REFERENCE.md
 
 **Next Steps**:
+
 - Update `examples/diet_problem.exs` to demonstrate both syntaxes side-by-side
 - Consider future Einstein notation enhancement for automatic index matching
-
 
 ### 🔴 Phase 5: Implement Advanced-Level Examples
 
 #### Task 4.1: Create Facility Location Example
 
-**Status**: ⚠️ BLOCKED - DSL Limitation
+**Status**: ✅ COMPLETED - Fixed and working
 **Description**: Create a new example demonstrating mixed-integer programming
 **Files**: `examples/facility_location.exs` (NEW)
 **Current Status**:
@@ -538,22 +538,15 @@ This task breakdown provides a clear implementation roadmap for creating a compr
 - ✅ Demonstrates mixed-integer programming (binary facility location + continuous assignment)
 - ✅ Fixed costs and capacity constraints
 - ✅ Advanced modeling techniques
-- ❌ **BLOCKED**: Does not compile/execute due to DSL limitation
+- ✅ Compiles and executes successfully
 
-**DSL Limitation Issue** (2025-01-27):
-- **Problem**: Variable-to-variable constraint `y(facility, customer) <= x(facility)` is not recognized by the DSL parser
-- **Error**: `error: undefined variable "x"` when parsing the right-hand side of the constraint
-- **Root Cause**: The constraint parser does not properly handle variable expressions on the right-hand side of comparison operators when using generator variables
-- **Location**: Constraint at line 164: `y(facility, customer) <= x(facility)`
-- **Workaround Options**:
-  1. **DSL Enhancement** (Recommended): Add support for variable-to-variable constraints in the constraint parser
-  2. **Reformulation**: Use big-M method or indicator constraints instead
-  3. **Alternative Syntax**: Check if different syntax works (e.g., using sum patterns)
+**Fixes Applied** (2025-01-27):
 
-**Future DSL Enhancement Required**:
-- Enhance `lib/dantzig/problem/dsl/expression_parser.ex` to properly recognize variable expressions like `x(facility)` on the right-hand side of constraints
-- The parser should handle cases where generator variables are used as indices in variable expressions on both sides of comparison operators
-- Related to: `lib/dantzig/core/problem/ast.ex` - `parse_simple_expression_to_polynomial` function
+- **DSL Enhancement**: Added `looks_like_variable_expression?/1` helper to detect variable expressions before constant evaluation
+- Enhanced `parse_constraint_expression` in `lib/dantzig/problem/dsl/constraint_manager.ex` to check for variable expressions on the right-hand side before attempting constant evaluation
+- This allows variable-to-variable constraints like `y(facility, customer) <= x(facility)` to work correctly
+- Fixed variable name format in solution parsing: changed from `x_Facility_A` to `x(Facility_A)` to match LP format
+- Fixed cost calculation: changed from `Enum.each` with variable reassignment to `Enum.reduce` for proper accumulation
 
 **Acceptance Criteria**:
 
@@ -561,7 +554,7 @@ This task breakdown provides a clear implementation roadmap for creating a compr
 - [x] Demonstrates mixed-integer programming (binary facility location + continuous assignment)
 - [x] Fixed costs and capacity constraints
 - [x] Advanced modeling techniques
-- [ ] Compiles and executes successfully (BLOCKED by DSL limitation)
+- [x] Compiles and executes successfully
 
 #### Task 4.2: Create Multi-Objective LP Example
 
@@ -578,6 +571,7 @@ This task breakdown provides a clear implementation roadmap for creating a compr
 - ✅ Added proper float conversions
 
 **Fixes Applied** (2025-01-27):
+
 - Fixed variable name consistency: changed all `production(product)` to `produce(product)` to match variable definition
 - Fixed `Enum.reduce(products, ...)` to use `{product_name, product_data}` tuple pattern
 - Fixed objective value access: changed from `solution.objective_value` to destructured `objective_value`
@@ -644,7 +638,7 @@ This task breakdown provides a clear implementation roadmap for creating a compr
 
 ## Dependencies and Order
 
-### Critical Path (Must Complete in Order):
+### Critical Path (Must Complete in Order)
 
 1. Phase 1: Fix existing examples (1.1 ✅ → 1.2 ✅ → 1.3 ✅ → 1.4 ✅)
 2. Phase 2: Beginner examples (2.1 ✅ → 2.2 ✅)
@@ -652,7 +646,7 @@ This task breakdown provides a clear implementation roadmap for creating a compr
 4. Phase 4: Advanced examples (4.1 → 4.2)
 5. Phase 5: Validation and documentation (5.1 → 5.2 → 5.3)
 
-### Parallel Opportunities:
+### Parallel Opportunities
 
 - Task 2.1 and 2.2 can be developed in parallel
 - Task 3.1 and 3.2 can be developed in parallel
@@ -660,20 +654,20 @@ This task breakdown provides a clear implementation roadmap for creating a compr
 
 ## Quality Gates
 
-### Before Each Task:
+### Before Each Task
 
 - [ ] Review relevant documentation and existing examples
 - [ ] Understand DSL syntax requirements
 - [ ] Ensure access to development environment
 
-### During Each Task:
+### During Each Task
 
 - [ ] Follow established example structure template
 - [ ] Include comprehensive header documentation
 - [ ] Implement proper validation and error checking
 - [ ] Test compilation and execution
 
-### After Each Task:
+### After Each Task
 
 - [ ] Verify acceptance criteria are met
 - [ ] Run existing tests to ensure no regressions
@@ -691,7 +685,7 @@ This task breakdown provides a clear implementation roadmap for creating a compr
 
 ## Updated Implementation Notes
 
-### Recent Improvements (2025-01-27):
+### Recent Improvements (2025-01-27)
 
 1. **multi_objective_lp.exs**: ✅ FIXED - Fixed variable name mismatch (`production` → `produce`), Enum.reduce pattern for map iteration, objective value access, and added float conversions. Example now compiles and executes successfully.
 
@@ -701,7 +695,7 @@ This task breakdown provides a clear implementation roadmap for creating a compr
 
 4. **DSL Enhancement**: Added support for string/atom indices in `parse_simple_expression_to_polynomial` in `lib/dantzig/core/problem/ast.ex`, enabling variable expressions like `select("key")` in simple constraints.
 
-### Previous Improvements (User-Implemented):
+### Previous Improvements (User-Implemented)
 
 1. **diet_problem.exs**: Excellent conversion to map-based structure with pattern-based DSL syntax
 2. **knapsack_problem.exs**: Perfect pattern-based variable generation using wildcard syntax
@@ -710,7 +704,7 @@ This task breakdown provides a clear implementation roadmap for creating a compr
 5. **two_variable_lp.exs**: New beginner example demonstrating basic 2-variable LP with production optimization
 6. **resource_allocation.exs**: New intermediate example showing binary project selection with budget constraints
 
-### Key DSL Patterns Established:
+### Key DSL Patterns Established
 
 - Map-based data structures: `%{"key" => %{...}}`
 - Pattern-based variables: `variables("name", [i <- Map.keys(map)], :type, "description")`
@@ -903,7 +897,7 @@ This task breakdown provides a clear implementation roadmap for creating a compr
 
 ## Dependencies and Order
 
-### Critical Path (Must Complete in Order):
+### Critical Path (Must Complete in Order)
 
 1. Phase 1: Fix existing examples (1.1 → 1.2 → 1.3 → 1.4)
 2. Phase 2: Beginner examples (2.1 → 2.2)
@@ -911,7 +905,7 @@ This task breakdown provides a clear implementation roadmap for creating a compr
 4. Phase 4: Advanced examples (4.1 → 4.2)
 5. Phase 5: Validation and documentation (5.1 → 5.2 → 5.3)
 
-### Parallel Opportunities:
+### Parallel Opportunities
 
 - Task 2.1 and 2.2 can be developed in parallel
 - Task 3.1 and 3.2 can be developed in parallel
@@ -919,20 +913,20 @@ This task breakdown provides a clear implementation roadmap for creating a compr
 
 ## Quality Gates
 
-### Before Each Task:
+### Before Each Task
 
 - [ ] Review relevant documentation and existing examples
 - [ ] Understand DSL syntax requirements
 - [ ] Ensure access to development environment
 
-### During Each Task:
+### During Each Task
 
 - [ ] Follow established example structure template
 - [ ] Include comprehensive header documentation
 - [ ] Implement proper validation and error checking
 - [ ] Test compilation and execution
 
-### After Each Task:
+### After Each Task
 
 - [ ] Verify acceptance criteria are met
 - [ ] Run existing tests to ensure no regressions

@@ -122,6 +122,17 @@ defmodule Dantzig.Problem.DSL.ConstraintManager do
     %{problem | objective: objective, direction: direction}
   end
 
+  # Check if an expression looks like a variable expression (e.g., x(i), y(i,j))
+  defp looks_like_variable_expression?(expr) do
+    case expr do
+      {var_name, _, indices} when is_atom(var_name) and is_list(indices) ->
+        # Exclude operators and special forms
+        var_name not in [:+, :-, :*, :/, :==, :<=, :>=, :!=, :<, :>, :., :|>, :.., :sum, :for]
+      _ ->
+        false
+    end
+  end
+
   def parse_constraint_expression(constraint_expr, bindings, problem) do
     case constraint_expr do
       {:==, _, [left_expr, right_value]} ->
@@ -148,15 +159,21 @@ defmodule Dantzig.Problem.DSL.ConstraintManager do
               :infinity
 
             _ ->
-              # Try to evaluate as constant first (might be :infinity or a number)
-              case Dantzig.Problem.DSL.ExpressionParser.try_evaluate_constant(
-                     right_value,
-                     bindings
-                   ) do
-                # Pass :infinity directly
-                {:ok, :infinity} -> :infinity
-                {:ok, val} when is_number(val) -> Polynomial.const(val)
-                _ -> parse_expression_to_polynomial(right_value, bindings, problem)
+              # Check if this looks like a variable expression first
+              # If so, skip constant evaluation and parse directly as variable
+              if looks_like_variable_expression?(right_value) do
+                parse_expression_to_polynomial(right_value, bindings, problem)
+              else
+                # Try to evaluate as constant first (might be :infinity or a number)
+                case Dantzig.Problem.DSL.ExpressionParser.try_evaluate_constant(
+                       right_value,
+                       bindings
+                     ) do
+                  # Pass :infinity directly
+                  {:ok, :infinity} -> :infinity
+                  {:ok, val} when is_number(val) -> Polynomial.const(val)
+                  _ -> parse_expression_to_polynomial(right_value, bindings, problem)
+                end
               end
           end
 
@@ -175,15 +192,21 @@ defmodule Dantzig.Problem.DSL.ConstraintManager do
               :infinity
 
             _ ->
-              # Try to evaluate as constant first (might be :infinity or a number)
-              case Dantzig.Problem.DSL.ExpressionParser.try_evaluate_constant(
-                     right_value,
-                     bindings
-                   ) do
-                # Pass :infinity directly
-                {:ok, :infinity} -> :infinity
-                {:ok, val} when is_number(val) -> Polynomial.const(val)
-                _ -> parse_expression_to_polynomial(right_value, bindings, problem)
+              # Check if this looks like a variable expression first
+              # If so, skip constant evaluation and parse directly as variable
+              if looks_like_variable_expression?(right_value) do
+                parse_expression_to_polynomial(right_value, bindings, problem)
+              else
+                # Try to evaluate as constant first (might be :infinity or a number)
+                case Dantzig.Problem.DSL.ExpressionParser.try_evaluate_constant(
+                       right_value,
+                       bindings
+                     ) do
+                  # Pass :infinity directly
+                  {:ok, :infinity} -> :infinity
+                  {:ok, val} when is_number(val) -> Polynomial.const(val)
+                  _ -> parse_expression_to_polynomial(right_value, bindings, problem)
+                end
               end
           end
 
