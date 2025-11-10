@@ -118,9 +118,10 @@ problem =
 
     # Constraints: Makespan must be >= completion time of each job
     # Completion time = start time + processing time
+    # Note: We use jobs[job].processing_time (dot notation) for cleaner access
     constraints(
       [job <- job_names],
-      makespan >= start(job) + jobs[job][:processing_time],
+      makespan >= start(job) + jobs[job].processing_time,
       "Makespan must be at least completion time of #{job}"
     )
 
@@ -208,7 +209,6 @@ case {solution, objective_value} do
     Enum.each(schedule_data, fn %{job: job, start: start, processing: processing} ->
       start_pos = round(start * scale)
       duration_pos = round(processing * scale)
-      end_pos = start_pos + duration_pos
 
       bar = String.duplicate("█", max(1, duration_pos))
       padding = String.duplicate(" ", start_pos)
@@ -269,4 +269,3 @@ case {solution, objective_value} do
     IO.puts("❌ Unexpected result: #{inspect(other)}")
     System.halt(1)
 end
-

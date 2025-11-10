@@ -133,6 +133,18 @@ defmodule Dantzig.Problem.DSL.ConstraintManager do
     end
   end
 
+  # Check if an expression contains arithmetic operations
+  defp contains_arithmetic?(expr) do
+    case expr do
+      {op, _, [_left, _right]} when op in [:+, :-, :*, :/] ->
+        true
+      {op, _, [left, right]} when op in [:+, :-, :*, :/] ->
+        contains_arithmetic?(left) or contains_arithmetic?(right)
+      _ ->
+        false
+    end
+  end
+
   def parse_constraint_expression(constraint_expr, bindings, problem) do
     case constraint_expr do
       {:==, _, [left_expr, right_value]} ->
@@ -159,9 +171,9 @@ defmodule Dantzig.Problem.DSL.ConstraintManager do
               :infinity
 
             _ ->
-              # Check if this looks like a variable expression first
-              # If so, skip constant evaluation and parse directly as variable
-              if looks_like_variable_expression?(right_value) do
+              # Check if this contains arithmetic operations or looks like a variable expression
+              # If so, skip constant evaluation and parse directly
+              if contains_arithmetic?(right_value) or looks_like_variable_expression?(right_value) do
                 parse_expression_to_polynomial(right_value, bindings, problem)
               else
                 # Try to evaluate as constant first (might be :infinity or a number)
@@ -192,9 +204,9 @@ defmodule Dantzig.Problem.DSL.ConstraintManager do
               :infinity
 
             _ ->
-              # Check if this looks like a variable expression first
-              # If so, skip constant evaluation and parse directly as variable
-              if looks_like_variable_expression?(right_value) do
+              # Check if this contains arithmetic operations or looks like a variable expression
+              # If so, skip constant evaluation and parse directly
+              if contains_arithmetic?(right_value) or looks_like_variable_expression?(right_value) do
                 parse_expression_to_polynomial(right_value, bindings, problem)
               else
                 # Try to evaluate as constant first (might be :infinity or a number)
