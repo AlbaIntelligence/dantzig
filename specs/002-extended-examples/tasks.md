@@ -481,7 +481,7 @@ This task breakdown provides a clear implementation roadmap for creating a compr
 
 **Status**: ✅ COMPLETED - Implemented with TDD approach
 **Description**: Enhanced DSL to support wildcard placeholders (`:_`) combined with nested map access, enabling concise syntax like `sum(qty(:_) * foods[:_][nutrient])`
-**Files**: 
+**Files**:
 - `lib/dantzig/problem/dsl/expression_parser.ex` - Wildcard expansion logic
 - `test/dantzig/dsl/wildcard_nested_access_test.exs` - Comprehensive test suite
 - `docs/DSL_SYNTAX_REFERENCE.md` - Updated documentation with Section 7
