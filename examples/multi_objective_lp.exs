@@ -241,7 +241,7 @@ problem =
       [resource <- resource_names],
       sum(
         for product <- product_names do
-          production(product) * products[product][resource]
+          produce(product) * products[product][resource]
         end
       ) <= resource_capacities[resource],
       "Resource capacity constraint for #{resource}"
@@ -250,7 +250,7 @@ problem =
     # Demand constraints
     constraints(
       [product <- product_names],
-      production(product) <= products[product].max_demand,
+      produce(product) <= products[product].max_demand,
       "Maximum demand constraint for #{product}"
     )
 
@@ -261,13 +261,13 @@ problem =
       profit_weight *
         sum(
           for product <- product_names do
-            production(product) * products[product].profit
+            produce(product) * products[product].profit
           end
         ) -
         emission_weight *
           sum(
             for product <- product_names do
-              production(product) * products[product].emissions * emission_cost_per_kg
+              produce(product) * products[product].emissions * emission_cost_per_kg
             end
           ),
       :minimize
@@ -276,7 +276,7 @@ problem =
 
 # Solve the problem
 IO.puts("\nSolving optimization problem...")
-{solution, _objective_value} = Problem.solve(problem, solver: :highs, print_optimizer_input: true)
+{solution, objective_value} = Problem.solve(problem, solver: :highs, print_optimizer_input: true)
 
 # Display results
 IO.puts("\n" <> String.duplicate("=", 79))
@@ -288,13 +288,15 @@ if solution.model_status == "Optimal" do
 
   # Calculate actual objective values
   total_profit =
-    Enum.reduce(products, 0.0, fn p, acc ->
-      acc + solution.variables["production(#{p})"] * products[p].profit
+    Enum.reduce(products, 0.0, fn {product_name, product_data}, acc ->
+      var_value = solution.variables["produce(#{product_name})"] || 0.0
+      acc + var_value * product_data.profit
     end)
 
   total_emissions =
-    Enum.reduce(products, 0.0, fn p, acc ->
-      acc + solution.variables["production(#{p})"] * products[p].emissions
+    Enum.reduce(products, 0.0, fn {product_name, product_data}, acc ->
+      var_value = solution.variables["produce(#{product_name})"] || 0.0
+      acc + var_value * product_data.emissions
     end)
 
   IO.puts("Objective Values:")
@@ -302,7 +304,7 @@ if solution.model_status == "Optimal" do
   IO.puts("  Total Emissions: #{:erlang.float_to_binary(total_emissions, decimals: 2)} kg CO2")
 
   IO.puts(
-    "  Combined Objective: #{:erlang.float_to_binary(solution.objective_value, decimals: 6)}"
+    "  Combined Objective: #{:erlang.float_to_binary(objective_value, decimals: 6)}"
   )
 
   IO.puts("\nProduction Plan:")
@@ -311,7 +313,7 @@ if solution.model_status == "Optimal" do
   IO.puts(String.duplicate("-", 79))
 
   Enum.each(product_names, fn product ->
-    qty = solution.variables["production(#{product})"]
+    qty = (solution.variables["produce(#{product})"] || 0.0) * 1.0
 
     if qty > 0.001 do
       profit = qty * products[product].profit
@@ -347,15 +349,17 @@ if solution.model_status == "Optimal" do
 
   Enum.each(resource_names, fn resource ->
     used =
-      Enum.reduce(products, 0.0, fn p, acc ->
-        acc + solution.variables["production(#{p})"] * products[p][resource]
+      Enum.reduce(products, 0.0, fn {product_name, product_data}, acc ->
+        var_value = (solution.variables["produce(#{product_name})"] || 0.0) * 1.0
+        resource_value = (product_data[resource] || 0.0) * 1.0
+        acc + var_value * resource_value
       end)
 
     capacity = resource_capacities[resource]
     utilization = used / capacity * 100.0
 
     IO.puts(
-      String.pad_trailing(resource, 20) <>
+      String.pad_trailing(to_string(resource), 20) <>
         ": " <>
         String.pad_leading(:erlang.float_to_binary(used, decimals: 2), 8) <>
         " / " <>
