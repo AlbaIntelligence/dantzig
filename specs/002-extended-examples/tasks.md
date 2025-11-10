@@ -450,7 +450,7 @@ This task breakdown provides a clear implementation roadmap for creating a compr
 
 #### Task 3.2: Create Project Selection Example
 
-**Status**: ⚠️ IN PROGRESS - File exists but has DSL syntax issue
+**Status**: ✅ COMPLETED - Fixed and working
 **Description**: Create a new example demonstrating binary decision problems
 **Files**: `examples/project_selection.exs`
 **Current Status**:
@@ -458,13 +458,13 @@ This task breakdown provides a clear implementation roadmap for creating a compr
 - ✅ `project_selection.exs` file exists with comprehensive documentation
 - ✅ Has 6 projects (meets 5-8 requirement)
 - ✅ Demonstrates project dependencies
-- ❌ **ISSUE**: Variable `select` not recognized in constraint at line 181
-- **Error**: `Unsupported simple expression: {:select, [line: 181, column: 7], ["mobile_app"]}`
+- ✅ Compiles and executes successfully
 
-**Current Issue** (2025-01-27):
-- Constraint `select("mobile_app") <= select("website")` fails to parse
-- The constraint parser does not recognize `select("mobile_app")` as a variable expression
-- This is a similar issue to facility_location.exs but with simple constraints (no generators)
+**Fixes Applied** (2025-01-27):
+- **DSL Enhancement**: Added support for string/atom indices in variable expressions for simple constraints
+- Enhanced `lib/dantzig/core/problem/ast.ex` - `parse_simple_expression_to_polynomial` to handle string indices
+- Now supports variable expressions like `select("mobile_app")` in simple constraints (constraints/2)
+- Maintains backward compatibility with integer indices
 
 **Acceptance Criteria**:
 
@@ -472,7 +472,7 @@ This task breakdown provides a clear implementation roadmap for creating a compr
 - [x] Demonstrates binary variables and budget constraints
 - [x] 5-8 projects with costs and dependencies (6 projects with dependencies)
 - [x] Binary integer programming capabilities
-- [ ] Compiles and executes successfully (BLOCKED by DSL syntax issue)
+- [x] Compiles and executes successfully
 
 
 ### 🔴 Phase 4: DSL Enhancement - Wildcard + Nested Access
