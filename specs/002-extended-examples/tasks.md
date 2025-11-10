@@ -450,23 +450,29 @@ This task breakdown provides a clear implementation roadmap for creating a compr
 
 #### Task 3.2: Create Project Selection Example
 
-**Status**: ⚠️ PARTIAL - resource_allocation.exs exists but project_selection.exs does not
+**Status**: ⚠️ IN PROGRESS - File exists but has DSL syntax issue
 **Description**: Create a new example demonstrating binary decision problems
-**Files**: `examples/resource_allocation.exs` (exists), `examples/project_selection.exs` (missing)
+**Files**: `examples/project_selection.exs`
 **Current Status**:
 
-- ✅ `resource_allocation.exs` exists and demonstrates binary project selection with budget constraints
-- ⚠️ Only has 3 projects (needs 5-8 per acceptance criteria)
-- ⚠️ Does not demonstrate project dependencies
-- ❌ `project_selection.exs` file does not exist as specified
+- ✅ `project_selection.exs` file exists with comprehensive documentation
+- ✅ Has 6 projects (meets 5-8 requirement)
+- ✅ Demonstrates project dependencies
+- ❌ **ISSUE**: Variable `select` not recognized in constraint at line 181
+- **Error**: `Unsupported simple expression: {:select, [line: 181, column: 7], ["mobile_app"]}`
+
+**Current Issue** (2025-01-27):
+- Constraint `select("mobile_app") <= select("website")` fails to parse
+- The constraint parser does not recognize `select("mobile_app")` as a variable expression
+- This is a similar issue to facility_location.exs but with simple constraints (no generators)
 
 **Acceptance Criteria**:
 
-- [x] New example file with comprehensive documentation (resource_allocation.exs exists)
+- [x] New example file with comprehensive documentation
 - [x] Demonstrates binary variables and budget constraints
-- [ ] 5-8 projects with costs and dependencies (only 3 projects, no dependencies)
+- [x] 5-8 projects with costs and dependencies (6 projects with dependencies)
 - [x] Binary integer programming capabilities
-- [x] Compiles and executes successfully
+- [ ] Compiles and executes successfully (BLOCKED by DSL syntax issue)
 
 
 ### 🔴 Phase 4: DSL Enhancement - Wildcard + Nested Access
