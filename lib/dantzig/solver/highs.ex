@@ -79,7 +79,7 @@ defmodule Dantzig.HiGHS do
     end
   end
 
-  defp constraint_to_iodata(constraint = %Constraint{}) do
+  def constraint_to_iodata(constraint = %Constraint{}, name_override \\ nil) do
     # Polynomial.to_lp_constraint returns [linear_terms, quadratic_terms]
     # We need to flatten this into a single iodata
     [linear_terms, quadratic_terms] = Polynomial.to_lp_constraint(constraint.left_hand_side)
@@ -97,7 +97,9 @@ defmodule Dantzig.HiGHS do
       "\n"
     ]
 
-    case constraint.name do
+    name_to_use = name_override || constraint.name
+
+    case name_to_use do
       nil ->
         base
 
@@ -215,7 +217,7 @@ defmodule Dantzig.HiGHS do
     ]
   end
 
-  defp variable_bounds(%ProblemVariable{} = v) do
+  def variable_bounds(%ProblemVariable{} = v) do
     # For binary variables, set bounds to 0 <= variable <= 1
     case v.type do
       :binary ->
