@@ -26,7 +26,7 @@ defmodule Dantzig.Solution.Parser do
     i
   end
 
-  line = utf8_string([not: ?\n, not: ?\r], min_bound: 0)
+  line = utf8_string([not: ?\n, not: ?\r], min: 0)
 
   model_status =
     ignore(string("Model status") |> concat(ignore(newline)))
@@ -35,23 +35,23 @@ defmodule Dantzig.Solution.Parser do
 
   float =
     optional(string("-"))
-    |> ascii_string([?0..?9], min_bound: 1)
+    |> ascii_string([?0..?9], min: 1)
     |> string(".")
-    |> ascii_string([?0..?9], min_bound: 1)
+    |> ascii_string([?0..?9], min: 1)
     |> reduce(:build_float)
 
   exponential_notation_float =
     optional(string("-"))
-    |> ascii_string([?0..?9], min_bound: 1)
-    |> optional(string(".") |> ascii_string([?0..?9], min_bound: 1))
+    |> ascii_string([?0..?9], min: 1)
+    |> optional(string(".") |> ascii_string([?0..?9], min: 1))
     |> string("e")
     |> optional(string("-"))
-    |> ascii_string([?0..?9], min_bound: 1)
+    |> ascii_string([?0..?9], min: 1)
     |> reduce(:build_float)
 
   integer =
     optional(string("-"))
-    |> ascii_string([?0..?9], min_bound: 1)
+    |> ascii_string([?0..?9], min: 1)
     |> reduce(:build_integer)
 
   number = choice([exponential_notation_float, float, integer])
@@ -66,7 +66,7 @@ defmodule Dantzig.Solution.Parser do
     |> concat(number)
     |> unwrap_and_tag(:objective)
 
-  variable = ascii_string([not: ?\s, not: ?\n, not: ?\r], min_bound: 1)
+  variable = ascii_string([not: ?\s, not: ?\n, not: ?\r], min: 1)
 
   defp build_variable([name, value]) do
     {name, value}

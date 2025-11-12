@@ -1,7 +1,7 @@
 # Tasks: Comprehensive Testing and DSL Improvements
 
 **Input**: Design documents from `/specs/003-testing/`
-**Prerequisites**: spec.md (required), DSL_IMPLEMENTATION_ISSUES.md, enumerator-tracking-design.md, TEST_FAILURE_ANALYSIS.md
+**Prerequisites**: spec.md (required), docs/internal/developer-notes/DSL_IMPLEMENTATION_ISSUES.md, docs/internal/developer-notes/enumerator-tracking-design.md, docs/internal/developer-notes/TEST_FAILURE_ANALYSIS.md
 
 **Tests**: Tests are included for comprehensive validation and TDD approach.
 
@@ -55,6 +55,8 @@
 
 #### Compilation Error Fixes
 
+- [x] T011a [US1] Fix NimbleParsec API syntax in `lib/dantzig/solution/parser.ex` (min_bound → min)
+- [x] T011b [US1] Fix cyclic module dependency by moving `Dantzig.Error` to `lib/dantzig/error.ex`
 - [ ] T012 [US1] Fix undefined variables in `test/compilation_test.exs`
 - [ ] T013 [P] [US1] Fix deprecated `variables/5` usage in `test/dantzig/dsl_test.exs`
 - [ ] T014 [P] [US1] Fix experimental test compilation errors in `test/dantzig/dsl/experimental/`
@@ -85,7 +87,7 @@
 
 ### Implementation for User Story 2
 
-- [ ] T021 [US2] Verify all examples in `docs/user/examples/` execute successfully
+- [ ] T021 [US2] Verify all examples in `docs/user/examples/*.exs` execute successfully
 - [ ] T022 [P] [US2] Fix any compilation errors in example files
 - [ ] T023 [P] [US2] Fix any runtime errors in example files
 - [ ] T024 [P] [US2] Verify all examples produce valid optimization solutions
@@ -201,7 +203,7 @@
 
 **Independent Test**: Run enumerator tracking tests and verify enumerators are registered
 
-**Requirements Coverage**: FR-004, FR-011, FR-013
+**Requirements Coverage**: FR-004, FR-011, FR-016
 
 ### Tests for User Story 4
 
@@ -244,7 +246,7 @@
 
 **Independent Test**: Run `mix test --cover` and review quality metrics
 
-**Requirements Coverage**: FR-008, FR-009
+**Requirements Coverage**: FR-008, FR-009, NFR-005
 
 ### Tests for User Story 5
 
@@ -254,12 +256,14 @@
 ### Implementation for User Story 5
 
 - [ ] T065 [US5] Review and categorize all test failures with clear reasons
-- [ ] T066 [P] [US5] Document expected test failures in `TEST_FAILURE_ANALYSIS.md`
+- [ ] T066 [P] [US5] Document expected test failures in `docs/internal/developer-notes/TEST_FAILURE_ANALYSIS.md`
 - [ ] T067 [P] [US5] Update test documentation to reflect current API
 - [ ] T068 [P] [US5] Remove or update outdated experimental tests
-- [ ] T069 [US5] Ensure test coverage meets targets (≥80% overall, ≥85% core modules)
+- [ ] T069 [US5] Ensure test coverage meets targets (≥85% overall)
 - [ ] T070 [P] [US5] Improve error messages in tests for better debugging
 - [ ] T071 [US5] Add tests for edge cases identified in DSL issues
+- [ ] T108 [P] [US5] Validate code files are under 500 lines (refactor if feasible and no other options)
+- [ ] T109 [P] [US5] Validate documentation files are under 300 lines (refactor if feasible and no other options)
 
 **Checkpoint**: At this point, test suite quality should be improved
 
@@ -269,9 +273,9 @@
 
 **Purpose**: Document improvements and validate completion
 
-- [ ] T072 [P] Update `DSL_IMPLEMENTATION_ISSUES.md` with resolved issues
-- [ ] T073 [P] Update `enumerator-tracking-design.md` with implementation status
-- [ ] T074 [P] Update `TEST_FAILURE_ANALYSIS.md` with final status
+- [ ] T072 [P] Update `docs/internal/developer-notes/DSL_IMPLEMENTATION_ISSUES.md` with resolved issues
+- [ ] T073 [P] Update `docs/developer/architecture/enumerator-tracking-design.md` with implementation status
+- [ ] T074 [P] Update `docs/internal/developer-notes/TEST_FAILURE_ANALYSIS.md` with final status
 - [ ] T075 [P] Create comprehensive test suite status report
 - [ ] T102 [US1] Run full test suite validation: `mix test`
 - [ ] T103 [US2] Run all examples validation: execute each example file
@@ -279,6 +283,7 @@
 - [ ] T105 [US3.5] Run model parameters and Problem.modify tests validation
 - [ ] T106 [US4] Run enumerator tracking tests validation
 - [ ] T107 [US5] Run coverage analysis: `mix test --cover`
+- [ ] T110 [US5] Validate file size limits: code files <500 lines, docs <300 lines (unless no other options)
 
 ---
 
@@ -369,9 +374,10 @@ With multiple developers:
 | FR-010: Valid solutions             | Phase 2 (US2) | 2 tasks    | ✅ Covered |
 | FR-011: Variable enumerators       | Phase 4 (US4) | 8 tasks    | ✅ Covered |
 | FR-012: Constraint validation       | Phase 4 (US4) | 4 tasks    | ✅ Covered |
-| FR-013: Design documentation        | Phase 4 (US4) | 1 task     | ✅ Covered |
 | FR-013: Model parameters           | Phase 3.5     | 8 tasks    | ✅ Covered |
-| FR-014: Problem.modify             | Phase 3.5     | 8 tasks    | ✅ Covered (overlaps with FR-013)
+| FR-014: Problem.modify             | Phase 3.5     | 8 tasks    | ✅ Covered |
 | FR-015: Constant access            | Phase 3 (US3) | 13 tasks   | ✅ Covered |
+| FR-016: Design documentation       | Phase 4 (US4) | 1 task     | ✅ Covered |
+| NFR-005: File size limits          | Phase 5 (US5) | 3 tasks    | ✅ Covered |
 
-**Total Tasks**: 102 tasks covering all 15 functional requirements
+**Total Tasks**: 105 tasks covering all 16 functional requirements and 1 non-functional requirement

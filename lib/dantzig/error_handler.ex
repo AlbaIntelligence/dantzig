@@ -98,8 +98,8 @@ defmodule Dantzig.ErrorHandler do
         "• Problem formulation may need review."
 
       :constraint_conflict ->
-        "Constraint conflict detected: #{details.conflict_description}"
-        |> <> " Two or more constraints cannot be satisfied simultaneously."
+        "Constraint conflict detected: #{details.conflict_description}" <>
+        " Two or more constraints cannot be satisfied simultaneously."
 
       _ ->
         "Constraint validation error: #{inspect(details)}"
@@ -305,9 +305,4 @@ defmodule Dantzig.ErrorHandler do
     line = Keyword.get(location, :line, 0)
     {file, line}
   end
-end
-
-# Error struct for consistent error reporting
-defmodule Dantzig.Error do
-  defstruct [:type, :message, :suggestions, :code_location]
 end
