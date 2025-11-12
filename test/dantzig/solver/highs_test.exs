@@ -484,7 +484,7 @@ defmodule Dantzig.Solver.HiGHSTest do
       iodata = HiGHS.variable_bounds(var_def)
       string = IO.iodata_to_binary(iodata)
 
-      assert string == "  1 x >= 0.0\n"
+      assert string == "  0.0 <= x\n"
     end
 
     test "formats continuous variable with only upper bound" do
