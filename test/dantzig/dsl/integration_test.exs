@@ -59,7 +59,7 @@ defmodule Dantzig.DSL.IntegrationTest do
 
       assert map_size(problem.variable_defs) == 3
       # Verify variables are binary
-      x1 = Problem.get_variable(problem, "x", [1])
+      x1 = Problem.get_variable(problem, "x(1)")
       assert x1.type == :binary
     end
 
@@ -84,9 +84,9 @@ defmodule Dantzig.DSL.IntegrationTest do
           objective(sum(x(:_)), direction: :minimize)
         end
 
-      x1 = Problem.get_variable(problem, "x", [1])
-      assert x1.min == 0
-      assert x1.max == 10
+      x1 = Problem.get_variable(problem, "x(1)")
+      assert x1.min_bound == 0
+      assert x1.max_bound == 10
     end
   end
 
@@ -102,7 +102,7 @@ defmodule Dantzig.DSL.IntegrationTest do
       assert map_size(problem.variable_defs) == 5
       # Verify all variables exist
       for i <- 1..5 do
-        assert Problem.get_variable(problem, "x", [i]) != nil
+        assert Problem.get_variable(problem, "x(#{i})") != nil
       end
     end
 
@@ -277,7 +277,7 @@ defmodule Dantzig.DSL.IntegrationTest do
         end
 
       x1_def = Map.get(problem.variable_defs, "x(1)")
-      assert x1_def.max == 10
+      assert x1_def.max_bound == 10
     end
 
     test "uses model parameters in constraint bounds" do
@@ -309,9 +309,9 @@ defmodule Dantzig.DSL.IntegrationTest do
           objective(sum(x(:_)), direction: :minimize)
         end
 
-      x1 = Problem.get_variable(problem, "x", [1])
-      assert x1.min == 0
-      assert x1.max == 10
+      x1 = Problem.get_variable(problem, "x(1)")
+      assert x1.min_bound == 0
+      assert x1.max_bound == 10
     end
   end
 
