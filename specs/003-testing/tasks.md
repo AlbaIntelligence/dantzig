@@ -58,7 +58,7 @@
 - [x] T011a [US1] Fix NimbleParsec API syntax in `lib/dantzig/solution/parser.ex` (min_bound → min)
 - [x] T011b [US1] Fix cyclic module dependency by moving `Dantzig.Error` to `lib/dantzig/error.ex`
 - [x] T012 [US1] Fix undefined variables in `test/compilation_test.exs` (fix function_exported check for macro, fix Code.compile_file pattern matching)
-- [ ] T013 [P] [US1] Fix deprecated `variables/5` usage in `test/dantzig/dsl_test.exs`
+- [x] T013 [P] [US1] Fix deprecated `variables/5` usage in `test/dantzig/dsl_test.exs` - Test uses valid form, added clarifying comment
 - [ ] T014 [P] [US1] Fix experimental test compilation errors in `test/dantzig/dsl/experimental/`
 - [ ] T015 [US1] Fix benchmark framework references or mark tests as skipped in `test/performance/scalability_test.exs`
 
