@@ -34,7 +34,7 @@ defmodule Dantzig.Core.ProblemTest do
     test "transforms variable reference with single generator variable" do
       # Test that x(i) where i is from generator gets transformed correctly
       # Input: AST for x(i) where i comes from generator context
-      # Expected: AST that can resolve to concrete variable names x_1, x_2, etc.
+      # Expected: AST that can resolve to concrete variable names x(1), x(2), etc.
 
       # Create AST for x(i) expression
       expr = quote do: x(i)
@@ -215,13 +215,13 @@ defmodule Dantzig.Core.ProblemTest do
       bindings = %{i: 1}
 
       # Parse the transformed expression with bindings
-      # This should resolve x(i) to x_1 when i=1
+      # This should resolve x(i) to x(1) when i=1
       alias Dantzig.Problem.DSL.ExpressionParser
       poly = ExpressionParser.parse_expression_to_polynomial(transformed, bindings, problem)
 
-      # Should resolve to polynomial referencing x_1
+      # Should resolve to polynomial referencing x(1)
       vars = Dantzig.Polynomial.variables(poly)
-      assert Enum.member?(vars, "x_1")
+      assert Enum.member?(vars, "x(1)")
     end
 
     test "transformed 2D variable reference resolves correctly with bindings" do
@@ -241,17 +241,17 @@ defmodule Dantzig.Core.ProblemTest do
       bindings = %{i: 1}
 
       # Parse the transformed expression with bindings
-      # This should resolve sum(queen2d(1, :_)) to queen2d_1_1 + queen2d_1_2
+      # This should resolve sum(queen2d(1, :_)) to queen2d(1,1) + queen2d(1,2)
       alias Dantzig.Problem.DSL.ExpressionParser
       poly = ExpressionParser.parse_expression_to_polynomial(transformed, bindings, problem)
 
-      # Should resolve to polynomial referencing queen2d_1_1 and queen2d_1_2
+      # Should resolve to polynomial referencing queen2d(1,1) and queen2d(1,2)
       vars = Dantzig.Polynomial.variables(poly)
-      assert Enum.member?(vars, "queen2d_1_1")
-      assert Enum.member?(vars, "queen2d_1_2")
-      # Should not reference queen2d_2_* (different i value)
-      refute Enum.member?(vars, "queen2d_2_1")
-      refute Enum.member?(vars, "queen2d_2_2")
+      assert Enum.member?(vars, "queen2d(1,1)")
+      assert Enum.member?(vars, "queen2d(1,2)")
+      # Should not reference queen2d(2,*) (different i value)
+      refute Enum.member?(vars, "queen2d(2,1)")
+      refute Enum.member?(vars, "queen2d(2,2)")
     end
 
     test "transformed variable reference resolves in constraint expression with bindings" do
@@ -277,12 +277,12 @@ defmodule Dantzig.Core.ProblemTest do
       alias Dantzig.Problem.DSL.ExpressionParser
       poly = ExpressionParser.parse_expression_to_polynomial(left_expr, bindings, problem)
 
-      # Should resolve to polynomial referencing x_2
+      # Should resolve to polynomial referencing x(2)
       vars = Dantzig.Polynomial.variables(poly)
-      assert Enum.member?(vars, "x_2")
+      assert Enum.member?(vars, "x(2)")
       # Should not reference other x variables
-      refute Enum.member?(vars, "x_1")
-      refute Enum.member?(vars, "x_3")
+      refute Enum.member?(vars, "x(1)")
+      refute Enum.member?(vars, "x(3)")
     end
   end
 
@@ -462,13 +462,13 @@ defmodule Dantzig.Core.ProblemTest do
       bindings = %{i: 1}
 
       # Parse the transformed expression with bindings
-      # This should resolve x(i) to x_1 when i=1
+      # This should resolve x(i) to x(1) when i=1
       alias Dantzig.Problem.DSL.ExpressionParser
       poly = ExpressionParser.parse_expression_to_polynomial(transformed, bindings, problem)
 
-      # Should resolve to polynomial referencing x_1
+      # Should resolve to polynomial referencing x(1)
       vars = Dantzig.Polynomial.variables(poly)
-      assert Enum.member?(vars, "x_1")
+      assert Enum.member?(vars, "x(1)")
     end
 
     test "transformed 2D variable reference resolves correctly with bindings" do
@@ -488,17 +488,17 @@ defmodule Dantzig.Core.ProblemTest do
       bindings = %{i: 1}
 
       # Parse the transformed expression with bindings
-      # This should resolve sum(queen2d(1, :_)) to queen2d_1_1 + queen2d_1_2
+      # This should resolve sum(queen2d(1, :_)) to queen2d(1,1) + queen2d(1,2)
       alias Dantzig.Problem.DSL.ExpressionParser
       poly = ExpressionParser.parse_expression_to_polynomial(transformed, bindings, problem)
 
-      # Should resolve to polynomial referencing queen2d_1_1 and queen2d_1_2
+      # Should resolve to polynomial referencing queen2d(1,1) and queen2d(1,2)
       vars = Dantzig.Polynomial.variables(poly)
-      assert Enum.member?(vars, "queen2d_1_1")
-      assert Enum.member?(vars, "queen2d_1_2")
-      # Should not reference queen2d_2_* (different i value)
-      refute Enum.member?(vars, "queen2d_2_1")
-      refute Enum.member?(vars, "queen2d_2_2")
+      assert Enum.member?(vars, "queen2d(1,1)")
+      assert Enum.member?(vars, "queen2d(1,2)")
+      # Should not reference queen2d(2,*) (different i value)
+      refute Enum.member?(vars, "queen2d(2,1)")
+      refute Enum.member?(vars, "queen2d(2,2)")
     end
 
     test "transformed variable reference resolves in objective expression with bindings" do
@@ -522,15 +522,15 @@ defmodule Dantzig.Core.ProblemTest do
       alias Dantzig.Problem.DSL.ExpressionParser
       poly = ExpressionParser.parse_expression_to_polynomial(transformed, bindings, problem)
 
-      # Should resolve to polynomial referencing x_2 and y_2
+      # Should resolve to polynomial referencing x(2) and y(2)
       vars = Dantzig.Polynomial.variables(poly)
-      assert Enum.member?(vars, "x_2")
-      assert Enum.member?(vars, "y_2")
+      assert Enum.member?(vars, "x(2)")
+      assert Enum.member?(vars, "y(2)")
       # Should not reference other x/y variables
-      refute Enum.member?(vars, "x_1")
-      refute Enum.member?(vars, "x_3")
-      refute Enum.member?(vars, "y_1")
-      refute Enum.member?(vars, "y_3")
+      refute Enum.member?(vars, "x(1)")
+      refute Enum.member?(vars, "x(3)")
+      refute Enum.member?(vars, "y(1)")
+      refute Enum.member?(vars, "y(3)")
     end
   end
 

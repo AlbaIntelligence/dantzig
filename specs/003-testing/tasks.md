@@ -50,7 +50,7 @@
 #### Variable Access Fixes
 
 - [x] T009 [P] [US1] Fix `Problem.get_variable/3` → `Problem.get_variable/2` in `test/dantzig/dsl/integration_test.exs` (use variable name format "x(1)" instead of indices)
-- [ ] T010 [P] [US1] Fix variable name format assertions (`x_1` → `x(1)`, `queen2d_1_1` → `queen2d(1,1)`) in `test/dantzig/core/problem_test.exs`
+- [x] T010 [P] [US1] Fix variable name format assertions (`x_1` → `x(1)`, `queen2d_1_1` → `queen2d(1,1)`) in `test/dantzig/core/problem_test.exs`
 - [x] T011 [P] [US1] Fix variable bounds field names (`min`/`max` → `min_bound`/`max_bound`) in `lib/dantzig/solver/highs.ex`
 
 #### Compilation Error Fixes
