@@ -59,7 +59,7 @@
 - [x] T011b [US1] Fix cyclic module dependency by moving `Dantzig.Error` to `lib/dantzig/error.ex`
 - [x] T012 [US1] Fix undefined variables in `test/compilation_test.exs` (fix function_exported check for macro, fix Code.compile_file pattern matching)
 - [x] T013 [P] [US1] Fix deprecated `variables/5` usage in `test/dantzig/dsl_test.exs` - Test uses valid form, added clarifying comment
-- [ ] T014 [P] [US1] Fix experimental test compilation errors in `test/dantzig/dsl/experimental/`
+- [x] T014 [P] [US1] Fix experimental test compilation errors in `test/dantzig/dsl/experimental/` - Fixed macro_parser_test.exs sum/1 issue (changed to use unknown_func for Code.eval_string tests)
 - [x] T015 [US1] Fix benchmark framework references or mark tests as skipped in `test/performance/scalability_test.exs` (marked all tests as skipped, commented out BenchmarkFramework calls)
 
 #### Test Assertion Updates

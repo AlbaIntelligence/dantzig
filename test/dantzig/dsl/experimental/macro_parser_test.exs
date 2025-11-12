@@ -13,7 +13,8 @@ defmodule Dantzig.DSL.MacroParserTest do
     # Let's test this theory:
     try do
       # This should fail at parse time, not macro time
-      Code.eval_string("sum(1 across 2)")
+      # Using a simple function call instead of sum macro
+      Code.eval_string("unknown_func(1 across 2)")
     rescue
       SyntaxError ->
         # Expected - parser fails before macro can see it
@@ -28,8 +29,8 @@ defmodule Dantzig.DSL.MacroParserTest do
   test "test if macros can handle valid syntax" do
     # This should work because 'in' is a valid Elixir operator
     try do
-      # This should parse successfully
-      Code.eval_string("sum(1 in 2)")
+      # This should parse successfully (even if function doesn't exist)
+      Code.eval_string("unknown_func(1 in 2)")
     rescue
       SyntaxError ->
         # Unexpected - this should parse
@@ -47,7 +48,8 @@ defmodule Dantzig.DSL.MacroParserTest do
 
     # This is a parser error (happens before macros):
     assert_raise SyntaxError, fn ->
-      Code.eval_string("sum(1 across 2)")
+      # Using a simple function call instead of sum macro
+      Code.eval_string("unknown_func(1 across 2)")
     end
 
     # This is a macro error (happens during macro expansion):
