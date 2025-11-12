@@ -396,7 +396,7 @@ defmodule Dantzig.Solver.HiGHSTest do
       iodata = HiGHS.constraint_to_iodata(constraint, "constraint1")
       string = IO.iodata_to_binary(iodata)
 
-      assert string == "  constraint1: 1 x >= 0.0\n"
+      assert string == "  constraint1: 1 x >= 0\n"
     end
 
     test "formats constraint without name" do
@@ -404,7 +404,7 @@ defmodule Dantzig.Solver.HiGHSTest do
       iodata = HiGHS.constraint_to_iodata(constraint, nil)
       string = IO.iodata_to_binary(iodata)
 
-      assert string == "  1 x >= 0.0\n"
+      assert string == "  1 x >= 0\n"
     end
 
     test "formats constraint with empty name" do
@@ -412,7 +412,7 @@ defmodule Dantzig.Solver.HiGHSTest do
       iodata = HiGHS.constraint_to_iodata(constraint, "")
       string = IO.iodata_to_binary(iodata)
 
-      assert string == "  1 x >= 0.0\n"
+      assert string == "  1 x >= 0\n"
     end
 
     test "formats equality constraint" do
@@ -540,7 +540,7 @@ defmodule Dantzig.Solver.HiGHSTest do
       iodata = HiGHS.variable_bounds(var_def)
       string = IO.iodata_to_binary(iodata)
 
-      assert string == ""
+      assert string == "  0 <= x <= 1\n"
     end
 
     test "formats integer variable" do
@@ -554,7 +554,7 @@ defmodule Dantzig.Solver.HiGHSTest do
       iodata = HiGHS.variable_bounds(var_def)
       string = IO.iodata_to_binary(iodata)
 
-      assert string == ""
+      assert string == "  x free\n"
     end
 
     test "formats integer variable with bounds" do
@@ -568,7 +568,7 @@ defmodule Dantzig.Solver.HiGHSTest do
       iodata = HiGHS.variable_bounds(var_def)
       string = IO.iodata_to_binary(iodata)
 
-      assert string == "0 <= x <= 100\n"
+      assert string == "  0.0 <= x\n  x <= 100.0\n"
     end
   end
 
