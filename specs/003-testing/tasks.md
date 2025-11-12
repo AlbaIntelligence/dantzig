@@ -64,7 +64,7 @@
 
 #### Test Assertion Updates
 
-- [x] T016 [P] [US1] Update LP format string assertions to match actual output format in `test/dantzig/solver/highs_test.exs` (updated constraint and variable bounds format assertions)
+- [x] T016 [P] [US1] Update LP format string assertions to match actual output format in `test/dantzig/solver/highs_test.exs` (COMPLETE - fixed all increment_objective calls, updated all format assertions to match actual LP output)
 - [ ] T017 [P] [US1] Fix constraint name interpolation assertions in `test/dantzig/problem/dsl/constraint_manager_test.exs`
 - [ ] T018 [P] [US1] Update `Problem.constraint/3` tests to reflect working functionality in `test/dantzig/core/problem_test.exs`
 
