@@ -6,7 +6,7 @@
 
 **Mathematical Optimization for Elixir** — Write optimization problems naturally, like mathematical notation, with automatic linearization and powerful pattern-based modeling.
 
-> ⚠️ **Important**: Old imperative syntax is deprecated. See [Deprecation Notice](docs/DEPRECATION_NOTICE.md) for migration guide.
+> ⚠️ **Important**: Old imperative syntax is deprecated. See [Deprecation Notice](docs/user/guides/DEPRECATION_NOTICE.md) for migration guide.
 
 ```elixir
 require Dantzig.Problem, as: Problem
@@ -131,12 +131,12 @@ IO.inspect({solution.objective, solution.variables})
 
 ## 📖 Documentation & Learning
 
-| Level               | Guide                                          | Description                     |
-| ------------------- | ---------------------------------------------- | ------------------------------- |
-| 🏃 **Beginner**     | [Getting Started](docs/GETTING_STARTED.md)     | Your first optimization problem |
-| 📚 **Intermediate** | [DSL Tutorial](docs/COMPREHENSIVE_TUTORIAL.md) | Complete guide with examples    |
-| 🏗️ **Advanced**     | [Architecture](docs/ARCHITECTURE.md)           | System design deep dive         |
-| 🔧 **Reference**    | [API Docs](https://hexdocs.pm/dantzig)         | Complete function reference     |
+| Level               | Guide                                                      | Description                     |
+| ------------------- | ---------------------------------------------------------- | ------------------------------- |
+| 🏃 **Beginner**     | [Getting Started](docs/user/quickstart.md)                 | Your first optimization problem |
+| 📚 **Intermediate** | [DSL Tutorial](docs/user/tutorial/comprehensive.md)        | Complete guide with examples    |
+| 🏗️ **Advanced**     | [Architecture](docs/developer/architecture/overview.md)   | System design deep dive         |
+| 🔧 **Reference**    | [API Docs](https://hexdocs.pm/dantzig)                     | Complete function reference     |
 
 **Generate full docs locally:**
 
@@ -265,7 +265,7 @@ config :dantzig, :highs_version, "1.9.0"
 
 ## 🤝 Contributing
 
-We welcome contributions! Explore the [architecture docs](docs/ARCHITECTURE.md) to understand the system design, and feel free to submit issues and pull requests on GitHub.
+We welcome contributions! Explore the [architecture docs](docs/developer/architecture/overview.md) to understand the system design, and feel free to submit issues and pull requests on GitHub.
 
 **Key Areas for Contribution**:
 
@@ -286,4 +286,4 @@ MIT License - see [LICENSE.TXT](LICENSE.TXT) for details.
 
 ---
 
-**Ready to optimize?** Start with the [Getting Started Guide](docs/GETTING_STARTED.md) or dive into the [DSL Tutorial](docs/COMPREHENSIVE_TUTORIAL.md) for comprehensive examples!
+**Ready to optimize?** Start with the [Getting Started Guide](docs/user/quickstart.md) or dive into the [DSL Tutorial](docs/user/tutorial/comprehensive.md) for comprehensive examples!

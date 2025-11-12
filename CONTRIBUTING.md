@@ -33,7 +33,7 @@ Thank you for your interest in contributing to Dantzig! This document provides g
 
 ## Architecture
 
-Before making significant changes, please read the [Architecture Documentation](docs/ARCHITECTURE.md) to understand the system design.
+Before making significant changes, please read the [Architecture Documentation](docs/developer/architecture/overview.md) to understand the system design.
 
 ## Pull Request Process
 

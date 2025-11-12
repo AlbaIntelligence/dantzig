@@ -30,16 +30,15 @@ defmodule Dantzig.MixProject do
         main: "readme",
         extras: [
           "README.md",
-          "docs/GETTING_STARTED.md",
-          "docs/TUTORIAL.md",
-          "docs/COMPREHENSIVE_TUTORIAL.md",
-          "docs/MODELING_GUIDE.md",
-          "docs/ARCHITECTURE.md",
-          "docs/ADVANCED_AST.md",
-          "docs/ARCHITECTURE.md",
-          "docs/PATTERN_BASED_OPERATIONS.md",
+          "docs/user/quickstart.md",
+          "docs/user/tutorial/basics.md",
+          "docs/user/tutorial/comprehensive.md",
+          "docs/user/guides/modeling-patterns.md",
+          "docs/developer/architecture/overview.md",
+          "docs/developer/architecture/advanced-ast.md",
+          "docs/user/reference/pattern-operations.md",
           "docs/README_MACROS.md",
-          "docs/VARIADIC_OPERATIONS.md"
+          "docs/user/reference/variadic-operations.md"
         ],
         groups_for_modules: [
           Core: [
