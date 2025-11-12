@@ -1,3 +1,8 @@
+# Error struct for consistent error reporting
+defmodule Dantzig.Error do
+  defstruct [:type, :message, :suggestions, :code_location]
+end
+
 defmodule Dantzig.ErrorHandler do
   @moduledoc """
   Enhanced error handling for the Dantzig optimization library.
@@ -20,41 +25,42 @@ defmodule Dantzig.ErrorHandler do
           code_location: {String.t(), integer()}
         }
   def dsl_parse_error(error_type, details, location \\ []) do
-    message = case error_type do
-      :undefined_variable ->
-        "Variable '#{details.variable_name}' is not defined. Available variables: #{Enum.join(details.available_variables, ", ")}"
+    message =
+      case error_type do
+        :undefined_variable ->
+          "Variable '#{details.variable_name}' is not defined. Available variables: #{Enum.join(details.available_variables, ", ")}"
 
-      :invalid_constraint_expression ->
-        "Invalid constraint expression: #{details.expression}. " <>
-        "Common issues: " <>
-        "• Check variable names match defined variables. " <>
-        "• Ensure mathematical operations are valid (no multiplication of variables). " <>
-        "• Use sum() for aggregated expressions."
+        :invalid_constraint_expression ->
+          "Invalid constraint expression: #{details.expression}. " <>
+            "Common issues: " <>
+            "• Check variable names match defined variables. " <>
+            "• Ensure mathematical operations are valid (no multiplication of variables). " <>
+            "• Use sum() for aggregated expressions."
 
-      :unreachable_constraint ->
-        "Constraint appears to be infeasible: #{details.constraint}. " <>
-        "This constraint cannot be satisfied simultaneously with other constraints. " <>
-        "Suggestions: " <>
-        "• Review conflicting constraints. " <>
-        "• Check if bounds are too restrictive. " <>
-        "• Verify constraint logic."
+        :unreachable_constraint ->
+          "Constraint appears to be infeasible: #{details.constraint}. " <>
+            "This constraint cannot be satisfied simultaneously with other constraints. " <>
+            "Suggestions: " <>
+            "• Review conflicting constraints. " <>
+            "• Check if bounds are too restrictive. " <>
+            "• Verify constraint logic."
 
-      :malformed_sum_expression ->
-        "Malformed sum expression: #{details.expression}. " <>
-        "Sum expressions should follow: " <>
-        "• sum(for var <- collection, do: expression). " <>
-        "• sum(variable_name(index) for index <- range)."
+        :malformed_sum_expression ->
+          "Malformed sum expression: #{details.expression}. " <>
+            "Sum expressions should follow: " <>
+            "• sum(for var <- collection, do: expression). " <>
+            "• sum(variable_name(index) for index <- range)."
 
-      :invalid_variable_access ->
-        "Invalid variable access: #{details.access}. " <>
-        "Variable access patterns: " <>
-        "• single variable: variable_name. " <>
-        "• indexed access: variable_name(index). " <>
-        "• sum comprehension: sum(for i <- 1..n, do: variable_name(i))."
+        :invalid_variable_access ->
+          "Invalid variable access: #{details.access}. " <>
+            "Variable access patterns: " <>
+            "• single variable: variable_name. " <>
+            "• indexed access: variable_name(index). " <>
+            "• sum comprehension: sum(for i <- 1..n, do: variable_name(i))."
 
-      _ ->
-        "DSL parsing error: #{inspect(details)}"
-    end
+        _ ->
+          "DSL parsing error: #{inspect(details)}"
+      end
 
     suggestions = get_error_suggestions(error_type, details)
     code_location = get_error_location(location)
@@ -77,33 +83,34 @@ defmodule Dantzig.ErrorHandler do
           code_location: {String.t(), integer()}
         }
   def constraint_validation_error(error_type, details, location \\ []) do
-    message = case error_type do
-      :constraint_violation ->
-        "Constraint violation detected: #{details.constraint_description}. " <>
-        "The constraint is not satisfied by the solution. " <>
-        "Violation amount: #{details.violation}."
+    message =
+      case error_type do
+        :constraint_violation ->
+          "Constraint violation detected: #{details.constraint_description}. " <>
+            "The constraint is not satisfied by the solution. " <>
+            "Violation amount: #{details.violation}."
 
-      :infeasible_problem ->
-        "Problem is infeasible - no solution exists that satisfies all constraints. " <>
-        "This can occur when: " <>
-        "• Constraints are contradictory. " <>
-        "• Bounds are too restrictive. " <>
-        "• Required resources exceed available resources."
+        :infeasible_problem ->
+          "Problem is infeasible - no solution exists that satisfies all constraints. " <>
+            "This can occur when: " <>
+            "• Constraints are contradictory. " <>
+            "• Bounds are too restrictive. " <>
+            "• Required resources exceed available resources."
 
-      :unbounded_objective ->
-        "Objective function is unbounded - solution can be arbitrarily large. " <>
-        "This indicates: " <>
-        "• Missing constraints to bound the objective. " <>
-        "• Objective coefficients may be incorrect. " <>
-        "• Problem formulation may need review."
+        :unbounded_objective ->
+          "Objective function is unbounded - solution can be arbitrarily large. " <>
+            "This indicates: " <>
+            "• Missing constraints to bound the objective. " <>
+            "• Objective coefficients may be incorrect. " <>
+            "• Problem formulation may need review."
 
-      :constraint_conflict ->
-        "Constraint conflict detected: #{details.conflict_description}"
-        |> <> " Two or more constraints cannot be satisfied simultaneously."
+        :constraint_conflict ->
+          "Constraint conflict detected: #{details.conflict_description} " <>
+            "Two or more constraints cannot be satisfied simultaneously."
 
-      _ ->
-        "Constraint validation error: #{inspect(details)}"
-    end
+        _ ->
+          "Constraint validation error: #{inspect(details)}"
+      end
 
     suggestions = get_constraint_suggestions(error_type, details)
     code_location = get_error_location(location)
@@ -126,29 +133,30 @@ defmodule Dantzig.ErrorHandler do
           code_location: {String.t(), integer()}
         }
   def solver_error(error_type, details, location \\ []) do
-    message = case error_type do
-      :solver_not_available ->
-        "Optimization solver (HiGHS) is not available."
+    message =
+      case error_type do
+        :solver_not_available ->
+          "Optimization solver (HiGHS) is not available."
 
-      :solver_timeout ->
-        "Solver timed out after #{details.timeout_ms}ms. " <>
-        "This may indicate the problem is too large or complex."
+        :solver_timeout ->
+          "Solver timed out after #{details.timeout_ms}ms. " <>
+            "This may indicate the problem is too large or complex."
 
-      :solver_failure ->
-        "Solver failed to find a solution. " <>
-        "Exit code: #{details.exit_code}. " <>
-        "Error output: #{details.error_output}."
+        :solver_failure ->
+          "Solver failed to find a solution. " <>
+            "Exit code: #{details.exit_code}. " <>
+            "Error output: #{details.error_output}."
 
-      :invalid_problem_format ->
-        "Problem format is invalid for solver consumption. " <>
-        "This may be due to: " <>
-        "• Unsupported constraint types. " <>
-        "• Invalid bounds (NaN, infinity issues). " <>
-        "• Corrupted problem data."
+        :invalid_problem_format ->
+          "Problem format is invalid for solver consumption. " <>
+            "This may be due to: " <>
+            "• Unsupported constraint types. " <>
+            "• Invalid bounds (NaN, infinity issues). " <>
+            "• Corrupted problem data."
 
-      _ ->
-        "Solver error: #{inspect(details)}"
-    end
+        _ ->
+          "Solver error: #{inspect(details)}"
+      end
 
     suggestions = get_solver_suggestions(error_type, details)
     code_location = get_error_location(location)
@@ -171,23 +179,24 @@ defmodule Dantzig.ErrorHandler do
           code_location: {String.t(), integer()}
         }
   def model_parameter_error(error_type, details, location \\ []) do
-    message = case error_type do
-      :undefined_parameter ->
-        "Model parameter '#{details.parameter_name}' is not defined. " <>
-        "Available parameters: #{Enum.join(details.available_parameters, ", ")}."
+    message =
+      case error_type do
+        :undefined_parameter ->
+          "Model parameter '#{details.parameter_name}' is not defined. " <>
+            "Available parameters: #{Enum.join(details.available_parameters, ", ")}."
 
-      :invalid_parameter_type ->
-        "Invalid parameter type for '#{details.parameter_name}'. " <>
-        "Expected: #{details.expected_type}. " <>
-        "Got: #{inspect(details.actual_value)}."
+        :invalid_parameter_type ->
+          "Invalid parameter type for '#{details.parameter_name}'. " <>
+            "Expected: #{details.expected_type}. " <>
+            "Got: #{inspect(details.actual_value)}."
 
-      :parameter_evaluation_failed ->
-        "Failed to evaluate model parameter '#{details.parameter_name}'. " <>
-        "Error: #{details.error_message}."
+        :parameter_evaluation_failed ->
+          "Failed to evaluate model parameter '#{details.parameter_name}'. " <>
+            "Error: #{details.error_message}."
 
-      _ ->
-        "Model parameter error: #{inspect(details)}"
-    end
+        _ ->
+          "Model parameter error: #{inspect(details)}"
+      end
 
     suggestions = get_parameter_suggestions(error_type, details)
     code_location = get_error_location(location)
@@ -230,8 +239,10 @@ defmodule Dantzig.ErrorHandler do
   end
 
   defp get_error_suggestions(_error_type, _details) do
-    ["Check the documentation for proper DSL syntax",
-     "Review examples for correct usage patterns"]
+    [
+      "Check the documentation for proper DSL syntax",
+      "Review examples for correct usage patterns"
+    ]
   end
 
   defp get_constraint_suggestions(:infeasible_problem, _details) do
@@ -253,8 +264,7 @@ defmodule Dantzig.ErrorHandler do
   end
 
   defp get_constraint_suggestions(_error_type, _details) do
-    ["Review constraint formulation and bounds",
-     "Check mathematical model consistency"]
+    ["Review constraint formulation and bounds", "Check mathematical model consistency"]
   end
 
   defp get_solver_suggestions(:solver_not_available, _details) do
@@ -275,8 +285,10 @@ defmodule Dantzig.ErrorHandler do
   end
 
   defp get_solver_suggestions(_error_type, _details) do
-    ["Check problem format and solver compatibility",
-     "Verify all bounds and coefficients are valid numbers"]
+    [
+      "Check problem format and solver compatibility",
+      "Verify all bounds and coefficients are valid numbers"
+    ]
   end
 
   defp get_parameter_suggestions(:undefined_parameter, details) do
@@ -287,7 +299,7 @@ defmodule Dantzig.ErrorHandler do
     ]
   end
 
-  defp get_parameter_suggestions(:invalid_parameter_type, details) do
+  defp get_parameter_suggestions(:invalid_parameter_type, _details) do
     [
       "Check that parameter values match expected types",
       "Ensure collections are enumerable",
@@ -296,8 +308,7 @@ defmodule Dantzig.ErrorHandler do
   end
 
   defp get_parameter_suggestions(_error_type, _details) do
-    ["Review model parameter documentation",
-     "Check parameter examples for correct usage"]
+    ["Review model parameter documentation", "Check parameter examples for correct usage"]
   end
 
   defp get_error_location(location) do
@@ -305,9 +316,4 @@ defmodule Dantzig.ErrorHandler do
     line = Keyword.get(location, :line, 0)
     {file, line}
   end
-end
-
-# Error struct for consistent error reporting
-defmodule Dantzig.Error do
-  defstruct [:type, :message, :suggestions, :code_location]
 end

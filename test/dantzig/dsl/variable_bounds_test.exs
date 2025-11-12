@@ -49,8 +49,8 @@ defmodule Dantzig.DSL.VariableBoundsTest do
       assert problem.variable_defs["x"] != nil
       variable = problem.variable_defs["x"]
       assert variable.type == :continuous
-      assert variable.min == 0
-      assert variable.max == 100
+      assert variable.min_bound == 0
+      assert variable.max_bound == 100
     end
 
     test "integer variables with integer bounds" do
@@ -63,8 +63,8 @@ defmodule Dantzig.DSL.VariableBoundsTest do
       assert problem.variable_defs["y"] != nil
       variable = problem.variable_defs["y"]
       assert variable.type == :integer
-      assert variable.min == 0
-      assert variable.max == 10
+      assert variable.min_bound == 0
+      assert variable.max_bound == 10
     end
 
     test "variables with only min bound" do
@@ -76,8 +76,8 @@ defmodule Dantzig.DSL.VariableBoundsTest do
 
       assert problem.variable_defs["z"] != nil
       variable = problem.variable_defs["z"]
-      assert variable.min == 5
-      assert variable.max == nil
+      assert variable.min_bound == 5
+      assert variable.max_bound == nil
     end
 
     test "variables with only max bound" do
@@ -89,8 +89,8 @@ defmodule Dantzig.DSL.VariableBoundsTest do
 
       assert problem.variable_defs["w"] != nil
       variable = problem.variable_defs["w"]
-      assert variable.min == nil
-      assert variable.max == 50
+      assert variable.min_bound == nil
+      assert variable.max_bound == 50
     end
 
     test "variables with infinity bounds" do
@@ -102,8 +102,8 @@ defmodule Dantzig.DSL.VariableBoundsTest do
 
       assert problem.variable_defs["v"] != nil
       variable = problem.variable_defs["v"]
-      assert variable.min == 0
-      assert variable.max == :infinity
+      assert variable.min_bound == 0
+      assert variable.max_bound == :infinity
     end
   end
 
@@ -133,8 +133,8 @@ defmodule Dantzig.DSL.VariableBoundsTest do
         assert var_def != nil, "Expected variable_defs[#{var_name}] to exist"
         assert var_def.type == :continuous
         # Bounds should be applied to all generated variables
-        assert var_def.min == 0
-        assert var_def.max == 100
+        assert var_def.min_bound == 0
+        assert var_def.max_bound == 100
       end)
     end
 
@@ -163,8 +163,8 @@ defmodule Dantzig.DSL.VariableBoundsTest do
         var_def = problem.variable_defs[var_name]
         assert var_def != nil, "Expected variable_defs[#{var_name}] to exist"
         assert var_def.type == :continuous
-        assert var_def.min == 0
-        assert var_def.max == :infinity
+        assert var_def.min_bound == 0
+        assert var_def.max_bound == :infinity
       end)
     end
   end
@@ -245,8 +245,8 @@ defmodule Dantzig.DSL.VariableBoundsTest do
       assert problem.variable_defs["cont_var"] != nil
       variable = problem.variable_defs["cont_var"]
       assert variable.type == :continuous
-      assert variable.min == 0.1
-      assert variable.max == 99.9
+      assert variable.min_bound == 0.1
+      assert variable.max_bound == 99.9
     end
   end
 
@@ -265,8 +265,8 @@ defmodule Dantzig.DSL.VariableBoundsTest do
 
       assert modified_problem.variable_defs["x"] != nil
       x_var = modified_problem.variable_defs["x"]
-      assert x_var.min == 0
-      assert x_var.max == 100
+      assert x_var.min_bound == 0
+      assert x_var.max_bound == 100
 
       assert Map.has_key?(modified_problem.variables, "y")
       y_vars = modified_problem.variables["y"]
@@ -277,8 +277,8 @@ defmodule Dantzig.DSL.VariableBoundsTest do
         var_name = tuple_key_to_var_name("y", key)
         var_def = modified_problem.variable_defs[var_name]
         assert var_def != nil, "Expected variable_defs[#{var_name}] to exist"
-        assert var_def.min == 1
-        assert var_def.max == 5
+        assert var_def.min_bound == 1
+        assert var_def.max_bound == 5
       end)
     end
   end
@@ -295,8 +295,8 @@ defmodule Dantzig.DSL.VariableBoundsTest do
 
       assert modified_problem.variable_defs["x"] != nil
       x_var = modified_problem.variable_defs["x"]
-      assert x_var.min == 10
-      assert x_var.max == 90
+      assert x_var.min_bound == 10
+      assert x_var.max_bound == 90
     end
 
     test "add_variables with bounds and generators" do
@@ -328,10 +328,10 @@ defmodule Dantzig.DSL.VariableBoundsTest do
       bread_var = modified_problem.variable_defs["qty(bread)"]
       milk_var = modified_problem.variable_defs["qty(milk)"]
 
-      assert bread_var.min == 0
-      assert bread_var.max == 100
-      assert milk_var.min == 0
-      assert milk_var.max == 100
+      assert bread_var.min_bound == 0
+      assert bread_var.max_bound == 100
+      assert milk_var.min_bound == 0
+      assert milk_var.max_bound == 100
     end
   end
 

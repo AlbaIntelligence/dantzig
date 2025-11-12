@@ -30,16 +30,30 @@ defmodule Dantzig.MixProject do
         main: "readme",
         extras: [
           "README.md",
-          "docs/GETTING_STARTED.md",
-          "docs/TUTORIAL.md",
-          "docs/COMPREHENSIVE_TUTORIAL.md",
-          "docs/MODELING_GUIDE.md",
-          "docs/ARCHITECTURE.md",
-          "docs/ADVANCED_AST.md",
-          "docs/ARCHITECTURE.md",
-          "docs/PATTERN_BASED_OPERATIONS.md",
-          "docs/README_MACROS.md",
-          "docs/VARIADIC_OPERATIONS.md"
+          "docs/README.md",
+          # User Documentation
+          "docs/user/README.md",
+          "docs/user/quickstart.md",
+          "docs/user/tutorial/basics.md",
+          "docs/user/tutorial/comprehensive.md",
+          "docs/user/reference/dsl-syntax.md",
+          "docs/user/reference/DSL_SYNTAX_ADVANCED.md",
+          "docs/user/reference/advanced/wildcards-and-nested-maps.md",
+          "docs/user/reference/advanced/error-handling.md",
+          "docs/user/reference/advanced/best-practices.md",
+          "docs/user/reference/DSL_SYNTAX_EXAMPLES.md",
+          "docs/user/reference/pattern-operations.md",
+          "docs/user/reference/variadic-operations.md",
+          "docs/user/reference/expressions.md",
+          "docs/user/reference/model-parameters.md",
+          "docs/user/guides/modeling-patterns.md",
+          "docs/user/guides/troubleshooting.md",
+          "docs/user/guides/DEPRECATION_NOTICE.md",
+          # Developer Documentation
+          "docs/developer/README.md",
+          "docs/developer/architecture/overview.md",
+          "docs/developer/architecture/ast-transformation.md",
+          "docs/developer/contributing/style-guide.md"
         ],
         groups_for_modules: [
           Core: [

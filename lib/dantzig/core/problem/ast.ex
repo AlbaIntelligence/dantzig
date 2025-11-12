@@ -301,6 +301,30 @@ defmodule Dantzig.Problem.AST do
           Polynomial.variable(indexed_name)
         end
 
+      # Handle variable access patterns like x("key") which expand to {x, meta, ["key"]}
+      {var_name, _meta, [index]} when is_atom(var_name) and (is_binary(index) or is_atom(index)) ->
+        var_name_str = to_string(var_name)
+        index_str = to_string(index)
+
+        # Construct the indexed variable name
+        indexed_name = "#{var_name_str}(#{index_str})"
+
+        # Check if this corresponds to a variable name with index
+        if not is_nil(problem) do
+          var_def = Dantzig.Problem.get_variable(problem, indexed_name)
+
+          if var_def do
+            # This is a variable access - use the indexed variable name
+            Polynomial.variable(indexed_name)
+          else
+            raise ArgumentError,
+                  "Variable #{inspect(var_name)}(#{index_str}) not found. Ensure it was created with variables() first."
+          end
+        else
+          # No problem context - construct indexed name
+          Polynomial.variable(indexed_name)
+        end
+
       # Handle multi-index variable access like ship("Supplier1", "Customer1")
       {var_name, _meta, indices}
       when is_atom(var_name) and is_list(indices) and length(indices) > 1 and

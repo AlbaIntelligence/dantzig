@@ -175,10 +175,10 @@
 - [x] T059 [US3] Enhance documentation for examples/knapsack_problem.exs
 - [x] T060 [US3] Enhance documentation for examples/network_flow.exs (create if missing, or document why excluded)
 - [x] T061 [US3] Enhance documentation for examples/nqueens_dsl_working.exs
-- [ ] T062 [US3] Enhance documentation for examples/production_planning.exs
-- [ ] T063 [US3] Enhance documentation for examples/transportation_problem.exs
-- [ ] T064 [US3] Enhance documentation for examples/working_example.exs
-- [ ] T065 [P] [US3] Add business context explanations to all examples
+- [x] T062 [US3] Enhance documentation for examples/production_planning.exs
+- [x] T063 [US3] Enhance documentation for examples/transportation_problem.exs
+- [x] T064 [US3] Enhance documentation for examples/working_example.exs
+- [ ] T065a [P] [US3] Systematically check the problem as defined against the output in LP syntax for all examples
 - [ ] T066 [P] [US3] Add mathematical formulation explanations to all examples
 - [ ] T067 [P] [US3] Add DSL syntax explanations to all examples
 - [ ] T068 [P] [US3] Add common gotchas documentation to all examples
@@ -216,7 +216,7 @@
 - [ ] T082 [US4] Validate all examples cover 5+ distinct optimization problem domains
 - [ ] T083 [US4] Validate all examples demonstrate appropriate modeling techniques
 - [ ] T084 [US4] Validate all examples complete within reasonable time limits
-- [ ] T076a [US4] Add the examples from https://people.brunel.ac.uk/~mastjjb/jeb/or/lpmore.html with full attribution credits
+- [ ] T076a [US4] Add the examples from <https://people.brunel.ac.uk/~mastjjb/jeb/or/lpmore.html> with full attribution credits
 
 **Checkpoint**: All user stories should now be independently functional
 

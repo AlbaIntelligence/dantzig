@@ -422,6 +422,8 @@ defmodule Dantzig.Solver.HiGHSIntegrationTest do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
+      highs = Dantzig.Solver.HiGHS.new()
+
       problem =
         Problem.define do
           new(name: "Test Problem", direction: :minimize)
@@ -431,7 +433,7 @@ defmodule Dantzig.Solver.HiGHSIntegrationTest do
         end
 
       # Should not raise even with print_optimizer_input enabled
-      result = Dantzig.solve(problem, print_optimizer_input: true)
+      result = Dantzig.solve(problem, solver: highs, print_optimizer_input: true)
 
       assert result == :error or match?({:ok, %Solution{}}, result)
     end

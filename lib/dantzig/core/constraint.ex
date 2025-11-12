@@ -2,13 +2,66 @@ defmodule Dantzig.Constraint do
   @moduledoc """
   Normalized constraints over polynomials.
 
-  Build with `new/3` or `new_linear/3`, or use the macros with comparison
-  expressions: `new x + y <= 10`.
+  The `Constraint` module provides constraint representation and manipulation
+  for optimization problems. Constraints are normalized by moving all terms to
+  the left-hand side and storing a numeric right-hand side.
 
-  Constraints are normalized by moving all terms to the left-hand side and
-  storing a numeric right-hand side.
+  ## Constraint Creation
 
-  Supported operators: `:==`, `:<=`, `:>=`. The `:in` operator is reserved.
+  Create constraints using:
+
+  - `new/3`: General constraint (linear or quadratic)
+  - `new_linear/3`: Linear constraint with validation
+  - Macros: `new x + y <= 10` or `new_linear x + y <= 10`
+
+  ## Supported Operators
+
+  - `:==` - Equality constraint
+  - `:<=` - Less than or equal
+  - `:>=` - Greater than or equal
+  - `:in` - Reserved for future domain constraints
+
+  ## Normalization
+
+  Constraints are automatically normalized:
+
+      # Input: x + 2*y <= 10
+      # Normalized: x + 2*y - 10 <= 0
+      # Stored as: left_hand_side = x + 2*y, right_hand_side = 10
+
+  ## Infinity Bounds
+
+  Special handling for `:infinity` bounds:
+
+      # Unbounded constraint
+      Constraint.new_linear(x, :<=, :infinity)
+
+  The `:infinity` value cannot be converted to a polynomial and is handled
+  specially in `new_linear/4`.
+
+  ## Symbolic Solving
+
+  Solve constraints for a specific variable:
+
+      solved = Constraint.solve_for_variable(constraint, "x")
+      # Returns: %SolvedConstraint{variable: "x", operator: :<=, expression: ...}
+
+  ## Examples
+
+      # Create linear constraint
+      constraint = Constraint.new_linear(x + 2*y, :<=, 10, name: "Resource")
+
+      # Create with macro
+      constraint = Constraint.new(x + y == 5)
+
+      # Solve for variable
+      solved = Constraint.solve_for_variable(constraint, "x")
+
+  ## See Also
+
+  - `Dantzig.Problem` - Problem definition with constraints
+  - `Dantzig.Polynomial` - Polynomial representation
+  - `Dantzig.SolvedConstraint` - Solved constraint representation
   """
 
   require Dantzig.Polynomial, as: Polynomial

@@ -40,7 +40,8 @@ defmodule Dantzig.LPExamplesTest do
           objective(x + y - 50, direction: :maximize)
         end
 
-      {solution, objective_value} = Problem.solve(problem, print_optimizer_input: false)
+      {solution, objective_value} =
+        Problem.solve(problem, solver: :highs, print_optimizer_input: true)
 
       # Expected solution from source: x=45, y=6.25, objective=1.25
       assert_in_delta solution.variables["x"], 45.0, 0.01
@@ -82,7 +83,8 @@ defmodule Dantzig.LPExamplesTest do
           objective(13 * x1 + 5 * x2 - 125, direction: :maximize)
         end
 
-      {solution, objective_value} = Problem.solve(problem, print_optimizer_input: false)
+      {solution, objective_value} =
+        Problem.solve(problem, solver: :highs, print_optimizer_input: true)
 
       # Expected solution from source: x1=36, x2=0, profit=343
       assert_in_delta solution.variables["x1"], 36.0, 0.01
@@ -120,7 +122,8 @@ defmodule Dantzig.LPExamplesTest do
           objective(17.1667 * x + 25.8667 * y, direction: :maximize)
         end
 
-      {solution, objective_value} = Problem.solve(problem, print_optimizer_input: false)
+      {solution, objective_value} =
+        Problem.solve(problem, solver: :highs, print_optimizer_input: true)
 
       # Expected solution from source: x=10, y=65.52, profit=1866.50
       assert_in_delta solution.variables["x"], 10.0, 0.01
@@ -145,7 +148,8 @@ defmodule Dantzig.LPExamplesTest do
           objective(3 * xA + 5 * xB, direction: :maximize)
         end
 
-      {solution, objective_value} = Problem.solve(problem, print_optimizer_input: false)
+      {solution, objective_value} =
+        Problem.solve(problem, solver: :highs, print_optimizer_input: true)
 
       # Expected solution from source: xA=81.8, xB=32.7, profit=408.9
       assert_in_delta solution.variables["xA"], 81.8, 0.1
@@ -171,7 +175,8 @@ defmodule Dantzig.LPExamplesTest do
           objective(10 * a + 11 * b, direction: :minimize)
         end
 
-      {solution, objective_value} = Problem.solve(problem, print_optimizer_input: false)
+      {solution, objective_value} =
+        Problem.solve(problem, solver: :highs, print_optimizer_input: true)
 
       # Expected solution from source: a=8, b=3, objective=113
       assert_in_delta solution.variables["a"], 8.0, 0.01
@@ -196,7 +201,8 @@ defmodule Dantzig.LPExamplesTest do
           objective(5 * x1 + 6 * x2, direction: :maximize)
         end
 
-      {solution, objective_value} = Problem.solve(problem, print_optimizer_input: false)
+      {solution, objective_value} =
+        Problem.solve(problem, solver: :highs, print_optimizer_input: true)
 
       # Expected solution from source: x1=47/9≈5.222, x2=20/9≈2.222, objective=355/9≈39.444
       assert_in_delta solution.variables["x1"], 47 / 9, 0.01
@@ -221,7 +227,8 @@ defmodule Dantzig.LPExamplesTest do
           objective(30 * xT + 10 * xC, direction: :maximize)
         end
 
-      {solution, objective_value} = Problem.solve(problem, print_optimizer_input: false)
+      {solution, objective_value} =
+        Problem.solve(problem, solver: :highs, print_optimizer_input: true)
 
       # Expected solution from source: xT=1.333, xC=10.667, profit=146.667
       assert_in_delta solution.variables["xT"], 4 / 3, 0.01

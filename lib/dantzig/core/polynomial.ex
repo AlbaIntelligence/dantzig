@@ -2,12 +2,58 @@ defmodule Dantzig.Polynomial do
   @moduledoc """
   Sparse symbolic polynomials with operator overloading.
 
-  Internally represented as a map `%{[var, var, ...] => coefficient}` where the
-  key is the sorted multiset of variables comprising a term. Supports algebraic
-  operations, substitution, evaluation, and serialization to LP/QP iodata.
+  The `Polynomial` module provides a sparse representation of polynomials for
+  optimization problems. It supports algebraic operations, substitution, evaluation,
+  and serialization to LP/QP format.
 
-  Degree is defined as the size of the term key; only degree ≤ 2 is supported
-  when serializing to LP/QP for HiGHS.
+  ## Internal Representation
+
+  Internally represented as a map `%{[var, var, ...] => coefficient}` where the
+  key is the sorted multiset of variables comprising a term. This sparse representation
+  is efficient for large optimization problems where most terms are zero.
+
+  ## Degree Support
+
+  Degree is defined as the size of the term key:
+  - Degree 0: Constant terms `%{[] => 5.0}`
+  - Degree 1: Linear terms `%{["x"] => 3.0}`
+  - Degree 2: Quadratic terms `%{[["x", "y"]] => 2.0}`
+
+  Only degree ≤ 2 is supported when serializing to LP/QP for HiGHS.
+
+  ## Usage
+
+  Create polynomials:
+
+      # Constant polynomial
+      p1 = Polynomial.const(5.0)
+
+      # Linear polynomial: 3x + 2y
+      p2 = Polynomial.new(%{"x" => 3.0, "y" => 2.0})
+
+      # Monomial: 2x
+      p3 = Polynomial.monomial(2.0, "x")
+
+  Algebraic operations:
+
+      # Addition
+      sum = Polynomial.add(p1, p2)
+
+      # Subtraction
+      diff = Polynomial.subtract(p1, p2)
+
+      # Multiplication
+      product = Polynomial.multiply(p1, p2)
+
+  Operator overloading (via `Polynomial.Operators`):
+
+      import Dantzig.Polynomial.Operators
+      result = p1 + p2 * p3
+
+  ## See Also
+
+  - `Dantzig.Problem` - Problem definition using polynomials
+  - `Dantzig.Constraint` - Constraints using polynomials
   """
   defstruct simplified: %{}
 

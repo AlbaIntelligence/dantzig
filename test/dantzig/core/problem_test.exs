@@ -219,9 +219,9 @@ defmodule Dantzig.Core.ProblemTest do
       alias Dantzig.Problem.DSL.ExpressionParser
       poly = ExpressionParser.parse_expression_to_polynomial(transformed, bindings, problem)
 
-      # Should resolve to polynomial referencing x_1
+      # Should resolve to polynomial referencing x(1) (new format)
       vars = Dantzig.Polynomial.variables(poly)
-      assert Enum.member?(vars, "x_1")
+      assert Enum.member?(vars, "x(1)")
     end
 
     test "transformed 2D variable reference resolves correctly with bindings" do
@@ -247,11 +247,11 @@ defmodule Dantzig.Core.ProblemTest do
 
       # Should resolve to polynomial referencing queen2d_1_1 and queen2d_1_2
       vars = Dantzig.Polynomial.variables(poly)
-      assert Enum.member?(vars, "queen2d_1_1")
-      assert Enum.member?(vars, "queen2d_1_2")
-      # Should not reference queen2d_2_* (different i value)
-      refute Enum.member?(vars, "queen2d_2_1")
-      refute Enum.member?(vars, "queen2d_2_2")
+      assert Enum.member?(vars, "queen2d(1,1)")
+      assert Enum.member?(vars, "queen2d(1,2)")
+      # Should not reference queen2d(2,*) (different i value)
+      refute Enum.member?(vars, "queen2d(2,1)")
+      refute Enum.member?(vars, "queen2d(2,2)")
     end
 
     test "transformed variable reference resolves in constraint expression with bindings" do
@@ -279,10 +279,10 @@ defmodule Dantzig.Core.ProblemTest do
 
       # Should resolve to polynomial referencing x_2
       vars = Dantzig.Polynomial.variables(poly)
-      assert Enum.member?(vars, "x_2")
+      assert Enum.member?(vars, "x(2)")
       # Should not reference other x variables
-      refute Enum.member?(vars, "x_1")
-      refute Enum.member?(vars, "x_3")
+      refute Enum.member?(vars, "x(1)")
+      refute Enum.member?(vars, "x(3)")
     end
   end
 
@@ -466,9 +466,9 @@ defmodule Dantzig.Core.ProblemTest do
       alias Dantzig.Problem.DSL.ExpressionParser
       poly = ExpressionParser.parse_expression_to_polynomial(transformed, bindings, problem)
 
-      # Should resolve to polynomial referencing x_1
+      # Should resolve to polynomial referencing x(1) (new format)
       vars = Dantzig.Polynomial.variables(poly)
-      assert Enum.member?(vars, "x_1")
+      assert Enum.member?(vars, "x(1)")
     end
 
     test "transformed 2D variable reference resolves correctly with bindings" do
@@ -494,11 +494,11 @@ defmodule Dantzig.Core.ProblemTest do
 
       # Should resolve to polynomial referencing queen2d_1_1 and queen2d_1_2
       vars = Dantzig.Polynomial.variables(poly)
-      assert Enum.member?(vars, "queen2d_1_1")
-      assert Enum.member?(vars, "queen2d_1_2")
-      # Should not reference queen2d_2_* (different i value)
-      refute Enum.member?(vars, "queen2d_2_1")
-      refute Enum.member?(vars, "queen2d_2_2")
+      assert Enum.member?(vars, "queen2d(1,1)")
+      assert Enum.member?(vars, "queen2d(1,2)")
+      # Should not reference queen2d(2,*) (different i value)
+      refute Enum.member?(vars, "queen2d(2,1)")
+      refute Enum.member?(vars, "queen2d(2,2)")
     end
 
     test "transformed variable reference resolves in objective expression with bindings" do
@@ -522,15 +522,15 @@ defmodule Dantzig.Core.ProblemTest do
       alias Dantzig.Problem.DSL.ExpressionParser
       poly = ExpressionParser.parse_expression_to_polynomial(transformed, bindings, problem)
 
-      # Should resolve to polynomial referencing x_2 and y_2
+      # Should resolve to polynomial referencing x(2) and y(2)
       vars = Dantzig.Polynomial.variables(poly)
-      assert Enum.member?(vars, "x_2")
-      assert Enum.member?(vars, "y_2")
+      assert Enum.member?(vars, "x(2)")
+      assert Enum.member?(vars, "y(2)")
       # Should not reference other x/y variables
-      refute Enum.member?(vars, "x_1")
-      refute Enum.member?(vars, "x_3")
-      refute Enum.member?(vars, "y_1")
-      refute Enum.member?(vars, "y_3")
+      refute Enum.member?(vars, "x(1)")
+      refute Enum.member?(vars, "x(3)")
+      refute Enum.member?(vars, "y(1)")
+      refute Enum.member?(vars, "y(3)")
     end
   end
 
@@ -722,10 +722,10 @@ defmodule Dantzig.Core.ProblemTest do
       # But since we're outside the define block, we'll test with a quoted expression
       constraint_expr = quote do: x(1) + x(2) + x(3) == 1
 
-      # This should fail until T145 is implemented
-      assert_raise ArgumentError, fn ->
-        Problem.constraint(problem, constraint_expr, "Sum constraint")
-      end
+      # Problem.constraint/3 now works - it can add constraints
+      result = Problem.constraint(problem, constraint_expr, "Sum constraint")
+      assert result != problem  # Should return a new problem
+      assert map_size(result.constraints) > 0
     end
 
     test "adds single constraint without description" do
@@ -738,10 +738,10 @@ defmodule Dantzig.Core.ProblemTest do
 
       constraint_expr = quote do: x(1) >= 0
 
-      # This should fail until T145 is implemented
-      assert_raise ArgumentError, fn ->
-        Problem.constraint(problem, constraint_expr)
-      end
+      # Problem.constraint/3 now works without description
+      result = Problem.constraint(problem, constraint_expr)
+      assert result != problem  # Should return a new problem
+      assert map_size(result.constraints) > 0
     end
 
     test "adds single constraint with comparison operators" do
@@ -755,23 +755,24 @@ defmodule Dantzig.Core.ProblemTest do
       # Test <= operator
       constraint_expr1 = quote do: x(1) <= 1
 
-      assert_raise ArgumentError, fn ->
-        Problem.constraint(problem, constraint_expr1, "Less than or equal")
-      end
+      # Problem.constraint/3 now works with comparison operators
+      result1 = Problem.constraint(problem, constraint_expr1, "Less than or equal")
+      assert result1 != problem
+      assert map_size(result1.constraints) > 0
 
       # Test >= operator
       constraint_expr2 = quote do: x(2) >= 0
 
-      assert_raise ArgumentError, fn ->
-        Problem.constraint(problem, constraint_expr2, "Greater than or equal")
-      end
+      result2 = Problem.constraint(problem, constraint_expr2, "Greater than or equal")
+      assert result2 != problem
+      assert map_size(result2.constraints) > 0
 
       # Test == operator
       constraint_expr3 = quote do: x(1) == 1
 
-      assert_raise ArgumentError, fn ->
-        Problem.constraint(problem, constraint_expr3, "Equal")
-      end
+      result3 = Problem.constraint(problem, constraint_expr3, "Equal")
+      assert result3 != problem
+      assert map_size(result3.constraints) > 0
     end
 
     test "adds single constraint with arithmetic expressions" do
@@ -785,9 +786,10 @@ defmodule Dantzig.Core.ProblemTest do
       constraint_expr = quote do: x(1) + x(2) == 1
 
       # This should fail until T145 is implemented
-      assert_raise ArgumentError, fn ->
-        Problem.constraint(problem, constraint_expr, "Sum")
-      end
+      # Problem.constraint/3 now works with arithmetic expressions
+      result = Problem.constraint(problem, constraint_expr, "Sum")
+      assert result != problem
+      assert map_size(result.constraints) > 0
     end
 
     test "adds single constraint with scaled variables" do
@@ -800,9 +802,10 @@ defmodule Dantzig.Core.ProblemTest do
 
       constraint_expr = quote do: 2 * x(1) + 3 * x(2) <= 10
 
-      assert_raise ArgumentError, fn ->
-        Problem.constraint(problem, constraint_expr, "Scaled constraint")
-      end
+      # Problem.constraint/3 now works with scaled variables
+      result = Problem.constraint(problem, constraint_expr, "Scaled constraint")
+      assert result != problem
+      assert map_size(result.constraints) > 0
     end
 
     test "adds single constraint with constant comparisons" do
@@ -815,9 +818,10 @@ defmodule Dantzig.Core.ProblemTest do
 
       constraint_expr = quote do: x(1) >= 0
 
-      assert_raise ArgumentError, fn ->
-        Problem.constraint(problem, constraint_expr, "Non-negative")
-      end
+      # Problem.constraint/3 now works with constant comparisons
+      result = Problem.constraint(problem, constraint_expr, "Non-negative")
+      assert result != problem  # Should return a new problem
+      assert map_size(result.constraints) > 0
     end
 
     test "adds multiple single constraints sequentially" do
@@ -832,18 +836,18 @@ defmodule Dantzig.Core.ProblemTest do
       constraint_expr2 = quote do: x(2) >= 0
       constraint_expr3 = quote do: x(3) >= 0
 
-      # All should fail until T145 is implemented
-      assert_raise ArgumentError, fn ->
-        Problem.constraint(problem, constraint_expr1, "Constraint 1")
-      end
-
-      assert_raise ArgumentError, fn ->
-        Problem.constraint(problem, constraint_expr2, "Constraint 2")
-      end
-
-      assert_raise ArgumentError, fn ->
-        Problem.constraint(problem, constraint_expr3, "Constraint 3")
-      end
+      # Problem.constraint/3 now works - can add multiple constraints sequentially
+      result1 = Problem.constraint(problem, constraint_expr1, "Constraint 1")
+      assert result1 != problem
+      assert map_size(result1.constraints) > 0
+      
+      result2 = Problem.constraint(result1, constraint_expr2, "Constraint 2")
+      assert result2 != result1
+      assert map_size(result2.constraints) > map_size(result1.constraints)
+      
+      result3 = Problem.constraint(result2, constraint_expr3, "Constraint 3")
+      assert result3 != result2
+      assert map_size(result3.constraints) > map_size(result2.constraints)
     end
 
     test "preserves constraint name from description" do
@@ -856,9 +860,13 @@ defmodule Dantzig.Core.ProblemTest do
 
       constraint_expr = quote do: x(1) <= 1
 
-      assert_raise ArgumentError, fn ->
-        Problem.constraint(problem, constraint_expr, "My constraint name")
-      end
+      # Problem.constraint/3 now works and preserves constraint name from description
+      result = Problem.constraint(problem, constraint_expr, "My constraint name")
+      assert result != problem  # Should return a new problem
+      assert map_size(result.constraints) > 0
+      # Verify constraint name is preserved
+      constraint = result.constraints |> Map.values() |> List.first()
+      assert constraint.name == "My constraint name"
     end
   end
 
@@ -911,8 +919,8 @@ defmodule Dantzig.Core.ProblemTest do
       var_def = updated_problem.variable_defs["x"]
       assert var_def.name == "x"
       assert var_def.type == :continuous
-      assert var_def.min == nil
-      assert var_def.max == nil
+      assert var_def.min_bound == nil
+      assert var_def.max_bound == nil
     end
 
     test "creates a binary variable with default bounds [0, 1]" do
@@ -922,8 +930,8 @@ defmodule Dantzig.Core.ProblemTest do
       assert Dantzig.Polynomial.variables(poly) == ["x"]
       var_def = updated_problem.variable_defs["x"]
       assert var_def.type == :binary
-      assert var_def.min == 0
-      assert var_def.max == 1
+      assert var_def.min_bound == 0
+      assert var_def.max_bound == 1
     end
 
     test "creates a variable with custom bounds" do
@@ -937,8 +945,8 @@ defmodule Dantzig.Core.ProblemTest do
         )
 
       var_def = updated_problem.variable_defs["x"]
-      assert var_def.min == 5.0
-      assert var_def.max == 10.0
+      assert var_def.min_bound == 5.0
+      assert var_def.max_bound == 10.0
     end
 
     test "creates a variable with description" do
@@ -964,8 +972,8 @@ defmodule Dantzig.Core.ProblemTest do
         )
 
       var_def = updated_problem.variable_defs["x"]
-      assert var_def.min == 0
-      assert var_def.max == 2
+      assert var_def.min_bound == 0
+      assert var_def.max_bound == 2
     end
 
     test "creates binary variable with custom min bound" do
@@ -978,8 +986,8 @@ defmodule Dantzig.Core.ProblemTest do
         )
 
       var_def = updated_problem.variable_defs["x"]
-      assert var_def.min == -1
-      assert var_def.max == 1
+      assert var_def.min_bound == -1
+      assert var_def.max_bound == 1
     end
   end
 
@@ -1176,8 +1184,8 @@ defmodule Dantzig.Core.ProblemTest do
 
       assert x_def.type == :binary
       assert y_def.type == :binary
-      assert x_def.min == 0
-      assert y_def.min == 0
+      assert x_def.min_bound == 0
+      assert y_def.min_bound == 0
     end
   end
 

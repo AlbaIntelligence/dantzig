@@ -1,4 +1,4 @@
-defmodule Dantzig.DSL.IntegrationTest do
+defmodule Dantzig.DSL.ComprehensiveIntegrationTest do
   @moduledoc """
   Comprehensive integration tests for DSL functionality.
 

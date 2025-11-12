@@ -111,7 +111,9 @@ defmodule Dantzig.Performance.ScalabilityTest do
 
       # Should be able to validate results
       validation_result = BenchmarkFramework.validate_performance_requirements(results)
-      assert validation_result in [{:ok, results}, {:error, _}], "Should return validation result"
+
+      assert match?({:ok, _}, validation_result) or match?({:error, _}, validation_result),
+             "Should return validation result"
     end
   end
 end

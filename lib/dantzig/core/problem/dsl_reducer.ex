@@ -159,14 +159,128 @@ defmodule Dantzig.Problem.DSLReducer do
 
         # Build variable options - convert bounds to the format expected by new_variable
         var_opts = [type: type, description: description]
-        var_opts = if min_bound != nil, do: Keyword.put(var_opts, :min, min_bound), else: var_opts
-        var_opts = if max_bound != nil, do: Keyword.put(var_opts, :max, max_bound), else: var_opts
+
+        var_opts =
+          if min_bound != nil, do: Keyword.put(var_opts, :min_bound, min_bound), else: var_opts
+
+        var_opts =
+          if max_bound != nil, do: Keyword.put(var_opts, :max_bound, max_bound), else: var_opts
+
+        {new_problem, _} = Problem.new_variable(acc, name, var_opts)
+
+        new_problem
+
+      # Pattern: variables("name", :type, "description", [min_bound: ..., max_bound: ...])
+      # This is the most specific pattern for 4-arg variables with bounds (no generators)
+      # Must check that second element is an atom (type), not a list (generators)
+      {:variables, _, [name, type, description, opts]} = _ast, acc
+      when is_binary(name) and is_atom(type) and is_binary(description) and is_list(opts) ->
+        # Extract bounds from opts
+        min_bound = Keyword.get(opts, :min_bound)
+        max_bound = Keyword.get(opts, :max_bound)
+
+        # Validate bounds before creating variable
+        validate_bounds_for_single_variable!(type, min_bound, max_bound)
+
+        # Build variable options - use min_bound/max_bound as expected by new_variable
+        var_opts = [type: type, description: description]
+
+        var_opts =
+          if min_bound != nil, do: Keyword.put(var_opts, :min_bound, min_bound), else: var_opts
+
+        var_opts =
+          if max_bound != nil, do: Keyword.put(var_opts, :max_bound, max_bound), else: var_opts
 
         {new_problem, _} = Problem.new_variable(acc, name, var_opts)
 
         new_problem
 
       # Simple syntax with options: variables("name", :type, description: "desc", min_bound: 0, max_bound: 1)
+      # Handle both [name, type, ...] and [name, [], type, ...] patterns (with/without explicit empty generators)
+      # IMPORTANT: Must check that second is not a list (generators) to avoid matching generator patterns
+      {:variables, _, [name, second, type | remaining]} = _ast, acc
+      when is_binary(name) and is_atom(type) and not is_list(second) ->
+        # Check if second element is empty list (generators) or if it's actually the type
+        {actual_type, actual_remaining} =
+          if second == [] do
+            # Pattern: [name, [], type, ...]
+            {type, remaining}
+          else
+            # Pattern: [name, type, ...] (no explicit generators list)
+            # second is the type, type is actually the description
+            {second, [type | remaining]}
+          end
+
+        # Extract description and bounds from the remaining elements
+        {description, bounds_list} =
+          case actual_remaining do
+            # Pattern: [description, [min_bound: ..., max_bound: ...]]
+            [desc, [min_bound: _, max_bound: _] = bounds] when is_binary(desc) ->
+              {desc, bounds}
+
+            # Pattern: [description, bounds] where bounds is a keyword list
+            [desc, bounds] when is_binary(desc) and is_list(bounds) ->
+              {desc, bounds}
+
+            # Pattern: [[min_bound: ..., max_bound: ...]] (no description)
+            [[min_bound: _, max_bound: _] = bounds] ->
+              {"", bounds}
+
+            # Pattern: [bounds] where bounds is a keyword list (no description)
+            [bounds] when is_list(bounds) ->
+              {"", bounds}
+
+            # Pattern: [description: ..., min_bound: ..., max_bound: ...] (keyword list mixed in)
+            remaining_list when is_list(remaining_list) and length(remaining_list) > 0 ->
+              # Check if first element is a keyword (description: ...)
+              case remaining_list do
+                [{:description, desc} | rest] when is_list(rest) ->
+                  # Extract bounds from rest (ensure it's a keyword list)
+                  bounds =
+                    if Keyword.keyword?(rest) do
+                      Keyword.take(rest, [:min_bound, :max_bound])
+                    else
+                      []
+                    end
+
+                  {desc, bounds}
+
+                _ ->
+                  # Try to extract description and bounds from keyword list
+                  if Keyword.keyword?(remaining_list) do
+                    desc = Keyword.get(remaining_list, :description, "")
+                    bounds = Keyword.take(remaining_list, [:min_bound, :max_bound])
+                    {desc, bounds}
+                  else
+                    {"", []}
+                  end
+              end
+
+            _ ->
+              {"", []}
+          end
+
+        # Extract bounds from bounds_list
+        min_bound = Keyword.get(bounds_list, :min_bound)
+        max_bound = Keyword.get(bounds_list, :max_bound)
+
+        # Validate bounds before creating variable
+        validate_bounds_for_single_variable!(actual_type, min_bound, max_bound)
+
+        # Build variable options - convert bounds to the format expected by new_variable
+        var_opts = [type: actual_type, description: description]
+
+        var_opts =
+          if min_bound != nil, do: Keyword.put(var_opts, :min_bound, min_bound), else: var_opts
+
+        var_opts =
+          if max_bound != nil, do: Keyword.put(var_opts, :max_bound, max_bound), else: var_opts
+
+        {new_problem, _} = Problem.new_variable(acc, name, var_opts)
+
+        new_problem
+
+      # Fallback: variables("name", :type, ...) without explicit generators list
       {:variables, _, [name, type | remaining]} = _ast, acc
       when is_binary(name) and is_atom(type) ->
         # Extract description and bounds from the remaining elements
@@ -195,10 +309,14 @@ defmodule Dantzig.Problem.DSLReducer do
         # Validate bounds before creating variable
         validate_bounds_for_single_variable!(type, min_bound, max_bound)
 
-        # Build variable options - convert bounds to the format expected by new_variable
+        # Build variable options - use min_bound/max_bound as expected by new_variable
         var_opts = [type: type, description: description]
-        var_opts = if min_bound != nil, do: Keyword.put(var_opts, :min, min_bound), else: var_opts
-        var_opts = if max_bound != nil, do: Keyword.put(var_opts, :max, max_bound), else: var_opts
+
+        var_opts =
+          if min_bound != nil, do: Keyword.put(var_opts, :min_bound, min_bound), else: var_opts
+
+        var_opts =
+          if max_bound != nil, do: Keyword.put(var_opts, :max_bound, max_bound), else: var_opts
 
         {new_problem, _} = Problem.new_variable(acc, name, var_opts)
 
@@ -308,10 +426,14 @@ defmodule Dantzig.Problem.DSLReducer do
         # Validate bounds before creating variable
         validate_bounds_for_single_variable!(type, min_bound, max_bound)
 
-        # Build variable options - convert bounds to the format expected by new_variable
+        # Build variable options - use min_bound/max_bound as expected by new_variable
         var_opts = [type: type, description: description]
-        var_opts = if min_bound != nil, do: Keyword.put(var_opts, :min, min_bound), else: var_opts
-        var_opts = if max_bound != nil, do: Keyword.put(var_opts, :max, max_bound), else: var_opts
+
+        var_opts =
+          if min_bound != nil, do: Keyword.put(var_opts, :min_bound, min_bound), else: var_opts
+
+        var_opts =
+          if max_bound != nil, do: Keyword.put(var_opts, :max_bound, max_bound), else: var_opts
 
         {new_problem, _} = Problem.new_variable(acc, name, var_opts)
 
@@ -345,10 +467,14 @@ defmodule Dantzig.Problem.DSLReducer do
         # Validate bounds before creating variable
         validate_bounds_for_single_variable!(type, min_bound, max_bound)
 
-        # Build variable options - convert bounds to the format expected by new_variable
+        # Build variable options - use min_bound/max_bound as expected by new_variable
         var_opts = [type: type, description: description]
-        var_opts = if min_bound != nil, do: Keyword.put(var_opts, :min, min_bound), else: var_opts
-        var_opts = if max_bound != nil, do: Keyword.put(var_opts, :max, max_bound), else: var_opts
+
+        var_opts =
+          if min_bound != nil, do: Keyword.put(var_opts, :min_bound, min_bound), else: var_opts
+
+        var_opts =
+          if max_bound != nil, do: Keyword.put(var_opts, :max_bound, max_bound), else: var_opts
 
         {new_problem, _} = Problem.new_variable(acc, name, var_opts)
 

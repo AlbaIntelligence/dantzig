@@ -94,9 +94,9 @@ defmodule Dantzig.CompilationTest do
   test "example files compile without errors" do
     # Check that example files can be compiled
     example_files = [
-      "examples/simple_working_example.exs",
-      "examples/knapsack_problem.exs",
-      "examples/assignment_problem.exs"
+      "docs/user/examples/simple_working_example.exs",
+      "docs/user/examples/knapsack_problem.exs",
+      "docs/user/examples/assignment_problem.exs"
     ]
 
     for file <- example_files do

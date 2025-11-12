@@ -38,7 +38,7 @@ defmodule Dantzig.Performance.BenchmarkFramework do
     # Warmup runs
     for _ <- 1..@warmup_iterations do
       try do
-        Problem.solve(problem, print_optimizer_input: false)
+        Problem.solve(problem, solver: :highs, print_optimizer_input: true)
       rescue
         _ -> :ok  # Ignore warmup failures
       end
@@ -49,7 +49,7 @@ defmodule Dantzig.Performance.BenchmarkFramework do
 
     # Measure execution time
     {execution_time_us, result} = :timer.tc(fn ->
-      Problem.solve(problem, print_optimizer_input: false)
+      Problem.solve(problem, solver: :highs, print_optimizer_input: true)
     end)
 
     # Measure memory after

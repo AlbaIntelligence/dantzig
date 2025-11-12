@@ -173,7 +173,11 @@ defmodule Dantzig.BackwardCompatibilityTest do
 
     # Add variable
     {problem, var_ref} =
-      Dantzig.Problem.new_variable(problem, "x", type: :continuous, min_bound: 0.0, max_bound: 10.0)
+      Dantzig.Problem.new_variable(problem, "x",
+        type: :continuous,
+        min_bound: 0.0,
+        max_bound: 10.0
+      )
 
     assert is_map(problem.variables)
     assert Map.has_key?(problem.variables, "x")
@@ -279,8 +283,8 @@ defmodule Dantzig.BackwardCompatibilityTest do
   test "existing examples still work" do
     # Test that existing examples can still be executed
     example_files = [
-      "examples/knapsack_problem.exs",
-      "examples/tutorial_examples.exs"
+      "docs/user/examples/knapsack_problem.exs",
+      "docs/user/examples/tutorial_examples.exs"
     ]
 
     for file <- example_files do
