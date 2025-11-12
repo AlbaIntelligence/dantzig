@@ -41,7 +41,7 @@
 #### API Changes Fixes
 
 - [x] T003 [P] [US1] Fix `Dantzig.Solver.HiGHS` → `Dantzig.HiGHS` module alias in `test/dantzig/solver/highs_test.exs`
-- [ ] T004 [P] [US1] Fix `Problem.add_constraint/3` → `Problem.add_constraint/2` calls across all test files
+- [x] T004 [P] [US1] Fix `Problem.add_constraint/3` → `Problem.add_constraint/2` calls in `test/dantzig/solver/highs_test.exs` (move name to Constraint.new name: option)
 - [ ] T005 [P] [US1] Fix `Constraint.new` signature changes (use `name:` option) across all test files
 - [x] T006 [P] [US1] Fix `Polynomial.constant` → `Polynomial.const` calls in `test/dantzig/solver/highs_test.exs`
 - [ ] T007 [P] [US1] Fix `Problem.minimize`/`Problem.maximize` calls to set objective direction in solver tests

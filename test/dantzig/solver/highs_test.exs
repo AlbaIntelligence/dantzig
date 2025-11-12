@@ -14,8 +14,8 @@ defmodule Dantzig.Solver.HiGHSTest do
       problem = Problem.increment_objective(problem, y)
 
       # Constraint: x + y >= 1
-      constraint = Constraint.new(Polynomial.add(x, y), :>=, 1.0)
-      problem = Problem.add_constraint(problem, constraint, "constraint1")
+      constraint = Constraint.new(Polynomial.add(x, y), :>=, 1.0, name: "constraint1")
+      problem = Problem.add_constraint(problem, constraint)
 
       lp_data = HiGHS.to_lp_iodata(problem)
       lp_string = IO.iodata_to_binary(lp_data)
@@ -47,8 +47,8 @@ defmodule Dantzig.Solver.HiGHSTest do
       problem = Problem.increment_objective(problem, y)
 
       # Constraint: x + y <= 1
-      constraint = Constraint.new(Polynomial.add(x, y), :<=, 1.0)
-      problem = Problem.add_constraint(problem, constraint, "constraint1")
+      constraint = Constraint.new(Polynomial.add(x, y), :<=, 1.0, name: "constraint1")
+      problem = Problem.add_constraint(problem, constraint)
 
       lp_data = HiGHS.to_lp_iodata(problem)
       lp_string = IO.iodata_to_binary(lp_data)
@@ -149,8 +149,8 @@ defmodule Dantzig.Solver.HiGHSTest do
       problem = Problem.increment_objective(problem, y)
 
       # Constraint with empty name
-      constraint = Constraint.new(Polynomial.add(x, y), :>=, 1.0)
-      problem = Problem.add_constraint(problem, constraint, "")
+      constraint = Constraint.new(Polynomial.add(x, y), :>=, 1.0, name: "")
+      problem = Problem.add_constraint(problem, constraint)
 
       lp_data = HiGHS.to_lp_iodata(problem)
       lp_string = IO.iodata_to_binary(lp_data)
@@ -179,10 +179,11 @@ defmodule Dantzig.Solver.HiGHSTest do
             Polynomial.multiply(z, -1.0)
           ),
           :>=,
-          5.0
+          5.0,
+          name: "complex_constraint"
         )
 
-      problem = Problem.add_constraint(problem, constraint, "complex_constraint")
+      problem = Problem.add_constraint(problem, constraint)
 
       lp_data = HiGHS.to_lp_iodata(problem)
       lp_string = IO.iodata_to_binary(lp_data)
@@ -201,8 +202,8 @@ defmodule Dantzig.Solver.HiGHSTest do
       problem = Problem.increment_objective(problem, y)
 
       # Constraint: x + y == 1
-      constraint = Constraint.new(Polynomial.add(x, y), :==, 1.0)
-      problem = Problem.add_constraint(problem, constraint, "equality_constraint")
+      constraint = Constraint.new(Polynomial.add(x, y), :==, 1.0, name: "equality_constraint")
+      problem = Problem.add_constraint(problem, constraint)
 
       lp_data = HiGHS.to_lp_iodata(problem)
       lp_string = IO.iodata_to_binary(lp_data)
@@ -225,10 +226,11 @@ defmodule Dantzig.Solver.HiGHSTest do
         Constraint.new(
           Polynomial.subtract(x, y),
           :>=,
-          0.0
+          0.0,
+          name: "negative_constraint"
         )
 
-      problem = Problem.add_constraint(problem, constraint, "negative_constraint")
+      problem = Problem.add_constraint(problem, constraint)
 
       lp_data = HiGHS.to_lp_iodata(problem)
       lp_string = IO.iodata_to_binary(lp_data)
@@ -246,8 +248,8 @@ defmodule Dantzig.Solver.HiGHSTest do
       # No objective (zero)
 
       # Constraint: x + y >= 1
-      constraint = Constraint.new(Polynomial.add(x, y), :>=, 1.0)
-      problem = Problem.add_constraint(problem, constraint, "constraint1")
+      constraint = Constraint.new(Polynomial.add(x, y), :>=, 1.0, name: "constraint1")
+      problem = Problem.add_constraint(problem, constraint)
 
       lp_data = HiGHS.to_lp_iodata(problem)
       lp_string = IO.iodata_to_binary(lp_data)
@@ -340,13 +342,13 @@ defmodule Dantzig.Solver.HiGHSTest do
       problem = Problem.increment_objective(problem, y)
 
       # Multiple constraints
-      constraint1 = Constraint.new(x, :>=, 0.0)
-      constraint2 = Constraint.new(y, :>=, 0.0)
-      constraint3 = Constraint.new(Polynomial.add(x, y), :<=, 1.0)
+      constraint1 = Constraint.new(x, :>=, 0.0, name: "constraint1")
+      constraint2 = Constraint.new(y, :>=, 0.0, name: "constraint2")
+      constraint3 = Constraint.new(Polynomial.add(x, y), :<=, 1.0, name: "constraint3")
 
-      problem = Problem.add_constraint(problem, constraint1, "constraint1")
-      problem = Problem.add_constraint(problem, constraint2, "constraint2")
-      problem = Problem.add_constraint(problem, constraint3, "constraint3")
+      problem = Problem.add_constraint(problem, constraint1)
+      problem = Problem.add_constraint(problem, constraint2)
+      problem = Problem.add_constraint(problem, constraint3)
 
       lp_data = HiGHS.to_lp_iodata(problem)
       lp_string = IO.iodata_to_binary(lp_data)

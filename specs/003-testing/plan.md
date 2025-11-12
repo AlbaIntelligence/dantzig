@@ -108,6 +108,7 @@ docs/developer/architecture/   # Architecture documentation
 ```
 
 **Structure Decision**: Elixir library package structure with clear separation of concerns:
+
 - `lib/dantzig/` contains all library modules organized by functionality
 - `test/` mirrors the lib structure for comprehensive testing
 - `docs/user/examples/` provides learning resources
@@ -122,27 +123,33 @@ All constitution checks passed without violations. The testing and DSL improveme
 ## Phase Structure
 
 ### Phase 1: Fix Test Suite Failures (P1) 🎯 MVP
+
 **Goal**: Resolve all test failures to enable reliable development
 **Dependencies**: None
 **Key Activities**:
+
 - Fix API signature mismatches (module aliases, function arities)
 - Fix variable access patterns
 - Fix compilation errors
 - Update test assertions
 
 ### Phase 2: Fix Example Execution (P1)
+
 **Goal**: Ensure all example files execute successfully
 **Dependencies**: Can run in parallel with Phase 1
 **Key Activities**:
+
 - Fix compilation errors in examples
 - Fix runtime errors in examples
 - Verify examples produce valid solutions
 - Update example documentation
 
 ### Phase 3: Resolve DSL Implementation Issues (P1)
+
 **Goal**: Fix all high-priority DSL implementation issues
 **Dependencies**: Can start in parallel with Phase 1, but benefits from Phase 1 completion
 **Key Activities**:
+
 - Constant access with generator bindings
 - Description interpolation with AST
 - Generator domain type support
@@ -151,36 +158,44 @@ All constitution checks passed without violations. The testing and DSL improveme
 - Constant and enumerated constant access (depends on Phase 3.5)
 
 ### Phase 3.5: Model Parameters & Problem.modify (P1)
+
 **Goal**: Add model parameters and Problem.modify capability
 **Dependencies**: Can start after Phase 3 (Issue #1) completion
 **Key Activities**:
+
 - Implement model parameters in Problem.define
 - Implement Problem.modify macro
 - Ensure backward compatibility
 - Document new features
 
 ### Phase 4: Implement Enumerator Tracking (P2)
+
 **Goal**: Implement Phase 1 of enumerator tracking
 **Dependencies**: Can start after Phase 3 (Issue #1) completion
 **Key Activities**:
+
 - Add enumerator fields to Problem struct
 - Register enumerators during variable creation
 - Validate enumerators during constraint generation
 - Document enumerator tracking design
 
 ### Phase 5: Test Suite Quality (P2)
+
 **Goal**: Improve test suite quality and maintain coverage
 **Dependencies**: Depends on Phase 1 completion
 **Key Activities**:
+
 - Document test failures
 - Update test documentation
 - Ensure coverage targets met (≥80% overall, ≥85% core)
 - Add edge case tests
 
 ### Phase 6: Documentation and Validation
+
 **Goal**: Document improvements and validate completion
 **Dependencies**: Depends on all previous phases
 **Key Activities**:
+
 - Update implementation status documents
 - Run validation tests
 - Create comprehensive status report
@@ -188,26 +203,31 @@ All constitution checks passed without violations. The testing and DSL improveme
 ## Technical Decisions
 
 ### Test Framework
+
 - **Decision**: Use ExUnit with ExCoveralls for coverage
 - **Rationale**: Standard Elixir testing stack, already in use
 - **Alternatives Considered**: None (existing choice)
 
 ### DSL Enhancement Approach
+
 - **Decision**: Extend existing expression parser with constant evaluation
 - **Rationale**: Minimal changes to existing architecture, maintains backward compatibility
 - **Alternatives Considered**: Complete rewrite (rejected - too risky, breaks compatibility)
 
 ### Model Parameters Implementation
+
 - **Decision**: Thread model_parameters through macro expansion and expression evaluation
 - **Rationale**: Enables direct name access without `params.key` syntax, cleaner DSL
 - **Alternatives Considered**: Explicit `params.key` syntax (rejected - less ergonomic)
 
 ### Enumerator Tracking Storage
+
 - **Decision**: Add fields to Problem struct (`enumerators`, `variable_enumerators`)
 - **Rationale**: Keeps enumerator metadata with problem definition, enables validation
 - **Alternatives Considered**: Separate registry module (rejected - adds complexity)
 
 ### Backward Compatibility Strategy
+
 - **Decision**: Maintain 100% backward compatibility, no breaking changes
 - **Rationale**: Critical for existing users, enables incremental adoption
 - **Alternatives Considered**: Breaking changes with migration guide (rejected - violates FR-009)
@@ -215,16 +235,19 @@ All constitution checks passed without violations. The testing and DSL improveme
 ## Data Model
 
 ### Problem Struct Extensions
+
 - `enumerators`: Dictionary of enumerator metadata
 - `variable_enumerators`: Map of variable names to enumerator sequences
 - `linearization_variables`: Placeholder for future linearization variable tracking
 
 ### Enumerator Metadata
+
 - Domain: The enumerable collection (list, map, range, etc.)
 - Name: Generated name from AST/expression
 - Source: Where the enumerator was defined (variable, constraint)
 
 ### Model Parameters
+
 - Map structure: `%{key => value}` where keys are atom or string identifiers
 - Access pattern: Direct name access in DSL (e.g., `food_names`, not `params.food_names`)
 - Evaluation: At macro expansion time using generator bindings
@@ -232,21 +255,25 @@ All constitution checks passed without violations. The testing and DSL improveme
 ## Constraints
 
 ### Backward Compatibility
+
 - **Constraint**: Zero breaking changes to public API
 - **Impact**: All fixes must preserve existing function signatures and behavior
 - **Mitigation**: Comprehensive backward compatibility tests (FR-009)
 
 ### Test Coverage Targets
+
 - **Constraint**: ≥80% overall, ≥85% core modules
 - **Impact**: May require additional tests beyond fixes
 - **Mitigation**: Coverage validation tests and monitoring (NFR-001)
 
 ### File Size Limits
+
 - **Constraint**: Code files under 500 lines, documentation files under 300 lines (unless no other options)
 - **Impact**: May require refactoring large files or splitting into modules
 - **Mitigation**: Review file sizes during implementation, refactor if feasible
 
 ### DSL Syntax Consistency
+
 - **Constraint**: Model parameters and Problem.modify must use same DSL syntax as Problem.define
 - **Impact**: Requires careful macro design
 - **Mitigation**: Reuse existing DSL infrastructure
@@ -254,14 +281,17 @@ All constitution checks passed without violations. The testing and DSL improveme
 ## Risk Assessment
 
 ### High Risk
+
 - **Breaking backward compatibility**: Mitigated by explicit compatibility tests
 - **DSL parsing complexity**: Mitigated by incremental implementation and comprehensive tests
 
 ### Medium Risk
+
 - **Enumerator tracking performance**: Low impact, metadata only
 - **Test coverage gaps**: Mitigated by coverage validation
 
 ### Low Risk
+
 - **Example execution failures**: Straightforward fixes
 - **Documentation updates**: Mechanical task
 
