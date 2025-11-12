@@ -1,7 +1,7 @@
 defmodule Dantzig.Solver.HiGHSTest do
   use ExUnit.Case, async: true
 
-  alias Dantzig.{Problem, Solver.HiGHS, Polynomial, Constraint}
+  alias Dantzig.{Problem, HiGHS, Polynomial, Constraint}
 
   describe "to_lp_iodata/1" do
     test "generates LP format for simple minimization problem" do
@@ -262,7 +262,7 @@ defmodule Dantzig.Solver.HiGHSTest do
       {problem, x} = Problem.new_variable(problem, "x", type: :continuous)
 
       # Objective: minimize 5 (constant)
-      problem = Problem.increment_objective(problem, Polynomial.constant(5.0))
+      problem = Problem.increment_objective(problem, Polynomial.const(5.0))
 
       lp_data = HiGHS.to_lp_iodata(problem)
       lp_string = IO.iodata_to_binary(lp_data)

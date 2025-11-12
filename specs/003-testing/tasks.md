@@ -40,10 +40,10 @@
 
 #### API Changes Fixes
 
-- [ ] T003 [P] [US1] Fix `Dantzig.Solver.HiGHS` → `Dantzig.HiGHS` module alias in `test/dantzig/solver/highs_test.exs`
+- [x] T003 [P] [US1] Fix `Dantzig.Solver.HiGHS` → `Dantzig.HiGHS` module alias in `test/dantzig/solver/highs_test.exs`
 - [ ] T004 [P] [US1] Fix `Problem.add_constraint/3` → `Problem.add_constraint/2` calls across all test files
 - [ ] T005 [P] [US1] Fix `Constraint.new` signature changes (use `name:` option) across all test files
-- [ ] T006 [P] [US1] Fix `Polynomial.constant` → `Polynomial.const` calls in `test/dantzig/solver/highs_test.exs`
+- [x] T006 [P] [US1] Fix `Polynomial.constant` → `Polynomial.const` calls in `test/dantzig/solver/highs_test.exs`
 - [ ] T007 [P] [US1] Fix `Problem.minimize`/`Problem.maximize` calls to set objective direction in solver tests
 - [ ] T008 [P] [US1] Make `constraint_to_iodata/2` and `variable_bounds/1` public in `lib/dantzig/solver/highs.ex` or remove tests
 
@@ -51,7 +51,7 @@
 
 - [ ] T009 [P] [US1] Fix `Problem.get_variable/3` → `Problem.get_variable/2` or direct access in test files
 - [ ] T010 [P] [US1] Fix variable name format assertions (`x_1` → `x(1)`, `queen2d_1_1` → `queen2d(1,1)`) in `test/dantzig/core/problem_test.exs`
-- [ ] T011 [P] [US1] Fix variable bounds field names (`min`/`max` → `min_bound`/`max_bound`) across all test files
+- [x] T011 [P] [US1] Fix variable bounds field names (`min`/`max` → `min_bound`/`max_bound`) in `lib/dantzig/solver/highs.ex`
 
 #### Compilation Error Fixes
 
