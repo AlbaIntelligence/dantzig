@@ -1,8 +1,8 @@
-# Dantzig Architecture
+# Dantzig Architecture Overview
 
 Dantzig is a modeling layer for optimization problems in Elixir with a bridge to the external HiGHS solver. It provides multiple levels of abstraction: from low-level polynomial manipulation to high-level pattern-based modeling with automatic linearization of non-linear expressions. The syntax is designed to be declarative and concise. It is largely inspired by the Julia JuMP mathematical programming environment (<https://jump.dev/>).
 
-## Key properties
+## Key Properties
 
 - LP and QP (degree ≤ 2). Higher degrees raise during serialization
 - Variables support bounds; `:type` exists but integer serialization is not yet implemented
@@ -76,7 +76,7 @@ Dantzig is a modeling layer for optimization problems in Elixir with a bridge to
   - Manage binary path and automatic static download from JuliaBinaryWrappers
   - Platform-specific binary selection and caching
 
-## Data flow
+## Data Flow
 
 ### Basic Flow (Explicit Modeling)
 
@@ -103,44 +103,7 @@ Dantzig is a modeling layer for optimization problems in Elixir with a bridge to
 4. **Solving**: Same as basic flow
 5. **Evaluation**: Solution values substituted back into original expressions
 
-### Sequence diagram (Mermaid)
-
-```mermaid
-sequenceDiagram
-  participant User
-  participant DSL as Dantzig.DSL
-  participant AST as Dantzig.AST
-  participant Problem as Dantzig.Problem
-  participant HiGHSMod as Dantzig.HiGHS
-  participant HiGHSBin as highs (binary)
-  participant Parser as Dantzig.Solution.Parser
-
-  Note over User, Parser: Basic Flow (Explicit Modeling)
-  User->>Problem: build variables, constraints, objective
-  User->>HiGHSMod: solve(problem)
-  HiGHSMod->>HiGHSMod: to_lp_iodata(problem)
-  HiGHSMod->>HiGHSBin: run highs model.lp --solution_file solution.lp
-  HiGHSBin-->>HiGHSMod: stdout + solution.lp
-  HiGHSMod->>Parser: parse(solution.lp)
-  Parser-->>User: %Dantzig.Solution{}
-
-  Note over User, Parser: Advanced Flow (Pattern-based + AST)
-  User->>DSL: add_variables(problem, [i <- 1..8, j <- 1..8], "x", :binary)
-  DSL->>Problem: create N-dimensional variable families
-  User->>DSL: add_constraints(problem, [i <- 1..8], "x", {i, :_}, :==, 1)
-  DSL->>Problem: create pattern-based constraints
-  User->>AST: parse non-linear expressions (abs, max/min, logical)
-  AST->>AST: transform to linear constraints
-  AST->>Problem: add auxiliary variables and constraints
-  User->>HiGHSMod: solve(problem)
-  HiGHSMod->>HiGHSMod: to_lp_iodata(problem)
-  HiGHSMod->>HiGHSBin: run highs model.lp --solution_file solution.lp
-  HiGHSBin-->>HiGHSMod: stdout + solution.lp
-  HiGHSMod->>Parser: parse(solution.lp)
-  Parser-->>User: %Dantzig.Solution{}
-```
-
-## Error handling
+## Error Handling
 
 - Linearity checks when requested; missing variables surfaced with detailed context
 - Degree checks during serialization
@@ -200,23 +163,23 @@ Non-linear expressions with automatic linearization:
 - **DSL extensions**: additional pattern-based modeling constructs
 - **Custom linearization**: user-defined transformation rules for AST nodes
 
-## File format notes
+## File Format Notes
 
 - QP objective uses bracketed quadratic term convention; coefficients doubled inside, divided by 2 overall
 - Constraints accept degree 0..2 only
 
-### Objective serialization details
+### Objective Serialization Details
 
 - Terms are grouped by degree. Degree-2 terms are doubled inside brackets and divided by 2 overall to match the standard QP form expected by HiGHS.
 - Linear terms (degree 0 and 1) are emitted directly in a deterministic order.
 
-### Constraint serialization details
+### Constraint Serialization Details
 
 - Only degree 0..2 terms are accepted; otherwise an error is raised.
 - The left-hand side is always a polynomial; the right-hand side is numeric.
 - Inequality/equality operators are mapped to LP symbols (`=` for `:==`).
 
-## Performance notes
+## Performance Notes
 
 - **Symbolic operations**: lightweight polynomial manipulation with deterministic serialization order
 - **Temporary files**: automatically cleaned after `solve/1`
@@ -226,19 +189,11 @@ Non-linear expressions with automatic linearization:
 
 ## Related Documentation
 
-- **[DSL Tutorial](COMPREHENSIVE_TUTORIAL.md)** - Complete usage guide with examples
-- **[Getting Started](GETTING_STARTED.md)** - Basic setup and first example
-- **[Pattern-based Operations](PATTERN_BASED_OPERATIONS.md)** - Advanced pattern features
-- **[Variadic Operations](VARIADIC_OPERATIONS.md)** - Variadic function support
-- **[Advanced AST](ADVANCED_AST.md)** - AST transformation details
-
-## Related Documentation
-
-- **[DSL Tutorial](COMPREHENSIVE_TUTORIAL.md)** - Complete usage guide with examples
-- **[Getting Started](GETTING_STARTED.md)** - Basic setup and first example
-- **[Pattern-based Operations](PATTERN_BASED_OPERATIONS.md)** - Advanced pattern features
-- **[Variadic Operations](VARIADIC_OPERATIONS.md)** - Variadic function support
-- **[Advanced AST](ADVANCED_AST.md)** - AST transformation details
+- [AST Transformation](ast-transformation.md) - AST transformation details
+- [DSL System](dsl-system.md) - DSL implementation details
+- [Expression Evaluation](expression-evaluation.md) - Expression evaluation system
+- [Solver Integration](solver-integration.md) - Solver integration architecture
+- [Code Structure](../code-structure/module-overview.md) - Module organization
 
 ## Potential Improvements
 

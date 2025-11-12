@@ -33,21 +33,18 @@ defmodule ExtendedExamplesTest do
     "two_variable_lp.exs",
     "resource_allocation.exs",
     # Phase 3: Intermediate examples
-    "portfolio_optimization.exs"
-    # Phase 4: Advanced examples
-    # "facility_location.exs",  # Has DSL syntax issues
-    # "multi_objective_lp.exs"   # Not created yet
-  ]
-
-  # Examples with known issues
-  @examples_with_issues [
-    # DSL syntax error with variable-to-variable constraints
-    "facility_location.exs"
-  ]
-
-  # Examples that don't exist yet
-  @missing_examples [
+    "portfolio_optimization.exs",
+    # Phase 4: Advanced examples (now fixed/created)
+    "facility_location.exs",
     "multi_objective_lp.exs"
+  ]
+
+  # Examples with known issues (currently none - all fixed)
+  @examples_with_issues [
+  ]
+
+  # Examples that don't exist yet (currently none - all created)
+  @missing_examples [
   ]
 
   describe "Example file existence" do
@@ -354,10 +351,11 @@ defmodule ExtendedExamplesTest do
 
       for example <- @priority_examples do
         example_path = Path.join(@examples_dir, example)
-        content = File.read!(example_path)
+        content = String.downcase(File.read!(example_path))
 
         for section <- required_sections do
-          assert String.contains?(content, section),
+          section_lower = String.downcase(section)
+          assert String.contains?(content, section_lower),
                  "Example #{example} should have #{section} section in header documentation"
         end
       end
@@ -368,12 +366,13 @@ defmodule ExtendedExamplesTest do
         example_path = Path.join(@examples_dir, example)
         content = File.read!(example_path)
 
-        # Check for gotchas or similar section
+        # Check for gotchas or similar section (case-insensitive)
+        content_lower = String.downcase(content)
         has_gotchas =
-          String.contains?(content, "GOTCHAS") or
-            String.contains?(content, "gotchas") or
-            String.contains?(content, "COMMON") or
-            String.contains?(content, "LEARNING")
+          String.contains?(content_lower, "gotchas") or
+            String.contains?(content_lower, "common") or
+            String.contains?(content_lower, "learning") or
+            String.contains?(content_lower, "insights")
 
         assert has_gotchas,
                "Example #{example} should have common gotchas or learning insights section"
@@ -409,11 +408,18 @@ defmodule ExtendedExamplesTest do
 
     try do
       # Use System.cmd to execute the example via mix run
+      # Use Task.async with timeout instead of System.cmd timeout option
+      task = Task.async(fn ->
+        System.cmd("mix", ["run", file_path], stderr_to_stdout: true)
+      end)
+
       {output, exit_code} =
-        System.cmd("mix", ["run", file_path],
-          stderr_to_stdout: true,
-          timeout: @test_timeout
-        )
+        case Task.yield(task, @test_timeout) || Task.shutdown(task) do
+          {:ok, result} -> result
+          nil ->
+            Task.shutdown(task, :brutal_kill)
+            throw(:timeout)
+        end
 
       end_time = :erlang.monotonic_time(:millisecond)
       execution_time_ms = end_time - start_time

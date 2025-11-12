@@ -283,8 +283,8 @@ defmodule Dantzig.BackwardCompatibilityTest do
   test "existing examples still work" do
     # Test that existing examples can still be executed
     example_files = [
-      "examples/knapsack_problem.exs",
-      "examples/tutorial_examples.exs"
+      "docs/user/examples/knapsack_problem.exs",
+      "docs/user/examples/tutorial_examples.exs"
     ]
 
     for file <- example_files do

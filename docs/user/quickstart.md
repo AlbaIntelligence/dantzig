@@ -1,4 +1,4 @@
-# Getting Started with Dantzig
+# Quick Start with Dantzig
 
 Welcome! This guide will take you from installation to solving your first optimization problems using Dantzig's powerful DSL. We'll start simple and build up to advanced features like model parameters and incremental problem building.
 
@@ -30,7 +30,7 @@ require Dantzig.Problem, as: Problem
 
 # Maximize profit: $3 per unit of product A, $4 per unit of product B
 problem = Problem.define do
-new(direction: :maximize)
+  new(direction: :maximize)
 
   # Decision variables: how much of each product to produce
   variables("A", :continuous, min_bound: 0, description: "Units of Product A")
@@ -235,17 +235,18 @@ end
 
 ## Next Steps
 
-🎯 **Build your first model** using the examples above
+**Build your first model** using the examples above
 
-📚 **Deepen your knowledge:**
+**Deepen your knowledge:**
 
-- **[DSL Syntax Reference](DSL_SYNTAX_REFERENCE.md)** - Complete syntax guide
-- **[Comprehensive Tutorial](COMPREHENSIVE_TUTORIAL.md)** - Step-by-step modeling guide
-- **[Examples Directory](../examples/)** - Runnable examples for common problems
+- [DSL Syntax Reference](reference/dsl-syntax.md) - Complete syntax guide
+- [Tutorial](tutorial/basics.md) - Step-by-step modeling guide
+- [Examples Directory](examples/README.md) - Runnable examples for common problems
 
-🔧 **Advanced topics:**
+**Advanced topics:**
 
-- **[Modeling Guide](MODELING_GUIDE.md)** - Best practices and patterns
-- **[Advanced AST](ADVANCED_AST.md)** - Automatic linearization internals
+- [Modeling Guide](guides/modeling-patterns.md) - Best practices and patterns
+- [Pattern Operations](reference/pattern-operations.md) - Pattern-based operations
+- [Variadic Operations](reference/variadic-operations.md) - Variadic max/min/and/or
 
-🚀 **Ready to optimize?** Check out the [examples](../examples/) directory for complete, runnable optimization problems covering assignment, transportation, production planning, and more!
+**Ready to optimize?** Check out the [Examples Directory](examples/README.md) for complete, runnable optimization problems covering assignment, transportation, production planning, and more!

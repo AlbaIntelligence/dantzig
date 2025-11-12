@@ -101,7 +101,6 @@ problem =
 
 {:ok, solution} = Dantzig.solve(problem)  # 🚀 Blazing fast!
 ```
-
 ````
 
 ### Success Indicators
@@ -259,8 +258,8 @@ constraints(abs(x) + max(x, y, z) <= 5)
 This creates the necessary binary variables and linear constraints to represent the absolute value and maximum functions.
 
 ```
+```
 
 ## Maintenance
 
 This style guide should be reviewed and updated as the project evolves to maintain consistent, professional documentation quality.
-```

@@ -149,10 +149,19 @@ defmodule Dantzig.Problem.DSL.VariableManager do
   # Generator parsing and management
   def parse_generators(generators) do
     Enum.map(generators, fn
-      {:<-, _, [var, range]} when is_struct(range, Range) -> {var, Enum.to_list(range)}
-      {:<-, _, [var, list]} when is_list(list) -> {var, list}
-      {:<-, _, [var, expr]} -> {var, evaluate_expression(expr)}
-      _ -> raise ArgumentError, "Invalid generator: #{inspect(generators)}"
+      {:<-, _, [var, range]} when is_struct(range, Range) ->
+        # Keep Range as enumerable - no need to convert to list
+        {var, range}
+
+      {:<-, _, [var, list]} when is_list(list) ->
+        {var, list}
+
+      {:<-, _, [var, expr]} ->
+        # evaluate_expression now handles enumerables (Range, MapSet, etc.)
+        {var, evaluate_expression(expr)}
+
+      _ ->
+        raise ArgumentError, "Invalid generator: #{inspect(generators)}"
     end)
   end
 
@@ -181,18 +190,33 @@ defmodule Dantzig.Problem.DSL.VariableManager do
   def evaluate_expression(expr) do
     case expr do
       range when is_struct(range, Range) ->
-        Enum.to_list(range)
+        # Keep Range as enumerable - no need to convert to list
+        range
 
       {:.., _, [from_ast, to_ast]} ->
         from_val = evaluate_expression(from_ast)
         to_val = evaluate_expression(to_ast)
-        Enum.to_list(from_val..to_val)
+        # Keep Range as enumerable - no need to convert to list
+        from_val..to_val
 
       list when is_list(list) ->
         list
 
       literal when is_number(literal) or is_atom(literal) ->
         literal
+
+      # Handle MapSet and other enumerables (check after other patterns)
+      other ->
+        # Check if it's an enumerable (MapSet, Range already handled above, but check for others)
+        case Enumerable.impl_for(other) do
+          nil ->
+            # Not an enumerable, try other patterns or raise error
+            raise ArgumentError, "Cannot evaluate expression: #{inspect(other)}"
+
+          _impl ->
+            # Keep as enumerable - no need to convert to list
+            other
+        end
 
       # Unary minus
       {:-, _meta, [v]} ->

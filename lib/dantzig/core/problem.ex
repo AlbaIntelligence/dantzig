@@ -2,6 +2,12 @@ defmodule Dantzig.Problem do
   @moduledoc """
   Optimization model: variables, constraints, and objective.
 
+  The `Problem` module provides the main interface for defining and managing
+  optimization problems in Dantzig. It supports both a declarative DSL syntax
+  and an imperative API.
+
+  ## Problem Structure
+
   A problem holds:
 
   - `:direction` – `:maximize` or `:minimize`
@@ -12,8 +18,61 @@ defmodule Dantzig.Problem do
     (N‑D families; scalars appear with the empty tuple key `{}`)
   - `:constraints` – map of unique constraint id to `%Dantzig.Constraint{}`
 
-  Build a problem by creating variables, adding constraints, and adjusting
-  the objective. Then solve with `Dantzig.solve/1`.
+  ## DSL Syntax (Recommended)
+
+  The primary way to define problems is using the `define/1` and `modify/2` macros:
+
+      require Dantzig.Problem, as: Problem
+
+      problem = Problem.define do
+        new(direction: :maximize)
+        variables("x", [i <- 1..n], :continuous, min_bound: 0)
+        constraints([i <- 1..n], x(i) <= limit[i], "Constraint")
+        objective(sum(x(:_)), direction: :maximize)
+      end
+
+  With model parameters:
+
+      problem = Problem.define(model_parameters: %{n: 10, limit: [1, 2, 3]}) do
+        new(direction: :maximize)
+        variables("x", [i <- 1..n], :continuous, min_bound: 0)
+        constraints([i <- 1..n], x(i) <= limit[i], "Bound")
+        objective(sum(x(:_)), direction: :maximize)
+      end
+
+  Modify an existing problem:
+
+      modified = Problem.modify(problem) do
+        constraints(x(1) >= 5, "Additional constraint")
+      end
+
+  ## Imperative API
+
+  For programmatic problem building:
+
+      problem = Problem.new(direction: :maximize)
+      {problem, x} = Problem.new_variable(problem, "x", type: :continuous, min_bound: 0)
+      problem = Problem.add_constraint(problem, Constraint.new(x <= 10))
+      problem = Problem.set_objective(problem, x, direction: :maximize)
+
+  ## Solving
+
+  Once a problem is defined, solve it with:
+
+      {:ok, solution} = Dantzig.solve(problem)
+
+  ## Key Features
+
+  - **Pattern-based modeling**: Use generators `[i <- 1..n]` to create N-dimensional variables
+  - **Model parameters**: Pass runtime data via `model_parameters: %{...}`
+  - **Automatic linearization**: Non-linear expressions (abs, max, min, and, or) are automatically linearized
+  - **Incremental building**: Use `Problem.modify/2` to build problems incrementally
+
+  ## See Also
+
+  - `Dantzig.Polynomial` - Polynomial representation and operations
+  - `Dantzig.Constraint` - Constraint creation and manipulation
+  - `Dantzig.solve/1` - Solving optimization problems
   """
   alias Dantzig.Polynomial
   alias Dantzig.ProblemVariable

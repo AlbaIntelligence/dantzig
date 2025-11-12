@@ -133,9 +133,9 @@ IO.inspect({solution.objective, solution.variables})
 
 | Level               | Guide                                          | Description                     |
 | ------------------- | ---------------------------------------------- | ------------------------------- |
-| 🏃 **Beginner**     | [Getting Started](docs/GETTING_STARTED.md)     | Your first optimization problem |
-| 📚 **Intermediate** | [DSL Tutorial](docs/COMPREHENSIVE_TUTORIAL.md) | Complete guide with examples    |
-| 🏗️ **Advanced**     | [Architecture](docs/ARCHITECTURE.md)           | System design deep dive         |
+| 🏃 **Beginner**     | [Quick Start](docs/user/quickstart.md)         | Your first optimization problem |
+| 📚 **Intermediate** | [Tutorial](docs/user/tutorial/comprehensive.md) | Complete guide with examples    |
+| 🏗️ **Advanced**     | [Architecture](docs/developer/architecture/overview.md) | System design deep dive         |
 | 🔧 **Reference**    | [API Docs](https://hexdocs.pm/dantzig)         | Complete function reference     |
 
 **Generate full docs locally:**
@@ -196,25 +196,29 @@ constraints([i <- 1..3], sum(x(i, :_)) >= demand[i], "Demand satisfaction")
 constraints([i <- 1..3, j <- 1..3], x(i, j) <= capacity[i][j], "Capacity limits")
 ```
 
-## 💡 Examples by Complexity
+## 💡 Examples
+
+Complete, runnable examples are available in the [Examples Directory](docs/user/examples/README.md):
 
 ### **Simple Problems**
 
-- **Resource Allocation**: `mix run examples/simple_working_example.exs`
-- **Knapsack**: `mix run examples/knapsack_problem.exs`
-- **Assignment**: `mix run examples/assignment_problem.exs`
+- **Resource Allocation**: `mix run docs/user/examples/simple_working_example.exs`
+- **Knapsack**: `mix run docs/user/examples/knapsack_problem.exs`
+- **Assignment**: `mix run docs/user/examples/assignment_problem.exs`
 
 ### **Medium Problems**
 
-- **Transportation**: `mix run examples/transportation_problem.exs`
-- **Production Planning**: `mix run examples/production_planning.exs`
-- **Blending**: `mix run examples/blending_problem.exs`
+- **Transportation**: `mix run docs/user/examples/transportation_problem.exs`
+- **Production Planning**: `mix run docs/user/examples/production_planning.exs`
+- **Blending**: `mix run docs/user/examples/blending_problem.exs`
 
 ### **Complex Problems**
 
-- **N-Queens**: `mix run examples/nqueens_dsl.exs`
-- **Pattern Operations**: `mix run examples/pattern_based_operations_example.exs`
-- **Network Flow**: `mix run examples/network_flow.exs`
+- **N-Queens**: `mix run docs/user/examples/nqueens_dsl.exs`
+- **Pattern Operations**: `mix run docs/user/examples/pattern_based_operations_example.exs`
+- **Network Flow**: `mix run docs/user/examples/network_flow.exs`
+
+See the [Examples Directory](docs/user/examples/README.md) for a complete categorized list of all examples.
 
 ## ⚡ HiGHS Solver Integration
 
@@ -286,4 +290,4 @@ MIT License - see [LICENSE.TXT](LICENSE.TXT) for details.
 
 ---
 
-**Ready to optimize?** Start with the [Getting Started Guide](docs/GETTING_STARTED.md) or dive into the [DSL Tutorial](docs/COMPREHENSIVE_TUTORIAL.md) for comprehensive examples!
+**Ready to optimize?** Start with the [Quick Start Guide](docs/user/quickstart.md) or dive into the [Tutorial](docs/user/tutorial/comprehensive.md) for comprehensive examples!

@@ -4,22 +4,22 @@
 # Checks syntax alignment with DSL specs and tests execution
 
 examples = [
-  "examples/simple_working_example.exs",
-  "examples/assignment_problem.exs",
-  "examples/working_example.exs",
-  "examples/new_dsl_example.exs",
-  "examples/nqueens_dsl.exs",
-  "examples/knapsack_problem.exs",
-  "examples/transportation_problem.exs",
-  "examples/blending_problem.exs",
-  "examples/production_planning.exs",
-  "examples/network_flow.exs",
-  "examples/test_basic_dsl.exs",
-  "examples/variadic_operations_example.exs",
-  "examples/pattern_based_operations_example.exs",
-  "examples/tutorial_examples.exs",
-  "examples/school_timetabling.exs",
-  "examples/generate_timetable_svg.exs"
+  "docs/user/examples/simple_working_example.exs",
+  "docs/user/examples/assignment_problem.exs",
+  "docs/user/examples/working_example.exs",
+  "docs/user/examples/new_dsl_example.exs",
+  "docs/user/examples/nqueens_dsl.exs",
+  "docs/user/examples/knapsack_problem.exs",
+  "docs/user/examples/transportation_problem.exs",
+  "docs/user/examples/blending_problem.exs",
+  "docs/user/examples/production_planning.exs",
+  "docs/user/examples/network_flow.exs",
+  "docs/user/examples/test_basic_dsl.exs",
+  "docs/user/examples/variadic_operations_example.exs",
+  "docs/user/examples/pattern_based_operations_example.exs",
+  "docs/user/examples/tutorial_examples.exs",
+  "docs/user/examples/school_timetabling.exs",
+  "docs/user/examples/generate_timetable_svg.exs"
 ]
 
 IO.puts("=" |> String.duplicate(80))

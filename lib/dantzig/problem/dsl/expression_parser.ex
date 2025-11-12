@@ -2,12 +2,49 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
   @moduledoc """
   Parses and evaluates expressions for the Dantzig DSL.
 
-  This module handles:
-  - Polynomial expression parsing and construction
-  - Arithmetic expression evaluation
-  - Variable access pattern resolution
-  - Sum expression processing
-  - Complex expression normalization
+  The `ExpressionParser` module is responsible for converting Elixir AST expressions
+  into `Dantzig.Polynomial` structures. It handles constant evaluation, binding
+  propagation, and complex expression normalization.
+
+  ## Key Responsibilities
+
+  - **Polynomial expression parsing**: Converts AST to polynomial structures
+  - **Constant evaluation**: Evaluates constants from model parameters
+  - **Binding propagation**: Makes generator variables available during evaluation
+  - **Sum expression processing**: Handles `sum()` expressions with wildcards
+  - **Complex expression normalization**: Normalizes arithmetic and comparison operations
+
+  ## Evaluation Environment
+
+  The parser uses a process dictionary-based evaluation environment:
+
+  - **`:dantzig_eval_env`**: Stores model parameters and bindings
+  - Set automatically during DSL block evaluation
+  - Contains `:model_parameters` and `:bindings` keys
+
+  ## Constant Access
+
+  Constants are accessed from model parameters via:
+
+  - `try_evaluate_constant/2`: Evaluates constant expressions
+  - `evaluate_expression_with_bindings/2`: Evaluates expressions with bindings
+  - Supports nested map access: `map[key1][key2]`
+  - Automatic string/atom key conversion
+
+  ## Binding Propagation
+
+  Generator variables create bindings that are available during expression evaluation:
+
+      variables("x", [i <- 1..n], :continuous)
+      constraints([i <- 1..n], x(i) <= limit[i], "Bound")
+
+  The binding `i` is available in the constraint expression.
+
+  ## See Also
+
+  - `Dantzig.Problem.DSL.ConstraintManager` - Constraint parsing
+  - `Dantzig.Problem.DSL.VariableManager` - Variable creation
+  - `Dantzig.Problem.define/1` - DSL entry point
   """
 
   require Dantzig.Problem, as: Problem
@@ -79,55 +116,97 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
             # Arithmetic between expressions
             {op, _, [left, right]} when op in [:+, :-, :*, :/] ->
               left_poly_or_val =
-                case parse_expression_to_polynomial(left, bindings, problem) do
-                  %Polynomial{} = p ->
-                    p
+                # First check if left side is a constant access expression (e.g., multiplier[i])
+                # This must be checked BEFORE trying to parse as polynomial
+                cond do
+                  # Check if it's an Access.get pattern (constant access)
+                  match?({{:., _, [Access, :get]}, _, _}, left) ->
+                    # Try to evaluate as constant first
+                    case ConstantEvaluation.try_evaluate_constant(left, bindings) do
+                      {:ok, val} when is_number(val) ->
+                        Polynomial.const(val)
 
-                  _ ->
-                    case ConstantEvaluation.evaluate_expression_with_bindings(left, bindings) do
-                      v when is_number(v) ->
-                        Polynomial.const(v)
+                      _ ->
+                        # Not a constant, try parsing as polynomial
+                        case parse_expression_to_polynomial(left, bindings, problem) do
+                          %Polynomial{} = p -> p
+                          _ -> Polynomial.const(0)
+                        end
+                    end
 
-                      nil ->
-                        Polynomial.const(0)
+                  true ->
+                    # Not an Access.get pattern, try parsing as polynomial first
+                    case parse_expression_to_polynomial(left, bindings, problem) do
+                      %Polynomial{} = p ->
+                        p
 
-                      other ->
-                        raise ArgumentError,
-                              """
-                              Cannot use non-numeric value in arithmetic expression: #{inspect(other)}
+                      _ ->
+                        case ConstantEvaluation.evaluate_expression_with_bindings(left, bindings) do
+                          v when is_number(v) ->
+                            Polynomial.const(v)
 
-                              Arithmetic operations (+, -, *, /) require numeric values or polynomials.
-                              Got: #{inspect(other)}
+                          nil ->
+                            Polynomial.const(0)
 
-                              Common causes:
-                              1. Using a string or atom where a number is expected
-                              2. Accessing an undefined variable or constant
-                              3. Using a generator variable outside its scope
+                          other ->
+                            raise ArgumentError,
+                                  """
+                                  Cannot use non-numeric value in arithmetic expression: #{inspect(other)}
 
-                              Example of correct usage:
-                                x(i) + y(j)        # Adding variables
-                                x(i) * 2.5         # Multiplying by a number
-                                cost[i] * x(i)     # Using constants from model_parameters
-                              """
+                                  Arithmetic operations (+, -, *, /) require numeric values or polynomials.
+                                  Got: #{inspect(other)}
+
+                                  Common causes:
+                                  1. Using a string or atom where a number is expected
+                                  2. Accessing an undefined variable or constant
+                                  3. Using a generator variable outside its scope
+
+                                  Example of correct usage:
+                                    x(i) + y(j)        # Adding variables
+                                    x(i) * 2.5         # Multiplying by a number
+                                    cost[i] * x(i)     # Using constants from model_parameters
+                                  """
+                        end
                     end
                 end
 
               right_poly_or_val =
-                case parse_expression_to_polynomial(right, bindings, problem) do
-                  %Polynomial{} = p ->
-                    p
+                # First check if right side is a constant access expression (e.g., multiplier[i])
+                # This must be checked BEFORE trying to parse as polynomial
+                cond do
+                  # Check if it's an Access.get pattern (constant access)
+                  match?({{:., _, [Access, :get]}, _, _}, right) ->
+                    # Try to evaluate as constant first
+                    case ConstantEvaluation.try_evaluate_constant(right, bindings) do
+                      {:ok, val} when is_number(val) ->
+                        Polynomial.const(val)
 
-                  _ ->
-                    case ConstantEvaluation.evaluate_expression_with_bindings(right, bindings) do
-                      v when is_number(v) ->
-                        Polynomial.const(v)
+                      _ ->
+                        # Not a constant, try parsing as polynomial
+                        case parse_expression_to_polynomial(right, bindings, problem) do
+                          %Polynomial{} = p -> p
+                          _ -> Polynomial.const(0)
+                        end
+                    end
 
-                      nil ->
-                        Polynomial.const(0)
+                  true ->
+                    # Not an Access.get pattern, try parsing as polynomial first
+                    case parse_expression_to_polynomial(right, bindings, problem) do
+                      %Polynomial{} = p ->
+                        p
 
-                      other ->
-                        raise ArgumentError,
-                              "Cannot use non-numeric value in arithmetic: #{inspect(other)}"
+                      _ ->
+                        case ConstantEvaluation.evaluate_expression_with_bindings(right, bindings) do
+                          v when is_number(v) ->
+                            Polynomial.const(v)
+
+                          nil ->
+                            Polynomial.const(0)
+
+                          other ->
+                            raise ArgumentError,
+                                  "Cannot use non-numeric value in arithmetic: #{inspect(other)}"
+                        end
                     end
                 end
 
@@ -278,7 +357,7 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
                     case Map.fetch(bindings, var_atom) do
                       {:ok, value} ->
                         value
-                      
+
                       :error ->
                         # Try finding by AST node structure (for compatibility)
                         Enum.find_value(bindings, fn {key, value} ->
@@ -294,7 +373,7 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
                     case Map.fetch(bindings, var) do
                       {:ok, value} ->
                         value
-                      
+
                       :error ->
                         # Try finding by AST node structure (for compatibility)
                         Enum.find_value(bindings, fn {key, value} ->
@@ -539,23 +618,47 @@ defmodule Dantzig.Problem.DSL.ExpressionParser do
             {{:., _, [Access, :get]}, _, _} = access_expr ->
               # Recursively evaluate nested Access.get expressions using evaluate_expression_with_bindings
               # which handles nested Access.get correctly
+              # First, try to evaluate as a constant with bindings
               case ConstantEvaluation.try_evaluate_constant(access_expr, bindings) do
                 {:ok, val} when is_number(val) ->
                   Polynomial.const(val)
 
                 {:ok, nil} ->
+                  # Provide more helpful error message with binding information
+                  binding_info =
+                    if map_size(bindings) > 0 do
+                      "Available bindings: #{inspect(Map.keys(bindings))}. "
+                    else
+                      "No bindings available. "
+                    end
+
                   raise ArgumentError,
                         "Cannot evaluate constant access expression: #{inspect(access_expr)}. " <>
-                          "The expression evaluated to nil. Ensure the constant exists in model_parameters and indices are valid."
+                          "The expression evaluated to nil. " <>
+                          binding_info <>
+                          "Ensure the constant exists in model_parameters and indices are valid. " <>
+                          "If using generator bindings (e.g., multiplier[i] where i <- 1..3), " <>
+                          "ensure the binding variable is in scope."
 
                 {:ok, non_numeric_val} ->
                   raise ArgumentError,
                         "Constant access expression evaluated to non-numeric value: #{inspect(access_expr)} => #{inspect(non_numeric_val)}"
 
                 :error ->
+                  # Provide more helpful error message
+                  binding_info =
+                    if map_size(bindings) > 0 do
+                      "Available bindings: #{inspect(Map.keys(bindings))}. "
+                    else
+                      "No bindings available. "
+                    end
+
                   raise ArgumentError,
                         "Cannot evaluate constant access expression: #{inspect(access_expr)}. " <>
-                          "Ensure the constant exists in model_parameters and indices are valid."
+                          binding_info <>
+                          "Ensure the constant exists in model_parameters and indices are valid. " <>
+                          "If using generator bindings (e.g., multiplier[i] where i <- 1..3), " <>
+                          "ensure the binding variable is in scope."
               end
 
             _ ->

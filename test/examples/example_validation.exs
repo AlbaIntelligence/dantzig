@@ -132,10 +132,10 @@ defmodule Dantzig.Examples.Validation do
   # Private helper functions
 
   defp get_example_files do
-    "examples/"
+    "docs/user/examples/"
     |> File.ls!()
     |> Enum.filter(&String.ends_with?(&1, ".exs"))
-    |> Enum.map(&Path.join("examples", &1))
+    |> Enum.map(&Path.join("docs/user/examples", &1))
   end
 
   defp execute_example(file_path, timeout) do

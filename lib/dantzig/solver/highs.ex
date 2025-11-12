@@ -1,5 +1,57 @@
 defmodule Dantzig.HiGHS do
-  @moduledoc false
+  @moduledoc """
+  HiGHS solver integration for Dantzig.
+
+  This module provides integration with the HiGHS (High-performance
+  Interior-Point Solver) for linear and quadratic programming problems.
+
+  ## Key Functions
+
+  - `solve/1`: Solves an optimization problem and returns a solution
+  - `to_lp_iodata/1`: Serializes a problem to LP/QP format
+
+  ## Problem Serialization
+
+  Problems are serialized to LP/QP format with the following structure:
+
+  - **Direction**: `Maximize` or `Minimize`
+  - **Objective**: Linear and quadratic terms
+  - **Constraints**: Subject To section with all constraints
+  - **Bounds**: Variable bounds
+  - **General/Binary**: Integer and binary variable declarations
+
+  ## Solver Execution
+
+  The solver is executed via system command:
+
+  1. Write problem to temporary LP file
+  2. Execute `highs` binary with model file
+  3. Parse solution from output file
+  4. Clean up temporary files
+
+  ## Solution Format
+
+  Solutions are parsed from HiGHS output format:
+
+  - Status (optimal, infeasible, unbounded, etc.)
+  - Objective value
+  - Variable values
+  - Constraint dual values
+
+  ## Configuration
+
+  Solver binary path is configured via `Dantzig.Config`:
+
+      config :dantzig, :highs_binary_path, "/path/to/highs"
+
+  Or use the default path from `priv/bin/highs`.
+
+  ## See Also
+
+  - `Dantzig.solve/1` - Main solving interface
+  - `Dantzig.Solution` - Solution representation
+  - `Dantzig.Config` - Configuration management
+  """
 
   require Dantzig.Problem, as: Problem
   alias Dantzig.Config
@@ -79,7 +131,7 @@ defmodule Dantzig.HiGHS do
     end
   end
 
-  defp constraint_to_iodata(constraint = %Constraint{}) do
+  def constraint_to_iodata(constraint = %Constraint{}, name \\ nil) do
     # Polynomial.to_lp_constraint returns [linear_terms, quadratic_terms]
     # We need to flatten this into a single iodata
     [linear_terms, quadratic_terms] = Polynomial.to_lp_constraint(constraint.left_hand_side)
@@ -97,7 +149,10 @@ defmodule Dantzig.HiGHS do
       "\n"
     ]
 
-    case constraint.name do
+    # Use passed name if provided, otherwise use constraint.name
+    display_name = name || constraint.name
+
+    case display_name do
       nil ->
         base
 
@@ -203,7 +258,7 @@ defmodule Dantzig.HiGHS do
     ]
   end
 
-  defp variable_bounds(%ProblemVariable{} = v) do
+  def variable_bounds(%ProblemVariable{} = v) do
     # For binary variables, set bounds to 0 <= variable <= 1
     case v.type do
       :binary ->

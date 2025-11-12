@@ -1,8 +1,8 @@
-# Pattern-Based Operations in Dantzig AST
+# Pattern-Based Operations
 
 ## Overview
 
-The Dantzig AST system now supports **pattern-based operations** that allow you to write concise expressions like `max(x[_])` instead of `max(x[1], x[2], x[3], x[4], x[5])`. This makes optimization modeling much more elegant and maintainable.
+The Dantzig AST system supports **pattern-based operations** that allow you to write concise expressions like `max(x[_])` instead of `max(x[1], x[2], x[3], x[4], x[5])`. This makes optimization modeling much more elegant and maintainable.
 
 ## What Are Pattern-Based Operations?
 
@@ -71,120 +71,6 @@ b[_] OR b[_] OR b[_]               # At least one b variable must be true
 b[1] OR b[2] OR b[3]
 ```
 
-## Implementation Details
-
-### Parser Enhancement
-
-The parser now detects pattern-based arguments in function calls:
-
-```elixir
-def detect_pattern_based_args(args) do
-  case args do
-    # Single pattern-based argument: max(x[_])
-    [{var_name, _, indices}] when is_list(indices) ->
-      if Enum.all?(indices, &(&1 == :_)) do
-        {:pattern, var_name, indices}
-      else
-        :explicit
-      end
-
-    # Multiple arguments - for now, treat as explicit
-    _ ->
-      :explicit
-  end
-end
-```
-
-### AST Representation
-
-Pattern-based operations are represented as `Sum` expressions within the variadic operations:
-
-```elixir
-# max(x[_]) becomes:
-%AST.Max{
-  args: [
-    %AST.Sum{
-      variable: %AST.Variable{
-        name: "x",
-        indices: [:_],
-        pattern: [:_]
-      }
-    }
-  ]
-}
-```
-
-### Transformer Enhancement
-
-The transformer handles pattern-based operations by:
-
-1. **Detecting Pattern-Based Arguments**: Checks if arguments contain `Sum` expressions with pattern variables
-2. **Resolving Patterns**: Uses the variable map to find all matching variables
-3. **Creating Constraints**: Generates appropriate constraints for each matching variable
-
-```elixir
-def transform_max_pattern(var_name, pattern, problem, bindings) do
-  # Get the variable map
-  var_map = Problem.get_var_map(problem, var_name)
-
-  if var_map do
-    # Create pattern from bindings
-    resolved_pattern = create_pattern(pattern, bindings)
-
-    # Get all matching variables
-    matching_vars = var_map
-    |> Enum.filter(fn {key, _monomial} -> matches_pattern(key, resolved_pattern) end)
-
-    # Create new variable for maximum
-    max_var_name = generate_max_pattern_var_name(var_name, pattern, bindings)
-    {problem, max_monomial} = Problem.new_variable(problem, max_var_name, type: :continuous)
-
-    # Create constraints: w >= x[i] for all matching variables
-    problem = Enum.reduce(matching_vars, problem, fn {_key, monomial}, current_problem ->
-      add_constraint(current_problem, max_monomial, :>=, monomial, "max_pattern_ge")
-    end)
-
-    {problem, max_monomial}
-  else
-    raise ArgumentError, "Variable map not found for #{var_name}"
-  end
-end
-```
-
-## Linearization Rules
-
-### Pattern-Based Max
-
-For `max(x[_]) = z` where `x[_]` represents `x[1], x[2], ..., x[n]`:
-
-- **Constraints**: `z ≥ x[i]` for all `i = 1, 2, ..., n`
-- **Variable**: `z` is continuous
-
-### Pattern-Based Min
-
-For `min(x[_]) = z` where `x[_]` represents `x[1], x[2], ..., x[n]`:
-
-- **Constraints**: `z ≤ x[i]` for all `i = 1, 2, ..., n`
-- **Variable**: `z` is continuous
-
-### Pattern-Based And
-
-For `x[_] AND x[_] AND ... AND x[_] = z` (where all `x[i]` are binary):
-
-- **Constraints**:
-  - `z ≤ x[i]` for all `i = 1, 2, ..., n`
-  - `z ≥ ∑x[i] - (n-1)`
-- **Variable**: `z` is binary
-
-### Pattern-Based Or
-
-For `x[_] OR x[_] OR ... OR x[_] = z` (where all `x[i]` are binary):
-
-- **Constraints**:
-  - `z ≥ x[i]` for all `i = 1, 2, ..., n`
-  - `z ≤ ∑x[i]`
-- **Variable**: `z` is binary
-
 ## Examples
 
 ### Basic Examples
@@ -204,7 +90,7 @@ a[_] AND a[_] AND a[_]       # a[1] AND a[2] AND a[3]
 b[_] OR b[_] OR b[_]         # b[1] OR b[2] OR b[3]
 ```
 
-### 4D Variables (busy[i, j, k, l])
+### 4D Variables
 
 ```elixir
 # Create 4D variables busy[i, j, k, l]
@@ -225,10 +111,6 @@ max(x[_, j]) - min(x[i, _])  # max(x[1,j],...,x[n,j]) - min(x[i,1],...,x[i,m])
 # Nested operations
 max(min(x[_, j]), min(x[i, _]))  # max of minimums
 a[_] AND (b[_] OR c[_])          # all a's AND (at least one b OR at least one c)
-
-# With arithmetic
-max(x[_]) * min(y[_])        # max(x[1],...,x[n]) * min(y[1],...,y[m])
-sum(x[_]) == max(x[_]) * count(x[_])  # sum equals max times count
 ```
 
 ### Practical Use Cases
@@ -270,32 +152,32 @@ max(flow[_, destination])
 
 ## Benefits
 
-### 1. **Concise Syntax**
+### 1. Concise Syntax
 
 - `max(x[_])` instead of `max(x[1], x[2], x[3], x[4], x[5])`
 - Reduces code verbosity significantly
 
-### 2. **Automatic Scaling**
+### 2. Automatic Scaling
 
 - Works with any number of variables
 - No need to update code when adding/removing variables
 
-### 3. **Less Error-Prone**
+### 3. Less Error-Prone
 
 - No need to list variables explicitly
 - Reduces chance of missing variables or typos
 
-### 4. **More Readable**
+### 4. More Readable
 
 - Intent is clearer: "maximum of all x variables"
 - Easier to understand the mathematical meaning
 
-### 5. **Maintainable**
+### 5. Maintainable
 
 - Adding variables doesn't require code changes
 - Easier to refactor and modify
 
-### 6. **Flexible**
+### 6. Flexible
 
 - Supports complex patterns like `x[_, j]` or `x[i, _]`
 - Can be combined with other operations
@@ -316,28 +198,42 @@ The naming convention is:
 - `_` becomes `all`
 - Fixed indices are included as-is
 
-## Error Handling
+## Linearization Rules
 
-The system provides clear error messages for common issues:
+### Pattern-Based Max
 
-```elixir
-# No variables found matching pattern
-raise ArgumentError, "No variables found matching pattern x#{inspect([:_])}"
+For `max(x[_]) = z` where `x[_]` represents `x[1], x[2], ..., x[n]`:
 
-# Variable map not found
-raise ArgumentError, "Variable map not found for x"
-```
+- **Constraints**: `z ≥ x[i]` for all `i = 1, 2, ..., n`
+- **Variable**: `z` is continuous
 
-## Future Enhancements
+### Pattern-Based Min
 
-The pattern-based system provides a foundation for:
+For `min(x[_]) = z` where `x[_]` represents `x[1], x[2], ..., x[n]`:
 
-1. **More Complex Patterns**: `x[1..5]`, `x[even]`, `x[prime]`
-2. **Conditional Patterns**: `x[_ where condition]`
-3. **Set Operations**: `union(x[_], y[_])`, `intersection(x[_], y[_])`
-4. **Statistical Functions**: `mean(x[_])`, `variance(x[_])`, `median(x[_])`
-5. **Aggregation Functions**: `count(x[_])`, `product(x[_])`
+- **Constraints**: `z ≤ x[i]` for all `i = 1, 2, ..., n`
+- **Variable**: `z` is continuous
 
-## Conclusion
+### Pattern-Based And
 
-Pattern-based operations make the Dantzig AST system much more powerful and user-friendly. They provide a natural, mathematical syntax that scales automatically and reduces the complexity of optimization modeling. This enhancement brings the system closer to the expressiveness of mathematical optimization languages while maintaining the power and flexibility of Elixir.
+For `x[_] AND x[_] AND ... AND x[_] = z` (where all `x[i]` are binary):
+
+- **Constraints**:
+  - `z ≤ x[i]` for all `i = 1, 2, ..., n`
+  - `z ≥ ∑x[i] - (n-1)`
+- **Variable**: `z` is binary
+
+### Pattern-Based Or
+
+For `x[_] OR x[_] OR ... OR x[_] = z` (where all `x[i]` are binary):
+
+- **Constraints**:
+  - `z ≥ x[i]` for all `i = 1, 2, ..., n`
+  - `z ≤ ∑x[i]`
+- **Variable**: `z` is binary
+
+## Related Documentation
+
+- [DSL Syntax Reference](dsl-syntax.md) - Complete syntax guide
+- [Variadic Operations](variadic-operations.md) - Variadic max/min/and/or functions
+- [Modeling Guide](../guides/modeling-patterns.md) - Best practices

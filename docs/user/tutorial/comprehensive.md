@@ -435,12 +435,12 @@ IO.puts("Feasibility: #{solution.feasibility}")
 
 ---
 
-**Ready to optimize?** Start with the [Getting Started Guide](GETTING_STARTED.md) or explore the [Examples](../examples/) directory!
+**Ready to optimize?** Start with the [Quick Start Guide](../quickstart.md) or explore the [Examples](../examples/README.md) directory!
 
 ## Related Documentation
 
-- **[Getting Started](GETTING_STARTED.md)** - Basic setup and first example
-- **[Architecture Guide](ARCHITECTURE.md)** - System design and internals
-- **[Pattern-based Operations](PATTERN_BASED_OPERATIONS.md)** - Advanced pattern features
-- **[Variadic Operations](VARIADIC_OPERATIONS.md)** - Variadic function support
-- **[Macro Guide](README_MACROS.md)** - Macro system documentation
+- **[Quick Start Guide](../quickstart.md)** - Basic setup and first example
+- **[Architecture Guide](../../developer/architecture/overview.md)** - System design and internals
+- **[Pattern-based Operations](../reference/pattern-operations.md)** - Advanced pattern features
+- **[Variadic Operations](../reference/variadic-operations.md)** - Variadic function support
+- **[DSL Syntax Reference](../reference/dsl-syntax.md)** - Complete syntax reference

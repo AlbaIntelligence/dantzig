@@ -37,10 +37,20 @@ defmodule Dantzig.Problem.DSL.ExpressionParser.ConstantEvaluation do
 
           :error ->
             # If not in bindings, try the environment (model parameters + caller bindings)
+            env = Process.get(:dantzig_eval_env)
             case eval_with_env({name, [], nil}) do
               nil ->
+                env_info =
+                  if env do
+                    "Environment available with keys: #{inspect(Keyword.keys(env))}. "
+                  else
+                    "No environment available in process dictionary. "
+                  end
+
                 raise ArgumentError,
-                      "Cannot evaluate variable '#{name}' - not found in model_parameters/environment"
+                      "Cannot evaluate variable '#{name}' - not found in bindings or model_parameters. " <>
+                        env_info <>
+                        "Available bindings: #{inspect(Map.keys(bindings))}."
 
               value ->
                 value
@@ -110,6 +120,28 @@ defmodule Dantzig.Problem.DSL.ExpressionParser.ConstantEvaluation do
         # Recursively evaluate container (might be nested Access.get like foods_dict[food])
         container = evaluate_expression_with_bindings(container_ast, bindings)
 
+        # If container evaluation failed (returned nil), provide helpful error
+        if container == nil do
+          container_name =
+            case container_ast do
+              {name, _, _} when is_atom(name) -> to_string(name)
+              _ -> inspect(container_ast)
+            end
+
+          env = Process.get(:dantzig_eval_env)
+          env_info =
+            if env do
+              "Environment available with keys: #{inspect(Keyword.keys(env))}. "
+            else
+              "No environment available. "
+            end
+
+          raise ArgumentError,
+                "Cannot evaluate container '#{container_name}' for constant access. " <>
+                  env_info <>
+                  "Ensure '#{container_name}' exists in model_parameters."
+        end
+
         # Handle key evaluation - distinguish between literal atoms and generator variables
         key =
           case key_ast do
@@ -145,21 +177,37 @@ defmodule Dantzig.Problem.DSL.ExpressionParser.ConstantEvaluation do
           end
 
         # Access the container with the evaluated key
-        cond do
-          is_map(container) ->
-            # Try atom key first, then string key (for flexibility)
-            case Map.get(container, key) do
-              nil when is_atom(key) -> Map.get(container, to_string(key))
-              nil when is_binary(key) -> Map.get(container, safe_to_atom(key))
-              value -> value
-            end
+        result =
+          cond do
+            is_map(container) ->
+              # Try atom key first, then string key (for flexibility)
+              case Map.get(container, key) do
+                nil when is_atom(key) -> Map.get(container, to_string(key))
+                nil when is_binary(key) -> Map.get(container, safe_to_atom(key))
+                value -> value
+              end
 
-          is_list(container) and is_integer(key) ->
-            Enum.at(container, key)
+            is_list(container) and is_integer(key) ->
+              # Use 0-based indexing (Elixir standard)
+              Enum.at(container, key)
 
-          true ->
-            nil
+            true ->
+              nil
+          end
+
+        # If result is nil, provide helpful error message
+        if result == nil do
+          key_str = inspect(key)
+          container_type = if is_list(container), do: "list", else: "map"
+          container_size = if is_list(container), do: length(container), else: map_size(container)
+
+          raise ArgumentError,
+                "Constant access returned nil: #{inspect(container_ast)}[#{key_str}]. " <>
+                  "Container is a #{container_type} with #{container_size} elements. " <>
+                  "Ensure the key #{key_str} is valid for this container."
         end
+
+        result
 
       # Tuple access (e.g., {a, b, c}[1])
       {:__block__, _, [tuple_expr]} when is_tuple(tuple_expr) ->

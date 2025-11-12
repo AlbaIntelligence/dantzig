@@ -140,13 +140,15 @@ defmodule Dantzig.Problem.DSL.ExpressionParser.SumProcessing do
                 """
       end
 
-    if not is_list(domain_values) do
+    # Check that domain_values is an enumerable (for robustness)
+    # Accept any enumerable type (lists, ranges, MapSets, etc.), not just lists
+    unless Enumerable.impl_for(domain_values) do
       env = Process.get(:dantzig_eval_env)
       env_info = if env, do: "Environment has #{length(env)} items: #{inspect(Keyword.keys(env))}", else: "Environment NOT SET"
       
       raise ArgumentError,
             """
-            Generator domain must evaluate to a list, got: #{inspect(domain_values)}
+            Generator domain must evaluate to an enumerable, got: #{inspect(domain_values)}
             
             Domain AST: #{inspect(domain_ast)}
             Current bindings: #{inspect(Map.keys(bindings))}
@@ -156,6 +158,7 @@ defmodule Dantzig.Problem.DSL.ExpressionParser.SumProcessing do
             Make sure:
             1. The variable is defined in the outer scope before Problem.define
             2. Or pass it via model_parameters: Problem.define model_parameters: %{subjects: subjects} do
+            3. The value must be an enumerable (list, range, MapSet, etc.)
             """
     end
 

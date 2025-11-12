@@ -1,6 +1,6 @@
 # DSL Syntax Examples
 
-**Part of**: [DSL_SYNTAX_REFERENCE.md](DSL_SYNTAX_REFERENCE.md) | **See Also**: [DSL_SYNTAX_ADVANCED.md](DSL_SYNTAX_ADVANCED.md)
+**Part of**: [DSL Syntax Reference](dsl-syntax.md) | **See Also**: [DSL Syntax Advanced](DSL_SYNTAX_ADVANCED.md)
 
 This document contains complete working examples demonstrating the Dantzig DSL syntax. These examples serve as golden references for correct DSL usage.
 

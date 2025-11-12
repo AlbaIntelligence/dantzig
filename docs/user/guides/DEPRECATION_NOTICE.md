@@ -173,9 +173,9 @@ end
 
 If you need help migrating from old to new syntax, please:
 
-1. Check the [DSL Syntax Reference](DSL_SYNTAX_REFERENCE.md)
-2. Look at the updated examples in the `examples/` directory
-3. Review the [Comprehensive Tutorial](COMPREHENSIVE_TUTORIAL.md)
+1. Check the [DSL Syntax Reference](../reference/dsl-syntax.md)
+2. Look at the updated examples in the [Examples Directory](../examples/README.md)
+3. Review the [Comprehensive Tutorial](../tutorial/comprehensive.md)
 
 ---
 

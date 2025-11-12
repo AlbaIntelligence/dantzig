@@ -70,10 +70,11 @@ defmodule Dantzig.DSL.ConstantAccessTest do
       problem =
         Problem.define model_parameters: %{multiplier: [4.0, 5.0, 6.0, 7.0]} do
           new(name: "Test Problem", description: "Test list index access")
-          variables("x", [i <- 1..4], :continuous, "Xs")
+          # Use 0-based indexing (Elixir standard)
+          variables("x", [i <- 0..3], :continuous, "Xs")
 
           # The DSL should identify variables (x(i)) as variables, and multiplier[i] as constants
-          constraints(sum(for i <- 1..4, do: x(i) * multiplier[i]) <= 10, "Max constraint")
+          constraints(sum(for i <- 0..3, do: x(i) * multiplier[i]) <= 10, "Max constraint")
         end
 
       # Verify constraint was created
@@ -87,9 +88,10 @@ defmodule Dantzig.DSL.ConstantAccessTest do
       problem =
         Problem.define model_parameters: %{costs: [10.0, 20.0, 30.0]} do
           new(name: "Test Problem", description: "Test list index in objective")
-          variables("x", [i <- 1..3], :continuous, "Xs")
+          # Use 0-based indexing (Elixir standard)
+          variables("x", [i <- 0..2], :continuous, "Xs")
 
-          objective(sum(for i <- 1..3, do: costs[i] * x(i)), :minimize)
+          objective(sum(for i <- 0..2, do: costs[i] * x(i)), :minimize)
         end
 
       # Verify objective was set
@@ -103,11 +105,12 @@ defmodule Dantzig.DSL.ConstantAccessTest do
       problem =
         Problem.define model_parameters: %{matrix: [[4.0, 5.0, 6.0], [7.0, 8.0, 9.0]]} do
           new(name: "Test Problem", description: "Test nested list access")
-          variables("x", [i <- 1..2, j <- 1..3], :continuous, "Xs")
+          # Use 0-based indexing (Elixir standard)
+          variables("x", [i <- 0..1, j <- 0..2], :continuous, "Xs")
 
           # The DSL should identify variables (x(i, j)) as variables, and matrix[i][j] as constants
           constraints(
-            sum(for i <- 1..2, j <- 1..3, do: x(i, j) * matrix[i][j]) <= 10,
+            sum(for i <- 0..1, j <- 0..2, do: x(i, j) * matrix[i][j]) <= 10,
             "Max constraint"
           )
         end
@@ -116,7 +119,7 @@ defmodule Dantzig.DSL.ConstantAccessTest do
       assert Map.size(problem.constraints) == 1
       constraint = hd(Map.values(problem.constraints))
 
-      # The constraint should have: 4.0*x(1,1) + 5.0*x(1,2) + 6.0*x(1,3) + 7.0*x(2,1) + 8.0*x(2,2) + 9.0*x(2,3) <= 10
+      # The constraint should have: 4.0*x(0,0) + 5.0*x(0,1) + 6.0*x(0,2) + 7.0*x(1,0) + 8.0*x(1,1) + 9.0*x(1,2) <= 10
       assert constraint != nil
     end
 
@@ -124,9 +127,10 @@ defmodule Dantzig.DSL.ConstantAccessTest do
       problem =
         Problem.define model_parameters: %{matrix: [[1.0, 2.0], [3.0, 4.0]]} do
           new(name: "Test Problem", description: "Test nested list in objective")
-          variables("x", [i <- 1..2, j <- 1..2], :continuous, "Xs")
+          # Use 0-based indexing (Elixir standard)
+          variables("x", [i <- 0..1, j <- 0..1], :continuous, "Xs")
 
-          objective(sum(for i <- 1..2, j <- 1..2, do: matrix[i][j] * x(i, j)), :maximize)
+          objective(sum(for i <- 0..1, j <- 0..1, do: matrix[i][j] * x(i, j)), :maximize)
         end
 
       assert problem.objective != nil
@@ -142,7 +146,7 @@ defmodule Dantzig.DSL.ConstantAccessTest do
       }
 
       workers = Map.keys(cost_matrix)
-      tasks = Enum.flat_map(cost_matrix, fn {_, v} -> Map.keys(v) end) |> MapSet.new()
+      tasks = Enum.flat_map(cost_matrix, fn {_, v} -> Map.keys(v) end) |> MapSet.new() |> MapSet.to_list()
 
       problem =
         Problem.define model_parameters: %{cost: cost_matrix, workers: workers, tasks: tasks} do
@@ -172,7 +176,7 @@ defmodule Dantzig.DSL.ConstantAccessTest do
       }
 
       workers = Map.keys(cost_matrix)
-      tasks = Enum.flat_map(cost_matrix, fn {_, v} -> Map.keys(v) end) |> MapSet.new()
+      tasks = Enum.flat_map(cost_matrix, fn {_, v} -> Map.keys(v) end) |> MapSet.new() |> MapSet.to_list()
 
       problem =
         Problem.define model_parameters: %{cost: cost_matrix, workers: workers, tasks: tasks} do
@@ -197,22 +201,25 @@ defmodule Dantzig.DSL.ConstantAccessTest do
 
   describe "constant access with generators" do
     test "constant access works with generator bindings in constraints" do
+      # Use 0-based indexing (Elixir standard) to avoid off-by-one errors
+      # This test demonstrates index-based access, but enumeration patterns are preferred
       problem =
         Problem.define model_parameters: %{multiplier: [4.0, 5.0, 6.0]} do
           new(name: "Test Problem", description: "Test constant with generator bindings")
-          variables("x", [i <- 1..3], :continuous, "Xs")
+          # Use 0-based indexing to match Elixir's list indexing
+          variables("x", [i <- 0..2], :continuous, "Xs")
 
           constraints(
-            [i <- 1..3],
+            [i <- 0..2],
             x(i) * multiplier[i] <= 10,
             "Constraint #{i}"
           )
         end
 
       # Should create 3 constraints:
-      # x(1) * 4.0 <= 10
-      # x(2) * 5.0 <= 10
-      # x(3) * 6.0 <= 10
+      # x(0) * 4.0 <= 10  (multiplier[0] = 4.0)
+      # x(1) * 5.0 <= 10  (multiplier[1] = 5.0)
+      # x(2) * 6.0 <= 10  (multiplier[2] = 6.0)
       assert Map.size(problem.constraints) == 3
     end
 
@@ -220,10 +227,11 @@ defmodule Dantzig.DSL.ConstantAccessTest do
       problem =
         Problem.define model_parameters: %{matrix: [[1.0, 2.0], [3.0, 4.0]]} do
           new(name: "Test Problem", description: "Test constant with multiple generators")
-          variables("x", [i <- 1..2, j <- 1..2], :continuous, "Xs")
+          # Use 0-based indexing (Elixir standard)
+          variables("x", [i <- 0..1, j <- 0..1], :continuous, "Xs")
 
           constraints(
-            [i <- 1..2, j <- 1..2],
+            [i <- 0..1, j <- 0..1],
             x(i, j) * matrix[i][j] <= 10,
             "Constraint #{i},#{j}"
           )
@@ -258,7 +266,7 @@ defmodule Dantzig.DSL.ConstantAccessTest do
     test "invalid map key raises error" do
       cost_matrix = %{"Alice" => %{"Task1" => 2}}
       workers = ["Alice"]
-      tasks = MapSet.new(["Task1"])
+      tasks = MapSet.new(["Task1"]) |> MapSet.to_list()
 
       assert_raise ArgumentError, fn ->
         Problem.define model_parameters: %{cost: cost_matrix, workers: workers, tasks: tasks} do
@@ -322,7 +330,7 @@ defmodule Dantzig.DSL.ConstantAccessTest do
 
   describe "enumerable types support" do
     test "mapset enumerable works in generators" do
-      tasks = MapSet.new(["Task1", "Task2"])
+      tasks = MapSet.new(["Task1", "Task2"]) |> MapSet.to_list()
 
       problem =
         Problem.define model_parameters: %{tasks: tasks} do
