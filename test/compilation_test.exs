@@ -104,6 +104,7 @@ defmodule Dantzig.CompilationTest do
       if File.exists?(file) do
         # Try to compile the example file
         result = Code.compile_file(file)
+
         case result do
           [{_, []}] ->
             assert true, "Example file #{file} compiled successfully"

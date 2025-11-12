@@ -29,7 +29,7 @@ defmodule Dantzig.Solver.HiGHSIntegrationTest do
   @tag :requires_highs
   describe "solve/1 - Simple linear programming problems" do
     test "solves simple minimization problem" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -51,7 +51,7 @@ defmodule Dantzig.Solver.HiGHSIntegrationTest do
     end
 
     test "solves simple maximization problem" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -74,7 +74,7 @@ defmodule Dantzig.Solver.HiGHSIntegrationTest do
     end
 
     test "solves problem with equality constraints" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -99,7 +99,7 @@ defmodule Dantzig.Solver.HiGHSIntegrationTest do
     end
 
     test "solves problem with bounded variables" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -127,7 +127,7 @@ defmodule Dantzig.Solver.HiGHSIntegrationTest do
 
   describe "solve/1 - Binary integer programming" do
     test "solves simple binary problem" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -152,7 +152,7 @@ defmodule Dantzig.Solver.HiGHSIntegrationTest do
     end
 
     test "solves knapsack-like binary problem" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -191,7 +191,7 @@ defmodule Dantzig.Solver.HiGHSIntegrationTest do
 
   describe "solve/1 - Integer programming" do
     test "solves simple integer problem" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -219,7 +219,7 @@ defmodule Dantzig.Solver.HiGHSIntegrationTest do
 
   describe "solve/1 - Complex problems" do
     test "solves transportation problem" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -254,7 +254,7 @@ defmodule Dantzig.Solver.HiGHSIntegrationTest do
     end
 
     test "solves assignment problem" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -290,7 +290,7 @@ defmodule Dantzig.Solver.HiGHSIntegrationTest do
 
   describe "solve/1 - Edge cases" do
     test "handles infeasible problem gracefully" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -312,7 +312,7 @@ defmodule Dantzig.Solver.HiGHSIntegrationTest do
     end
 
     test "handles unbounded problem" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -332,7 +332,7 @@ defmodule Dantzig.Solver.HiGHSIntegrationTest do
     end
 
     test "handles problem with no constraints" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -350,7 +350,7 @@ defmodule Dantzig.Solver.HiGHSIntegrationTest do
     end
 
     test "handles problem with single variable" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -375,7 +375,7 @@ defmodule Dantzig.Solver.HiGHSIntegrationTest do
 
   describe "Dantzig.solve/1 and Dantzig.solve!/1" do
     test "Dantzig.solve/1 returns {:ok, solution} or :error" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -393,7 +393,7 @@ defmodule Dantzig.Solver.HiGHSIntegrationTest do
     end
 
     test "Dantzig.solve!/1 returns solution or raises" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -418,7 +418,7 @@ defmodule Dantzig.Solver.HiGHSIntegrationTest do
     end
 
     test "Dantzig.solve/1 with print_optimizer_input option" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -439,7 +439,7 @@ defmodule Dantzig.Solver.HiGHSIntegrationTest do
 
   describe "Solution validation" do
     test "solution satisfies constraints" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -467,7 +467,7 @@ defmodule Dantzig.Solver.HiGHSIntegrationTest do
     end
 
     test "solution objective matches computed objective" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 

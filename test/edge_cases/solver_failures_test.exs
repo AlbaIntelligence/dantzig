@@ -64,7 +64,7 @@ defmodule Dantzig.EdgeCases.SolverFailuresTest do
   describe "Malformed solution file" do
     @tag :requires_highs
     test "handles empty solution file" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -75,7 +75,7 @@ defmodule Dantzig.EdgeCases.SolverFailuresTest do
 
     @tag :requires_highs
     test "handles invalid solution file format" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -91,7 +91,7 @@ defmodule Dantzig.EdgeCases.SolverFailuresTest do
 
     @tag :requires_highs
     test "handles solution file with missing sections" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -108,7 +108,7 @@ defmodule Dantzig.EdgeCases.SolverFailuresTest do
 
     @tag :requires_highs
     test "handles solution file with invalid numeric values" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -132,7 +132,7 @@ defmodule Dantzig.EdgeCases.SolverFailuresTest do
   describe "solve!/1 with failures" do
     @tag :requires_highs
     test "solve!/1 raises when solve/1 returns :error" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -171,7 +171,7 @@ defmodule Dantzig.EdgeCases.SolverFailuresTest do
   describe "Problem structure issues causing solver failures" do
     @tag :requires_highs
     test "handles problems that may cause LP export issues" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -206,7 +206,7 @@ defmodule Dantzig.EdgeCases.SolverFailuresTest do
 
     @tag :requires_highs
     test "handles problems with special characters in names" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -312,7 +312,7 @@ defmodule Dantzig.EdgeCases.SolverFailuresTest do
   describe "File I/O error handling" do
     @tag :requires_highs
     test "handles temporary file creation failures gracefully" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -345,7 +345,7 @@ defmodule Dantzig.EdgeCases.SolverFailuresTest do
   describe "Solver execution failures" do
     @tag :requires_highs
     test "handles solver process failures" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -380,7 +380,7 @@ defmodule Dantzig.EdgeCases.SolverFailuresTest do
 
     @tag :requires_highs
     test "handles problems that cause solver to produce no solution file" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -449,7 +449,7 @@ defmodule Dantzig.EdgeCases.SolverFailuresTest do
   describe "Error recovery and reporting" do
     @tag :requires_highs
     test "error messages provide helpful information" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 

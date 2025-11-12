@@ -257,7 +257,7 @@ defmodule Dantzig.EdgeCases.LargeProblemsTest do
   describe "Solving large problems" do
     @tag :requires_highs
     test "solves problem with 100 variables" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -281,7 +281,7 @@ defmodule Dantzig.EdgeCases.LargeProblemsTest do
 
     @tag :requires_highs
     test "solves problem with 200 variables" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -307,7 +307,7 @@ defmodule Dantzig.EdgeCases.LargeProblemsTest do
 
     @tag :requires_highs
     test "solves problem with 100 constraints" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -330,7 +330,7 @@ defmodule Dantzig.EdgeCases.LargeProblemsTest do
 
     @tag :requires_highs
     test "solves problem with nested generators (25x25 grid)" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
