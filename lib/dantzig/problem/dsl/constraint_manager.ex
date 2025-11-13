@@ -236,6 +236,7 @@ defmodule Dantzig.Problem.DSL.ConstraintManager do
       desc_ast when is_tuple(desc_ast) ->
         # Try to evaluate as AST
         var_bindings = Map.to_list(bindings)
+
         try do
           evaluable_ast = reconstruct_evaluable_ast(desc_ast, bindings)
           {evaluated, _} = Code.eval_quoted(evaluable_ast, var_bindings)
@@ -268,7 +269,7 @@ defmodule Dantzig.Problem.DSL.ConstraintManager do
         Enum.reduce(bindings, description, fn {var_atom, value}, acc_desc ->
           var_name = to_string(var_atom)
           # Replace #{var_name} patterns - use simple string replacement
-          # Build pattern string by concatenating parts to avoid interpolation syntax issues  
+          # Build pattern string by concatenating parts to avoid interpolation syntax issues
           pattern_str =
             [35, 123]
             |> List.to_string()
