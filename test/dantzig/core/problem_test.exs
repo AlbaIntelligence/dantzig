@@ -703,29 +703,28 @@ defmodule Dantzig.Core.ProblemTest do
   end
 
   # T141f: Tests for Problem.constraint/3 no-generator single constraints
-  # These tests are expected to FAIL until implementation is complete
+  # Note: Problem.constraint/3 is implemented and working - these tests verify functionality
 
   describe "Problem.constraint/3" do
     test "adds single constraint without generators" do
       # Test that Problem.constraint/3 can add a single constraint
       # Note: Variable access macros are only available inside Problem.define blocks
-      # So we need to test this differently - the actual usage would be inside define blocks
-      # For now, we test that the function exists and can be called
+      # So we test with quoted expressions that represent constraint ASTs
       problem =
         Problem.define do
           new(name: "Test")
           variables("x", [i <- 1..3], :binary, "Variable")
         end
 
-      # Problem.constraint should exist and accept constraint expression
-      # In actual usage, this would be: Problem.constraint(problem, x(1) + x(2) + x(3) == 1, "Sum constraint")
-      # But since we're outside the define block, we'll test with a quoted expression
+      # Problem.constraint accepts quoted constraint expressions
+      # The expression is transformed and parsed to create a constraint
       constraint_expr = quote do: x(1) + x(2) + x(3) == 1
 
-      # This should fail until T145 is implemented
-      assert_raise ArgumentError, fn ->
-        Problem.constraint(problem, constraint_expr, "Sum constraint")
-      end
+      # Should succeed and add the constraint
+      updated_problem = Problem.constraint(problem, constraint_expr, "Sum constraint")
+
+      # Verify constraint was added
+      assert length(Map.keys(updated_problem.constraints)) > length(Map.keys(problem.constraints))
     end
 
     test "adds single constraint without description" do
@@ -738,10 +737,11 @@ defmodule Dantzig.Core.ProblemTest do
 
       constraint_expr = quote do: x(1) >= 0
 
-      # This should fail until T145 is implemented
-      assert_raise ArgumentError, fn ->
-        Problem.constraint(problem, constraint_expr)
-      end
+      # Should succeed and add the constraint without description
+      updated_problem = Problem.constraint(problem, constraint_expr)
+
+      # Verify constraint was added
+      assert length(Map.keys(updated_problem.constraints)) > length(Map.keys(problem.constraints))
     end
 
     test "adds single constraint with comparison operators" do
@@ -752,26 +752,22 @@ defmodule Dantzig.Core.ProblemTest do
           variables("x", [i <- 1..2], :binary, "Variable")
         end
 
+      initial_count = length(Map.keys(problem.constraints))
+
       # Test <= operator
       constraint_expr1 = quote do: x(1) <= 1
-
-      assert_raise ArgumentError, fn ->
-        Problem.constraint(problem, constraint_expr1, "Less than or equal")
-      end
+      problem = Problem.constraint(problem, constraint_expr1, "Less than or equal")
+      assert length(Map.keys(problem.constraints)) > initial_count
 
       # Test >= operator
       constraint_expr2 = quote do: x(2) >= 0
-
-      assert_raise ArgumentError, fn ->
-        Problem.constraint(problem, constraint_expr2, "Greater than or equal")
-      end
+      problem = Problem.constraint(problem, constraint_expr2, "Greater than or equal")
+      assert length(Map.keys(problem.constraints)) > initial_count + 1
 
       # Test == operator
       constraint_expr3 = quote do: x(1) == 1
-
-      assert_raise ArgumentError, fn ->
-        Problem.constraint(problem, constraint_expr3, "Equal")
-      end
+      problem = Problem.constraint(problem, constraint_expr3, "Equal")
+      assert length(Map.keys(problem.constraints)) > initial_count + 2
     end
 
     test "adds single constraint with arithmetic expressions" do
@@ -784,10 +780,11 @@ defmodule Dantzig.Core.ProblemTest do
 
       constraint_expr = quote do: x(1) + x(2) == 1
 
-      # This should fail until T145 is implemented
-      assert_raise ArgumentError, fn ->
-        Problem.constraint(problem, constraint_expr, "Sum")
-      end
+      # Should succeed and add the constraint
+      updated_problem = Problem.constraint(problem, constraint_expr, "Sum")
+
+      # Verify constraint was added
+      assert length(Map.keys(updated_problem.constraints)) > length(Map.keys(problem.constraints))
     end
 
     test "adds single constraint with scaled variables" do
@@ -800,9 +797,11 @@ defmodule Dantzig.Core.ProblemTest do
 
       constraint_expr = quote do: 2 * x(1) + 3 * x(2) <= 10
 
-      assert_raise ArgumentError, fn ->
-        Problem.constraint(problem, constraint_expr, "Scaled constraint")
-      end
+      # Should succeed and add the constraint
+      updated_problem = Problem.constraint(problem, constraint_expr, "Scaled constraint")
+
+      # Verify constraint was added
+      assert length(Map.keys(updated_problem.constraints)) > length(Map.keys(problem.constraints))
     end
 
     test "adds single constraint with constant comparisons" do
@@ -815,9 +814,11 @@ defmodule Dantzig.Core.ProblemTest do
 
       constraint_expr = quote do: x(1) >= 0
 
-      assert_raise ArgumentError, fn ->
-        Problem.constraint(problem, constraint_expr, "Non-negative")
-      end
+      # Should succeed and add the constraint
+      updated_problem = Problem.constraint(problem, constraint_expr, "Non-negative")
+
+      # Verify constraint was added
+      assert length(Map.keys(updated_problem.constraints)) > length(Map.keys(problem.constraints))
     end
 
     test "adds multiple single constraints sequentially" do
@@ -828,22 +829,19 @@ defmodule Dantzig.Core.ProblemTest do
           variables("x", [i <- 1..3], :binary, "Variable")
         end
 
+      initial_count = length(Map.keys(problem.constraints))
+
       constraint_expr1 = quote do: x(1) >= 0
+      problem = Problem.constraint(problem, constraint_expr1, "Constraint 1")
+      assert length(Map.keys(problem.constraints)) > initial_count
+
       constraint_expr2 = quote do: x(2) >= 0
+      problem = Problem.constraint(problem, constraint_expr2, "Constraint 2")
+      assert length(Map.keys(problem.constraints)) > initial_count + 1
+
       constraint_expr3 = quote do: x(3) >= 0
-
-      # All should fail until T145 is implemented
-      assert_raise ArgumentError, fn ->
-        Problem.constraint(problem, constraint_expr1, "Constraint 1")
-      end
-
-      assert_raise ArgumentError, fn ->
-        Problem.constraint(problem, constraint_expr2, "Constraint 2")
-      end
-
-      assert_raise ArgumentError, fn ->
-        Problem.constraint(problem, constraint_expr3, "Constraint 3")
-      end
+      problem = Problem.constraint(problem, constraint_expr3, "Constraint 3")
+      assert length(Map.keys(problem.constraints)) > initial_count + 2
     end
 
     test "preserves constraint name from description" do
@@ -856,9 +854,19 @@ defmodule Dantzig.Core.ProblemTest do
 
       constraint_expr = quote do: x(1) <= 1
 
-      assert_raise ArgumentError, fn ->
-        Problem.constraint(problem, constraint_expr, "My constraint name")
-      end
+      # Should succeed and add the constraint with the provided name
+      updated_problem = Problem.constraint(problem, constraint_expr, "My constraint name")
+
+      # Verify constraint was added
+      assert length(Map.keys(updated_problem.constraints)) > length(Map.keys(problem.constraints))
+      
+      # Verify the constraint has the expected name (check that a constraint with this name exists)
+      constraint_names = 
+        updated_problem.constraints
+        |> Map.values()
+        |> Enum.map(& &1.name)
+      
+      assert "My constraint name" in constraint_names
     end
   end
 

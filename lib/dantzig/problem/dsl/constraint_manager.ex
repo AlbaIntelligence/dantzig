@@ -215,13 +215,30 @@ defmodule Dantzig.Problem.DSL.ConstraintManager do
         interpolated = interpolate_variables_in_description(desc, bindings, index_vals)
         interpolated
 
-      # Handle interpolated binaries (AST like {:<<>>, ...}) by evaluating with actual generator bindings
-      desc_ast when is_tuple(desc_ast) ->
+      # Handle string interpolation AST (like {:<<>>, ...}) by evaluating with actual generator bindings
+      {:<<>>, _meta, _parts} = desc_ast ->
         # Convert bindings map to a variable list acceptable to Code.eval_quoted
         var_bindings = Map.to_list(bindings)
 
         try do
-          {evaluated, _} = Code.eval_quoted(desc_ast, var_bindings)
+          # Reconstruct evaluable AST (replace normalized atoms with variable references)
+          evaluable_ast = reconstruct_evaluable_ast(desc_ast, bindings)
+          {evaluated, _} = Code.eval_quoted(evaluable_ast, var_bindings)
+          to_string(evaluated)
+        rescue
+          _ ->
+            # Fallback to simple suffix if evaluation fails
+            index_str = index_vals |> Enum.map(&to_string/1) |> Enum.join("_")
+            "constraint_#{index_str}"
+        end
+
+      # Handle other AST forms (like quoted strings or other tuple structures)
+      desc_ast when is_tuple(desc_ast) ->
+        # Try to evaluate as AST
+        var_bindings = Map.to_list(bindings)
+        try do
+          evaluable_ast = reconstruct_evaluable_ast(desc_ast, bindings)
+          {evaluated, _} = Code.eval_quoted(evaluable_ast, var_bindings)
           to_string(evaluated)
         rescue
           _ ->

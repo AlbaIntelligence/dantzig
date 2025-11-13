@@ -65,8 +65,8 @@
 #### Test Assertion Updates
 
 - [x] T016 [P] [US1] Update LP format string assertions to match actual output format in `test/dantzig/solver/highs_test.exs` (COMPLETE - fixed all increment_objective calls, updated all format assertions to match actual LP output)
-- [ ] T017 [P] [US1] Fix constraint name interpolation assertions in `test/dantzig/problem/dsl/constraint_manager_test.exs`
-- [ ] T018 [P] [US1] Update `Problem.constraint/3` tests to reflect working functionality in `test/dantzig/core/problem_test.exs`
+- [ ] T017 [P] [US1] Fix constraint name interpolation assertions in `test/dantzig/problem/dsl/constraint_manager_test.exs` (PARKED - issue with pattern matching for `#{` in binary strings from `quote`, needs deeper investigation)
+- [x] T018 [P] [US1] Update `Problem.constraint/3` tests to reflect working functionality in `test/dantzig/core/problem_test.exs` (COMPLETE - updated all tests to verify functionality works instead of expecting errors)
 
 **Checkpoint**: At this point, all test failures should be resolved or documented
 
