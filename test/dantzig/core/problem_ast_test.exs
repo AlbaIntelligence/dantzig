@@ -684,4 +684,3 @@ defmodule Dantzig.Core.ProblemASTTest do
     end
   end
 end
-

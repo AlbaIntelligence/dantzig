@@ -176,4 +176,3 @@ defmodule Dantzig.Core.ProblemConstraintTest do
     end
   end
 end
-

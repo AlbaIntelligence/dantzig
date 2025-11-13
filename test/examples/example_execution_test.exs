@@ -5,7 +5,7 @@ defmodule Examples.ExampleExecutionTest do
   This test ensures that all example files can be executed successfully
   and produce expected outputs.
 
-  T054: Create example execution validation test
+  T019: Create example execution validation test
   """
   # Example execution tests should run sequentially
   use ExUnit.Case, async: false
