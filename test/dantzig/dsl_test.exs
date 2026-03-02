@@ -18,6 +18,6 @@ defmodule Dantzig.DSLTest do
   
   defp create_test_problem do
     Dantzig.Problem.new(name: "test")
-    |> Dantzig.Problem.variables("queen2d", [i <- 1..2, j <- 1..2], :binary, "Queen position")
+    |> Dantzig.Problem.variables("queen2d", quote(do: [i <- 1..2, j <- 1..2]), :binary, "Queen position")
   end
 end
