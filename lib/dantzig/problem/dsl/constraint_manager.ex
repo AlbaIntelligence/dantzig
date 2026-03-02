@@ -250,44 +250,93 @@ defmodule Dantzig.Problem.DSL.ConstraintManager do
         interpolated = interpolate_variables_in_description(desc, bindings, index_vals)
         interpolated
 
-      # Handle string interpolation AST (like {:<<>>, ...}) by evaluating with actual generator bindings
+      # Handle string interpolation AST (like {:<<>>, ...}) by extracting string parts
       {:<<>>, _meta, _parts} = desc_ast ->
-        # Convert bindings map to a variable list acceptable to Code.eval_quoted
-        var_bindings = Map.to_list(bindings)
+        # Extract the string parts from the binary AST and use string replacement
+        extracted_string = extract_string_from_binary_ast(desc_ast)
 
         try do
-          # Reconstruct evaluable AST (replace normalized atoms with variable references)
-          evaluable_ast = reconstruct_evaluable_ast(desc_ast, bindings)
-          {evaluated, _} = Code.eval_quoted(evaluable_ast, var_bindings)
-          to_string(evaluated)
+          interpolate_variables_in_description(extracted_string, bindings, index_vals)
         rescue
-          _ ->
-            # Fallback to simple suffix if evaluation fails
-            index_str = index_vals |> Enum.map(&to_string/1) |> Enum.join("_")
-            "constraint_#{index_str}"
+          _ -> fallback_name(index_vals)
         end
 
       # Handle other AST forms (like quoted strings or other tuple structures)
       desc_ast when is_tuple(desc_ast) ->
-        # Try to evaluate as AST
-        var_bindings = Map.to_list(bindings)
+        # Try to extract string from the AST first
+        extracted_string = extract_string_from_binary_ast(desc_ast)
 
         try do
-          evaluable_ast = reconstruct_evaluable_ast(desc_ast, bindings)
-          {evaluated, _} = Code.eval_quoted(evaluable_ast, var_bindings)
-          to_string(evaluated)
+          interpolate_variables_in_description(extracted_string, bindings, index_vals)
         rescue
-          _ ->
-            # Fallback to simple suffix if evaluation fails
-            index_str = index_vals |> Enum.map(&to_string/1) |> Enum.join("_")
-            "constraint_#{index_str}"
+          _ -> fallback_name(index_vals)
         end
 
       # If description is nil, generate a generic name
       nil ->
-        index_str = index_vals |> Enum.map(&to_string/1) |> Enum.join("_")
-        "constraint_#{index_str}"
+        fallback_name(index_vals)
     end
+  end
+
+  # Extract the interpolated string from a binary AST like {:<<>>, [], ["Variable ", {:i, [], nil}, ""]}
+  # Also handles transformed AST with :: type annotations
+  defp extract_string_from_binary_ast({:<<>>, _meta, parts}) do
+    result =
+      Enum.map_join(parts, fn
+        # String literals - keep as is
+        part when is_binary(part) -> part
+
+        # Type annotation for interpolation: {:::, _, [to_string_call, type]}
+        # e.g., {:::, _, [{{:., _, [Kernel, :to_string]}, _, [var_ast]}, {:binary, _, _}]}
+        {op, _, [to_string_call, _type]} when op == :"::" ->
+          # Extract the variable from the to_string call
+          extract_var_from_to_string_call(to_string_call)
+
+        # Variable references like {:i, [], nil} - extract the var name for string replacement
+        {var_name, [], nil} when is_atom(var_name) ->
+          "#{var_name}"
+
+        # Handle other AST nodes - convert to inspect string as fallback
+        other ->
+          "#{inspect(other, pretty: false)}"
+      end)
+
+    result
+  end
+
+  # Extract variable name from Kernel.to_string call
+  # Pattern: {{:., _, [Kernel, :to_string]}, _, [var_ast]}
+  defp extract_var_from_to_string_call({{:., _dot_meta, [Kernel, :to_string]}, _call_meta, [var_ast]}) do
+    extract_var_name(var_ast)
+  end
+
+  # Handle nested structures - extract from inner to_string call
+  defp extract_var_from_to_string_call({op, _type_meta, [inner_call, _type]}) when op == :"::" do
+    extract_var_from_to_string_call(inner_call)
+  end
+
+  # Fallback - just use inspect
+  defp extract_var_from_to_string_call(other) do
+    "#{inspect(other, pretty: false)}"
+  end
+
+  # Extract the variable name from various AST forms
+  defp extract_var_name({var_name, _, ctx}) when is_atom(var_name) and (is_atom(ctx) or is_nil(ctx)) do
+    "#{var_name}"
+  end
+
+  defp extract_var_name(atom) when is_atom(atom) do
+    "#{atom}"
+  end
+
+  defp extract_var_name(other) do
+    "#{inspect(other, pretty: false)}"
+  end
+
+  # Generate a fallback name when interpolation fails
+  defp fallback_name(index_vals) do
+    index_str = index_vals |> Enum.map(&to_string/1) |> Enum.join("_")
+    "constraint_#{index_str}"
   end
 
   # Helper function to interpolate variables in constraint descriptions

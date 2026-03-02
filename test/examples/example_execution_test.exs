@@ -10,7 +10,7 @@ defmodule Examples.ExampleExecutionTest do
   # Example execution tests should run sequentially
   use ExUnit.Case, async: false
 
-  @examples_dir "examples"
+  @examples_dir "docs/user/examples"
   # 30 seconds timeout per example
   @test_timeout 30_000
 

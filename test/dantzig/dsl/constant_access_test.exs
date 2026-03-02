@@ -24,7 +24,7 @@ defmodule Dantzig.DSL.ConstantAccessTest do
         end
 
       # Verify constraint was created with correct coefficients
-      assert Map.size(problem.constraints) == 1
+      assert Kernel.map_size(problem.constraints) == 1
       constraint = hd(Map.values(problem.constraints))
       # The constraint should have: x2 + 7.0 * x1 <= 10
       # This test will need to verify the polynomial coefficients
@@ -42,7 +42,7 @@ defmodule Dantzig.DSL.ConstantAccessTest do
           constraints(multiplier_1 * x1 - x2 * multiplier_2 <= 10, "Max constraint")
         end
 
-      assert Map.size(problem.constraints) == 1
+      assert Kernel.map_size(problem.constraints) == 1
       constraint = hd(Map.values(problem.constraints))
       # The constraint should have: 7.0 * x1 - x2 * (-5.0) <= 10
       # Which simplifies to: 7.0 * x1 + 5.0 * x2 <= 10
@@ -78,7 +78,7 @@ defmodule Dantzig.DSL.ConstantAccessTest do
         end
 
       # Verify constraint was created
-      assert Map.size(problem.constraints) == 1
+      assert Kernel.map_size(problem.constraints) == 1
       constraint = hd(Map.values(problem.constraints))
       # The constraint should have: 4.0*x(1) + 5.0*x(2) + 6.0*x(3) + 7.0*x(4) <= 10
       assert constraint != nil
@@ -116,7 +116,7 @@ defmodule Dantzig.DSL.ConstantAccessTest do
         end
 
       # Verify constraint was created
-      assert Map.size(problem.constraints) == 1
+      assert Kernel.map_size(problem.constraints) == 1
       constraint = hd(Map.values(problem.constraints))
 
       # The constraint should have: 4.0*x(0,0) + 5.0*x(0,1) + 6.0*x(0,2) + 7.0*x(1,0) + 8.0*x(1,1) + 9.0*x(1,2) <= 10
@@ -162,7 +162,7 @@ defmodule Dantzig.DSL.ConstantAccessTest do
         end
 
       # Verify constraint was created
-      assert Map.size(problem.constraints) == 1
+      assert Kernel.map_size(problem.constraints) == 1
       constraint = hd(Map.values(problem.constraints))
 
       # The constraint should have: 2*assign(Alice,Task1) + 3*assign(Alice,Task2) + 4*assign(Bob,Task1) + 2*assign(Bob,Task2) >= 0
@@ -220,7 +220,7 @@ defmodule Dantzig.DSL.ConstantAccessTest do
       # x(0) * 4.0 <= 10  (multiplier[0] = 4.0)
       # x(1) * 5.0 <= 10  (multiplier[1] = 5.0)
       # x(2) * 6.0 <= 10  (multiplier[2] = 6.0)
-      assert Map.size(problem.constraints) == 3
+      assert Kernel.map_size(problem.constraints) == 3
     end
 
     test "constant access works with multiple generator bindings" do
@@ -238,7 +238,7 @@ defmodule Dantzig.DSL.ConstantAccessTest do
         end
 
       # Should create 4 constraints (one for each combination of i and j)
-      assert Map.size(problem.constraints) == 4
+      assert Kernel.map_size(problem.constraints) == 4
     end
   end
 
@@ -308,8 +308,8 @@ defmodule Dantzig.DSL.ConstantAccessTest do
         end
 
       # Should work exactly as before
-      assert Map.size(problem.variables) > 0
-      assert Map.size(problem.constraints) == 3
+      assert Kernel.map_size(problem.variables) > 0
+      assert Kernel.map_size(problem.constraints) == 3
       assert problem.objective != nil
       assert problem.direction == :maximize
     end
@@ -340,8 +340,8 @@ defmodule Dantzig.DSL.ConstantAccessTest do
         end
 
       # Should create 2 variables and 2 constraints
-      assert Map.size(problem.variables) >= 2
-      assert Map.size(problem.constraints) == 2
+      assert Kernel.map_size(problem.variables) >= 2
+      assert Kernel.map_size(problem.constraints) == 2
     end
 
     test "range enumerable works in generators" do
@@ -353,8 +353,8 @@ defmodule Dantzig.DSL.ConstantAccessTest do
         end
 
       # Should create 5 variables and 5 constraints
-      assert Map.size(problem.variables) >= 5
-      assert Map.size(problem.constraints) == 5
+      assert Kernel.map_size(problem.variables) >= 5
+      assert Kernel.map_size(problem.constraints) == 5
     end
   end
 end

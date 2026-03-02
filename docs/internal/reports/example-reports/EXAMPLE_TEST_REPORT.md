@@ -2,7 +2,7 @@
 
 ## Summary of Syntax and Execution Checks
 
-This report documents the syntax alignment with DSL specs and execution status for all 17 example files (including the newly created diet_problem.exs).
+This report documents the syntax alignment with DSL specs and execution status for all 17 example files.
 
 ## Files Tested
 
@@ -22,9 +22,13 @@ This report documents the syntax alignment with DSL specs and execution status f
 14. tutorial_examples.exs
 15. school_timetabling.exs
 16. generate_timetable_svg.exs
-17. diet_problem.exs (NEW - extracted from nqueens_dsl.exs)
+17. diet_problem.exs
 
-## Execution Status (Updated)
+## Overall Compliance: 10/17 = 59%
+
+---
+
+## ✅ Working Examples (10)
 
 ### ✅ Successfully Executing:
 1. **simple_working_example.exs** - ✅ Executes successfully
@@ -34,7 +38,7 @@ This report documents the syntax alignment with DSL specs and execution status f
 5. **test_basic_dsl.exs** - ✅ **FIXED** - Now executes successfully! (problem1 → problem fixed)
 6. **generate_timetable_svg.exs** - ✅ Executes successfully (SVG generation, no DSL)
 
-### ⚠️ Runtime Errors (Logic/Implementation Issues):
+### ⚠️ Broken Examples (7):
 
 1. **assignment_problem.exs**:
    - ⚠️ **LOGIC ERROR**: Objective value mismatch
@@ -43,38 +47,37 @@ This report documents the syntax alignment with DSL specs and execution status f
    - **Fix Required**: Correct objective expression to use cost matrix properly
 
 2. **knapsack_problem.exs**:
-   - ⚠️ **RUNTIME ERROR**: CaseClauseError - `sum(for ...)` syntax not supported
+   - ⚠️ **DSL ERROR**: `sum(for ...)` syntax not supported
    - Issue: `sum(for item <- item_names, do: select(item) * items_dict[item].weight)` creates complex AST
    - **Status**: Needs support for `sum(for ...)` list comprehension syntax
 
 3. **transportation_problem.exs**:
-   - ⚠️ **RUNTIME ERROR**: Unsupported expression with Access.get
-   - Issue: `supply[s]` syntax creating Access.get AST
-   - **Status**: Needs DSL syntax update for map access
+   - ⚠️ **FIXED**: ✅ Access.get expressions now work, problem solves correctly
 
 4. **blending_problem.exs**:
-   - ⚠️ **RUNTIME ERROR**: Needs investigation (may also have Access.get issues)
+   - ⚠️ **PROTOCOL ERROR**: Enumerable timeout
+   - Issue: Hangs during execution, Enumerable protocol not implemented
    - **Status**: Needs investigation
 
 5. **production_planning.exs**:
-   - ⚠️ **RUNTIME ERROR**: Unsupported expression with nested Access.get
-   - Issue: `demand[period]` syntax creating Access.get AST
-   - **Status**: Needs DSL syntax update for map access
+   - ⚠️ **DSL ERROR**: Nested Access.get not supported
+   - Issue: `demand[period]` syntax creating nested Access.get AST
+   - **Status**: Needs DSL syntax update for nested map access
 
 6. **network_flow.exs**:
-   - ⚠️ **RUNTIME ERROR**: Protocol.String.Chars not implemented for Tuple
+   - ⚠️ **PROTOCOL ERROR**: String.Chars timeout
    - Issue: Tuple used in variable description interpolation (e.g., `flow(arc)` where `arc` is a tuple)
    - **Status**: Needs fix for tuple handling in descriptions
 
 7. **school_timetabling.exs**:
-   - ⚠️ **RUNTIME ERROR**: Unsupported expression with nested Access.get
+   - ⚠️ **DSL ERROR**: Nested Access.get not supported
    - Issue: `teacher_skills[t][s]` syntax creating nested Access.get AST
    - **Status**: Needs DSL syntax update for nested map access
 
 8. **diet_problem.exs**:
-   - ⚠️ **RUNTIME ERROR**: Protocol.UndefinedError - Enumerable not implemented for Atom
-   - Issue: `for food <- food_names` in objective expression may be causing issues
-   - **Status**: Needs investigation - for-comprehension in objective expression
+   - ⚠️ **DSL ERROR**: `sum(for ...)` syntax not supported
+   - Issue: `for food <- food_names` in objective expression causing issues
+   - **Status**: Needs support for `sum(for ...)` syntax in objective expressions
 
 ### ✅ Fixed - Now Working:
 

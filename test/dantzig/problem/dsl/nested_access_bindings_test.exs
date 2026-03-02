@@ -164,7 +164,7 @@ defmodule Dantzig.Problem.DSL.NestedAccessBindingsTest do
       constraint_expr =
         quote do
           sum(for food <- food_names, do: qty(food) * foods_dict[food][nutrient_to_atom[limit]]) <=
-            limits_dict[limit].max
+            limits_dict[limit].max_bound
         end
 
       # Parse with limit="calories" binding
@@ -234,7 +234,7 @@ defmodule Dantzig.Problem.DSL.NestedAccessBindingsTest do
 
       assert problem != nil
       # One for each limit
-      assert Map.size(problem.constraints) == 2
+      assert Kernel.map_size(problem.constraints) == 2
       assert problem.objective != nil
     end
   end

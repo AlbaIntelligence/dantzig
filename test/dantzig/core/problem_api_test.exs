@@ -56,8 +56,8 @@ defmodule Dantzig.Core.ProblemAPITest do
       var_def = updated_problem.variable_defs["x"]
       assert var_def.name == "x"
       assert var_def.type == :continuous
-      assert var_def.min == nil
-      assert var_def.max == nil
+      assert var_def.min_bound == nil
+      assert var_def.max_bound == nil
     end
 
     test "creates a binary variable with default bounds [0, 1]" do
@@ -67,8 +67,8 @@ defmodule Dantzig.Core.ProblemAPITest do
       assert Dantzig.Polynomial.variables(poly) == ["x"]
       var_def = updated_problem.variable_defs["x"]
       assert var_def.type == :binary
-      assert var_def.min == 0
-      assert var_def.max == 1
+      assert var_def.min_bound == 0
+      assert var_def.max_bound == 1
     end
 
     test "creates a variable with custom bounds" do
@@ -82,8 +82,8 @@ defmodule Dantzig.Core.ProblemAPITest do
         )
 
       var_def = updated_problem.variable_defs["x"]
-      assert var_def.min == 5.0
-      assert var_def.max == 10.0
+      assert var_def.min_bound == 5.0
+      assert var_def.max_bound == 10.0
     end
 
     test "creates a variable with description" do
@@ -109,8 +109,8 @@ defmodule Dantzig.Core.ProblemAPITest do
         )
 
       var_def = updated_problem.variable_defs["x"]
-      assert var_def.min == 0
-      assert var_def.max == 2
+      assert var_def.min_bound == 0
+      assert var_def.max_bound == 2
     end
 
     test "creates binary variable with custom min bound" do
@@ -123,8 +123,8 @@ defmodule Dantzig.Core.ProblemAPITest do
         )
 
       var_def = updated_problem.variable_defs["x"]
-      assert var_def.min == -1
-      assert var_def.max == 1
+      assert var_def.min_bound == -1
+      assert var_def.max_bound == 1
     end
   end
 
@@ -321,8 +321,8 @@ defmodule Dantzig.Core.ProblemAPITest do
 
       assert x_def.type == :binary
       assert y_def.type == :binary
-      assert x_def.min == 0
-      assert y_def.min == 0
+      assert x_def.min_bound == 0
+      assert y_def.min_bound == 0
     end
   end
 
