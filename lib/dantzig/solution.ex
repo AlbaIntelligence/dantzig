@@ -29,10 +29,7 @@ defmodule Dantzig.Solution do
   end
 
   @doc """
-  Evaluate a number or polynomial at the solution variable assignment.
-
-  Returns a number if the expression becomes constant; otherwise returns the
-  reduced polynomial (when free variables remain).
+  Evaluate expression at solution.
   """
   def evaluate(%__MODULE__{} = _solution, number) when is_number(number), do: number
 

@@ -11,7 +11,7 @@ defmodule Dantzig.ErrorHandler do
   """
 
   @doc """
-  Generate a helpful error message for DSL parsing errors.
+  DSL parsing error.
   """
   @spec dsl_parse_error(atom(), term(), keyword()) :: %Dantzig.Error{
           type: :dsl_parse_error,
@@ -69,7 +69,7 @@ defmodule Dantzig.ErrorHandler do
   end
 
   @doc """
-  Generate a helpful error message for constraint validation errors.
+  Constraint validation error.
   """
   @spec constraint_validation_error(atom(), term(), keyword()) :: %Dantzig.Error{
           type: :constraint_validation_error,
@@ -119,7 +119,7 @@ defmodule Dantzig.ErrorHandler do
   end
 
   @doc """
-  Generate a helpful error message for solver integration errors.
+  Solver integration error.
   """
   @spec solver_error(atom(), term(), keyword()) :: %Dantzig.Error{
           type: :solver_error,
@@ -165,7 +165,7 @@ defmodule Dantzig.ErrorHandler do
   end
 
   @doc """
-  Generate a helpful error message for model parameters issues.
+  Model parameter error.
   """
   @spec model_parameter_error(atom(), term(), keyword()) :: %Dantzig.Error{
           type: :model_parameter_error,
@@ -294,7 +294,7 @@ defmodule Dantzig.ErrorHandler do
     ]
   end
 
-  defp get_parameter_suggestions(:invalid_parameter_type, details) do
+  defp get_parameter_suggestions(:invalid_parameter_type, _details) do
     [
       "Check that parameter values match expected types",
       "Ensure collections are enumerable",

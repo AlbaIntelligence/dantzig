@@ -19,12 +19,26 @@ defmodule Dantzig.HiGHS do
     with_temporary_files(["model.lp", "solution.lp"], fn [model_path, solution_path] ->
       File.write!(model_path, iodata_bin)
 
-      {output, _error_code} =
+      {output, exit_code} =
         System.cmd(command, [
           model_path,
           "--solution_file",
           solution_path
         ])
+
+      # Check for solver errors
+      if exit_code != 0 do
+        raise RuntimeError, """
+        HiGHS solver failed with exit code: #{exit_code}
+
+        Input problem/model file:
+
+        #{indent(iodata_bin, 4)}
+        Output from the HiGHS solver:
+
+        #{indent(output, 4)}
+        """
+      end
 
       solution_contents =
         case File.read(solution_path) do

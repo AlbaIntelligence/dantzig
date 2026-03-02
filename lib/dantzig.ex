@@ -40,9 +40,7 @@ defmodule Dantzig do
   end
 
   @doc """
-  Serialize a problem to LP/QP iodata and write it to `path`.
-
-  Useful for debugging or running the model with external tools.
+  Serialize problem to LP/QP file.
   """
   def dump_problem_to_file(%Problem{} = problem, path) do
     iodata = HiGHS.to_lp_iodata(problem)

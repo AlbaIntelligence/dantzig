@@ -35,20 +35,7 @@ defmodule Dantzig.ConstraintMetadata do
   end
 
   @doc """
-  Updates a metadata struct withn extra attributes.
-
-  Supports the following extra attributes:
-
-    - `:tags` (*optional*, default: [])
-    - `:attrs` (*optional*, default: [])
-
-  If the `:app` field isn't present, the function will attempt
-  to get the `:app` value from the given `:module`.
-  If the metadata was created from an environment,
-  sometimes the application name can't be deduced at
-  compile time, and if this function runs at runtime,
-  it will pretty much always be able to get the application
-  from the module name.
+  Update metadata with extra attributes.
   """
   def update(metadata, extra) do
     # Create an actual metadata struct if it doesn't exist
@@ -78,9 +65,7 @@ defmodule Dantzig.ConstraintMetadata do
   end
 
   @doc """
-  Converts constraint metadata into a comment in the `.lp` file format.
-
-  Supports `nil` as an argument, so it can be used for constraints without metadata.
+  Convert metadata to LP file comment.
   """
   def to_lp_comment(nil), do: ""
 

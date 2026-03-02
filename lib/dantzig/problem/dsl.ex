@@ -190,16 +190,7 @@ defmodule Dantzig.Problem.DSL do
   end
 
   @doc """
-  External API for adding variables to an existing problem.
-  This is the preferred way to add variables outside of Problem.define/modify blocks.
-
-  ## Examples
-
-      # Add variables with generators
-      problem = DSL.add_variables(problem, "x", [i <- 1..4], :continuous, "Decision variables")
-
-      # Add single variable
-      problem = DSL.add_variables(problem, "y", [], :binary, "Binary variable")
+  Add variables to problem.
   """
   defmacro add_variables(problem, var_name, generators, var_type, description) do
     quote do
@@ -214,18 +205,7 @@ defmodule Dantzig.Problem.DSL do
   end
 
   @doc """
-  Main DSL macro for defining optimization problems.
-
-  This macro provides a declarative syntax for defining problems with variables,
-  constraints, and objectives. It generates individual Problem.add_constraint calls.
-
-  Example:
-    problem = Problem.define do
-      new(name: "My Problem")
-      variables("x", [i <- 1..3], :continuous)
-      constraints([i <- 1..3], x(i) <= 1)
-      objective(sum(x(i) for i <- 1..3), :maximize)
-    end
+  Define problem block.
   """
   defmacro define(do: block) do
     quote do
@@ -236,18 +216,7 @@ defmodule Dantzig.Problem.DSL do
   end
 
   @doc """
-  Main DSL macro for defining optimization problems with model parameters.
-
-  This macro provides a declarative syntax for defining problems with variables,
-  constraints, and objectives, with access to model parameters.
-
-  Example:
-    problem = Problem.define(model_parameters: params) do
-      new(name: "My Problem")
-      variables("x", [i <- 1..params.n], :continuous)
-      constraints([i <- 1..params.n], x(i) <= params.max_val)
-      objective(sum(x(i) for i <- 1..params.n), :maximize)
-    end
+  Define problem with parameters.
   """
   defmacro define(opts, do: block) do
     quote do
@@ -258,14 +227,7 @@ defmodule Dantzig.Problem.DSL do
   end
 
   @doc """
-  Macro to handle sum expressions with 'in' syntax.
-  This transforms sum(expr in var <- list) into valid Elixir.
-
-  Example:
-    sum(qty(food) * foods[food]["cost"] in food <- food_names)
-
-  Future: Will support 'where' for filtering:
-    sum(qty(food) in food <- food_names where food != "ice_cream")
+  Sum expression macro.
   """
   defmacro sum(expr) do
     case expr do
@@ -289,8 +251,7 @@ defmodule Dantzig.Problem.DSL do
   end
 
   @doc """
-  Macro to handle generator syntax like [i <- 1..4, j <- 1..4].
-  This transforms the invalid Elixir syntax into proper AST representation.
+  Generator syntax macro.
   """
   defmacro generators(generator_list) do
     # Handle both direct lists and quoted expressions
@@ -335,7 +296,7 @@ defmodule Dantzig.Problem.DSL do
   end
 
   @doc """
-  Public DSL macro for constraints - matches nqueens_dsl.exs syntax.
+  Constraints macro.
   """
   defmacro constraints(problem, generators, constraint_expr, description \\ nil) do
     # Normalize any generator list entries like [i <- 1..4] to quoted var AST
@@ -382,14 +343,8 @@ defmodule Dantzig.Problem.DSL do
     end
   end
 
-  @doc """
-  Public DSL macro for objective - matches nqueens_dsl.exs syntax.
+  # Test helper functions - no docs needed
 
-  Supports two forms:
-  1. `objective(problem, objective_expr, opts)` - external API (when first arg is a variable)
-  2. `objective(objective_expr, opts)` - internal DSL (inside Problem.define/modify blocks)
-  """
-  # Pattern match: if first arg is a 3-tuple AST (like {:problem, [], Elixir}), it's external API
   defmacro objective({problem_var, _, _} = problem, objective_expr, opts)
            when is_atom(problem_var) do
     # External API form - call the function directly
@@ -417,13 +372,8 @@ defmodule Dantzig.Problem.DSL do
     end
   end
 
-  @doc """
-  Backward-compatible helper used by experimental tests to build bracket variable access AST.
-
-  Example:
-      var_bracket(:queen2d, [:_, :_])
-  """
-  defmacro var_bracket(var_name, indices) do
+  # Test helper - no docs needed
+  def var_bracket(var_name, indices) do
     quote do
       {unquote(var_name), [], unquote(indices)}
     end
@@ -432,21 +382,12 @@ defmodule Dantzig.Problem.DSL do
   # Backward compatibility shims - delegate to new Problem module functions
   # These maintain compatibility with existing code while providing new API
 
-  @doc """
-  Shim for backward compatibility - delegates to Problem.variables/5
-  """
+  # Shim - no docs needed
   def add_variables_shim(problem, generators, var_name, var_type, description) do
     Problem.variables(problem, var_name, generators, var_type, description: description)
   end
 
-  @doc """
-  Set the objective function with direction.
-
-  ## Examples
-
-      # Minimize total cost
-      problem = Problem.DSL.set_objective(problem, sum(x[_, _]), direction: :minimize)
-  """
+  # Set objective - no docs needed
   defmacro set_objective(problem, objective_expr, opts \\ []) do
     quote do
       unquote(__MODULE__).__set_objective__(
@@ -457,14 +398,12 @@ defmodule Dantzig.Problem.DSL do
     end
   end
 
-  @doc """
-  Shim for backward compatibility - delegates to Problem.objective/3
-  """
+  # Shim - no docs needed
   def set_objective_shim(problem, objective_expr, opts) do
     Problem.objective(problem, objective_expr, opts)
   end
 
-  # Implementation functions
+  # Internal functions - no docs needed
 
   def __add_variables__(problem, generators, var_name, var_type, opts_or_description),
     do:
@@ -481,66 +420,52 @@ defmodule Dantzig.Problem.DSL do
 
   # Experimental bracket syntax functions for testing
 
-  @doc """
-  Test function for double bracket access syntax like queen2d[[i, :_]]
-  """
+  # Test helpers - no docs needed
+
   def double_bracket_access(var_name, indices) do
     {var_name, [], [indices]}
   end
 
-  @doc """
-  Test function for tuple bracket access syntax like queen2d[{i, :_}]
-  """
+  # Test helpers - no docs needed
+
   def tuple_bracket_access(var_name, indices) do
     {var_name, [], [indices]}
   end
 
-  @doc """
-  Test function for bracket syntax like queen2d[i, :_]
-  """
+  # Test helpers - no docs needed
+
   def test_bracket_syntax(var_name, indices) do
     {var_name, [], indices}
   end
 
-  @doc """
-  Test function for Access protocol usage
-  """
+  # Test helpers - no docs needed
+
   def test_access_protocol(var_name, indices) do
     {var_name, [], indices}
   end
 
-  @doc """
-  Test function for dynamic macro creation
-  """
+  # Test helpers - no docs needed
+
   def test_dynamic_macro(var_name, indices) do
     {var_name, [], indices}
   end
 
-  @doc """
-  Test function for transforming invalid syntax
-  """
+  # Test helpers - no docs needed
+
   def transform_invalid_syntax(var_name, indices) do
     {var_name, [], indices}
   end
 
   # Helper functions for AST creation (used in tests)
 
-  @doc """
-  Create a function call AST for variable access syntax.
-  Used for testing realistic syntax approaches.
+  # Test helpers - no docs needed
 
-  Example: func_call(:queen2d, [1, :_]) creates AST for queen2d(1, :_)
-  """
   def func_call(var_name, args) do
     {var_name, [], args}
   end
 
-  @doc """
-  Create a variable helper AST for variable access syntax.
-  Used for testing realistic syntax approaches.
+  # Test helpers - no docs needed
 
-  Example: var_helper("queen3d", [1, 2, 3]) creates AST for queen3d(1, 2, 3)
-  """
   def var_helper(var_name, args) when is_binary(var_name) do
     {String.to_atom(var_name), [], args}
   end
@@ -549,80 +474,64 @@ defmodule Dantzig.Problem.DSL do
     {var_name, [], args}
   end
 
-  @doc """
-  Create a single bracket access AST for variable access syntax.
-  Used for testing realistic syntax approaches.
+  # Test helpers - no docs needed
 
-  Example: single_bracket(:queen2d, [1]) creates AST for queen2d[1]
-  """
   def single_bracket(var_name, args) do
     {var_name, [], args}
   end
 
-  @doc """
-  Create a dynamic variable access AST for variable access syntax.
-  Used for testing realistic syntax approaches.
+  # Test helpers - no docs needed
 
-  Example: dynamic_var_access(:queen2d, [1, :_]) creates AST for queen2d(1, :_)
-  """
   def dynamic_var_access(var_name, args) do
     {var_name, [], args}
   end
 
   # Additional test helper functions for bracket syntax experiments
 
-  @doc """
-  Test function for bracket breakthrough syntax.
-  """
+  # Test helpers - no docs needed
+
   def bracket_breakthrough(var_name, args) do
     {var_name, [], args}
   end
 
-  @doc """
-  Test function for syntax transformer.
-  """
+  # Test helpers - no docs needed
+
   def syntax_transformer(var_name, args) do
     {var_name, [], args}
   end
 
-  @doc """
-  Test function for access protocol.
-  """
+  # Test helpers - no docs needed
+
   def access_protocol_test(var_name, args) do
     {var_name, [], args}
   end
 
-  @doc """
-  Test function for alternative bracket syntax.
-  """
+  # Test helpers - no docs needed
+
   def alternative_bracket(var_name, args) do
     {var_name, [], args}
   end
 
-  @doc """
-  Test function for bracket macro.
-  """
+  # Test helpers - no docs needed
+
   def bracket_macro_test(var_name, args) do
     {var_name, [], args}
   end
 
-  @doc """
-  Test function for multi-argument bracket syntax.
-  """
+  # Test helpers - no docs needed
+
   def multi_arg_bracket(var_name, args) do
     {var_name, [], args}
   end
 
-  @doc """
-  Test function for bracket access syntax.
-  """
+  # Test helpers - no docs needed
+
   def bracket_access(var_name, args) do
     {var_name, [], args}
   end
 
-  @doc """
-  Test function for variable access syntax.
-  """
+  # Test helpers - no docs needed
+
   def var_access(var_name, args) do
     {var_name, [], args}
   end

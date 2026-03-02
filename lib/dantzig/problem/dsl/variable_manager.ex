@@ -189,6 +189,7 @@ defmodule Dantzig.Problem.DSL.VariableManager do
   # Expression evaluation for generators
   def evaluate_expression(expr) do
     case expr do
+      # Range - must come first (most specific)
       range when is_struct(range, Range) ->
         # Keep Range as enumerable - no need to convert to list
         range
@@ -205,23 +206,11 @@ defmodule Dantzig.Problem.DSL.VariableManager do
       literal when is_number(literal) or is_atom(literal) ->
         literal
 
-      # Handle MapSet and other enumerables (check after other patterns)
-      other ->
-        # Check if it's an enumerable (MapSet, Range already handled above, but check for others)
-        case Enumerable.impl_for(other) do
-          nil ->
-            # Not an enumerable, try other patterns or raise error
-            raise ArgumentError, "Cannot evaluate expression: #{inspect(other)}"
-
-          _impl ->
-            # Keep as enumerable - no need to convert to list
-            other
-        end
-
       # Unary minus
       {:-, _meta, [v]} ->
         -evaluate_expression(v)
 
+      # Binary operators
       {op, _, [left, right]} when op in [:+, :-, :*, :/] ->
         left_val = evaluate_expression(left)
         right_val = evaluate_expression(right)
@@ -278,8 +267,18 @@ defmodule Dantzig.Problem.DSL.VariableManager do
       {name, _, ctx} = var when is_atom(name) and (is_atom(ctx) or is_nil(ctx)) ->
         eval_with_env(var)
 
-      _ ->
-        raise ArgumentError, "Cannot evaluate expression: #{inspect(expr)}"
+      # Handle MapSet and other enumerables (catch-all - must be LAST)
+      other ->
+        # Check if it's an enumerable (MapSet, Range already handled above, but check for others)
+        case Enumerable.impl_for(other) do
+          nil ->
+            # Not an enumerable, try other patterns or raise error
+            raise ArgumentError, "Cannot evaluate expression: #{inspect(other)}"
+
+          _impl ->
+            # Keep as enumerable - no need to convert to list
+            other
+        end
     end
   end
 

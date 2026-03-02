@@ -1,59 +1,6 @@
 defmodule Dantzig.Polynomial do
   @moduledoc """
   Sparse symbolic polynomials with operator overloading.
-
-  The `Polynomial` module provides a sparse representation of polynomials for
-  optimization problems. It supports algebraic operations, substitution, evaluation,
-  and serialization to LP/QP format.
-
-  ## Internal Representation
-
-  Internally represented as a map `%{[var, var, ...] => coefficient}` where the
-  key is the sorted multiset of variables comprising a term. This sparse representation
-  is efficient for large optimization problems where most terms are zero.
-
-  ## Degree Support
-
-  Degree is defined as the size of the term key:
-  - Degree 0: Constant terms `%{[] => 5.0}`
-  - Degree 1: Linear terms `%{["x"] => 3.0}`
-  - Degree 2: Quadratic terms `%{[["x", "y"]] => 2.0}`
-
-  Only degree ≤ 2 is supported when serializing to LP/QP for HiGHS.
-
-  ## Usage
-
-  Create polynomials:
-
-      # Constant polynomial
-      p1 = Polynomial.const(5.0)
-
-      # Linear polynomial: 3x + 2y
-      p2 = Polynomial.new(%{"x" => 3.0, "y" => 2.0})
-
-      # Monomial: 2x
-      p3 = Polynomial.monomial(2.0, "x")
-
-  Algebraic operations:
-
-      # Addition
-      sum = Polynomial.add(p1, p2)
-
-      # Subtraction
-      diff = Polynomial.subtract(p1, p2)
-
-      # Multiplication
-      product = Polynomial.multiply(p1, p2)
-
-  Operator overloading (via `Polynomial.Operators`):
-
-      import Dantzig.Polynomial.Operators
-      result = p1 + p2 * p3
-
-  ## See Also
-
-  - `Dantzig.Problem` - Problem definition using polynomials
-  - `Dantzig.Constraint` - Constraints using polynomials
   """
   defstruct simplified: %{}
 
@@ -76,7 +23,7 @@ defmodule Dantzig.Polynomial do
   end
 
   @doc """
-  Replace operators by their polynomial versions inside a code block.
+  Replace operators with polynomial versions.
   """
   def replace_operators(ast) do
     Macro.prewalk(ast, fn
@@ -111,10 +58,7 @@ defmodule Dantzig.Polynomial do
   end
 
   @doc """
-  Compatibility constructor: build a polynomial from a map of variable => coefficient.
-
-  Example:
-    Dantzig.Polynomial.new(%{"x" => 1.0, "y" => 2.0})
+  Create polynomial from map.
   """
   def new(%{} = var_to_coeff) do
     terms =
@@ -507,17 +451,22 @@ defmodule Dantzig.Polynomial do
   end
 
   def degree(p) do
-    # Count all variables
     p.simplified
     |> Enum.map(fn {vars, _coeff} -> Enum.count(vars) end)
-    |> Enum.max()
+    |> case do
+      [] -> 0
+      degrees -> Enum.max(degrees)
+    end
   end
 
   def degree_on(p, var) do
     # Count only the times the variable is multiplied
     p.simplified
     |> Enum.map(fn {vars, _coeff} -> Enum.count(vars, fn v -> v == var end) end)
-    |> Enum.max()
+    |> case do
+      [] -> 0
+      counts -> Enum.max(counts)
+    end
   end
 
   # A number is turned into a constant
