@@ -70,7 +70,7 @@ defmodule Dantzig.EdgeCases.NumericalPrecisionTest do
 
     @tag :requires_highs
     test "solves problem with very small numbers" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -134,7 +134,7 @@ defmodule Dantzig.EdgeCases.NumericalPrecisionTest do
 
     @tag :requires_highs
     test "solves problem with very large numbers" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -244,7 +244,7 @@ defmodule Dantzig.EdgeCases.NumericalPrecisionTest do
   describe "Solution precision validation" do
     @tag :requires_highs
     test "solution values satisfy constraints within tolerance" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -273,7 +273,7 @@ defmodule Dantzig.EdgeCases.NumericalPrecisionTest do
 
     @tag :requires_highs
     test "solution objective matches computed objective within tolerance" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 

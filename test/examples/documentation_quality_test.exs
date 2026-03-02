@@ -357,7 +357,7 @@ defmodule Examples.DocumentationQualityTest do
             String.contains?(content, "# Example")
 
         # This is a soft requirement - log but don't fail
-        unless has_structure do
+        if !has_structure do
           IO.puts("Warning: Example #{example} could benefit from structural comments")
         end
       end
@@ -390,7 +390,7 @@ defmodule Examples.DocumentationQualityTest do
             String.contains?(content, "=")
 
         # This is a recommendation, not a requirement
-        unless has_named_constants do
+        if !has_named_constants do
           IO.puts(
             "Info: Example #{example} could benefit from named constants instead of magic numbers"
           )

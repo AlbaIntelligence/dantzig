@@ -28,7 +28,7 @@ defmodule Dantzig.EdgeCases.InfeasibleProblemsTest do
   @tag :requires_highs
   describe "Simple infeasible problems - single variable conflicts" do
     test "detects infeasible problem with conflicting bounds on single variable" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -51,7 +51,7 @@ defmodule Dantzig.EdgeCases.InfeasibleProblemsTest do
     end
 
     test "detects infeasible problem with equality constraint outside bounds" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -72,7 +72,7 @@ defmodule Dantzig.EdgeCases.InfeasibleProblemsTest do
     end
 
     test "detects infeasible binary problem with conflicting constraints" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -97,7 +97,7 @@ defmodule Dantzig.EdgeCases.InfeasibleProblemsTest do
   @tag :requires_highs
   describe "Infeasible problems - sum constraints" do
     test "detects infeasible problem with conflicting sum constraints" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -120,7 +120,7 @@ defmodule Dantzig.EdgeCases.InfeasibleProblemsTest do
     end
 
     test "detects infeasible problem with sum equality constraint incompatible with bounds" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -144,7 +144,7 @@ defmodule Dantzig.EdgeCases.InfeasibleProblemsTest do
   @tag :requires_highs
   describe "Infeasible problems - integer constraints" do
     test "detects infeasible integer problem with conflicting constraints" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -166,7 +166,7 @@ defmodule Dantzig.EdgeCases.InfeasibleProblemsTest do
     end
 
     test "detects infeasible integer problem with sum constraints" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -190,7 +190,7 @@ defmodule Dantzig.EdgeCases.InfeasibleProblemsTest do
   @tag :requires_highs
   describe "Infeasible problems - complex scenarios" do
     test "detects infeasible assignment problem with more tasks than workers" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -216,7 +216,7 @@ defmodule Dantzig.EdgeCases.InfeasibleProblemsTest do
     end
 
     test "detects infeasible transportation problem with insufficient supply" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -240,7 +240,7 @@ defmodule Dantzig.EdgeCases.InfeasibleProblemsTest do
     end
 
     test "detects infeasible knapsack problem with item too large" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -272,7 +272,7 @@ defmodule Dantzig.EdgeCases.InfeasibleProblemsTest do
   @tag :requires_highs
   describe "Infeasible problems - multiple conflicting constraints" do
     test "detects infeasible problem with multiple pairwise conflicts" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -297,7 +297,7 @@ defmodule Dantzig.EdgeCases.InfeasibleProblemsTest do
     end
 
     test "detects infeasible problem with chained equality constraints" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -326,7 +326,7 @@ defmodule Dantzig.EdgeCases.InfeasibleProblemsTest do
   @tag :requires_highs
   describe "Error handling for infeasible problems" do
     test "Dantzig.solve/1 returns :error for infeasible problems" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -348,7 +348,7 @@ defmodule Dantzig.EdgeCases.InfeasibleProblemsTest do
     end
 
     test "Dantzig.solve!/1 raises for infeasible problems" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 

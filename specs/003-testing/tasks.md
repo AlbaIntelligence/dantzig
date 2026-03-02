@@ -1,7 +1,7 @@
 # Tasks: Comprehensive Testing and DSL Improvements
 
 **Input**: Design documents from `/specs/003-testing/`
-**Prerequisites**: spec.md (required), DSL_IMPLEMENTATION_ISSUES.md, enumerator-tracking-design.md, TEST_FAILURE_ANALYSIS.md
+**Prerequisites**: spec.md (required), docs/internal/developer-notes/DSL_IMPLEMENTATION_ISSUES.md, docs/internal/developer-notes/enumerator-tracking-design.md, docs/internal/developer-notes/TEST_FAILURE_ANALYSIS.md
 
 **Tests**: Tests are included for comprehensive validation and TDD approach.
 
@@ -40,31 +40,33 @@
 
 #### API Changes Fixes
 
-- [ ] T003 [P] [US1] Fix `Dantzig.Solver.HiGHS` → `Dantzig.HiGHS` module alias in `test/dantzig/solver/highs_test.exs`
-- [ ] T004 [P] [US1] Fix `Problem.add_constraint/3` → `Problem.add_constraint/2` calls across all test files
-- [ ] T005 [P] [US1] Fix `Constraint.new` signature changes (use `name:` option) across all test files
-- [ ] T006 [P] [US1] Fix `Polynomial.constant` → `Polynomial.const` calls in `test/dantzig/solver/highs_test.exs`
-- [ ] T007 [P] [US1] Fix `Problem.minimize`/`Problem.maximize` calls to set objective direction in solver tests
-- [ ] T008 [P] [US1] Make `constraint_to_iodata/2` and `variable_bounds/1` public in `lib/dantzig/solver/highs.ex` or remove tests
+- [x] T003 [P] [US1] Fix `Dantzig.Solver.HiGHS` → `Dantzig.HiGHS` module alias in `test/dantzig/solver/highs_test.exs`
+- [x] T004 [P] [US1] Fix `Problem.add_constraint/3` → `Problem.add_constraint/2` calls in `test/dantzig/solver/highs_test.exs` (move name to Constraint.new name: option)
+- [x] T005 [P] [US1] Fix `Constraint.new` signature changes (use `name:` option) - Already handled in T004
+- [x] T006 [P] [US1] Fix `Polynomial.constant` → `Polynomial.const` calls in `test/dantzig/solver/highs_test.exs`
+- [x] T007 [P] [US1] Fix `Problem.minimize`/`Problem.maximize` calls to set objective direction - Already working correctly
+- [x] T008 [P] [US1] Make `constraint_to_iodata/2` and `variable_bounds/1` public in `lib/dantzig/solver/highs.ex`
 
 #### Variable Access Fixes
 
-- [ ] T009 [P] [US1] Fix `Problem.get_variable/3` → `Problem.get_variable/2` or direct access in test files
-- [ ] T010 [P] [US1] Fix variable name format assertions (`x_1` → `x(1)`, `queen2d_1_1` → `queen2d(1,1)`) in `test/dantzig/core/problem_test.exs`
-- [ ] T011 [P] [US1] Fix variable bounds field names (`min`/`max` → `min_bound`/`max_bound`) across all test files
+- [x] T009 [P] [US1] Fix `Problem.get_variable/3` → `Problem.get_variable/2` in `test/dantzig/dsl/integration_test.exs` (use variable name format "x(1)" instead of indices)
+- [x] T010 [P] [US1] Fix variable name format assertions (`x_1` → `x(1)`, `queen2d_1_1` → `queen2d(1,1)`) in `test/dantzig/core/problem_test.exs`
+- [x] T011 [P] [US1] Fix variable bounds field names (`min`/`max` → `min_bound`/`max_bound`) in `lib/dantzig/solver/highs.ex`
 
 #### Compilation Error Fixes
 
-- [ ] T012 [US1] Fix undefined variables in `test/compilation_test.exs`
-- [ ] T013 [P] [US1] Fix deprecated `variables/5` usage in `test/dantzig/dsl_test.exs`
-- [ ] T014 [P] [US1] Fix experimental test compilation errors in `test/dantzig/dsl/experimental/`
-- [ ] T015 [US1] Fix benchmark framework references or mark tests as skipped in `test/performance/scalability_test.exs`
+- [x] T011a [US1] Fix NimbleParsec API syntax in `lib/dantzig/solution/parser.ex` (min_bound → min)
+- [x] T011b [US1] Fix cyclic module dependency by moving `Dantzig.Error` to `lib/dantzig/error.ex`
+- [x] T012 [US1] Fix undefined variables in `test/compilation_test.exs` (fix function_exported check for macro, fix Code.compile_file pattern matching)
+- [x] T013 [P] [US1] Fix deprecated `variables/5` usage in `test/dantzig/dsl_test.exs` - Test uses valid form, added clarifying comment
+- [x] T014 [P] [US1] Fix experimental test compilation errors in `test/dantzig/dsl/experimental/` - Fixed macro_parser_test.exs sum/1 issue (changed to use unknown_func for Code.eval_string tests)
+- [x] T015 [US1] Fix benchmark framework references or mark tests as skipped in `test/performance/scalability_test.exs` (marked all tests as skipped, commented out BenchmarkFramework calls)
 
 #### Test Assertion Updates
 
-- [ ] T016 [P] [US1] Update LP format string assertions to match actual output format in `test/dantzig/solver/highs_test.exs`
-- [ ] T017 [P] [US1] Fix constraint name interpolation assertions in `test/dantzig/problem/dsl/constraint_manager_test.exs`
-- [ ] T018 [P] [US1] Update `Problem.constraint/3` tests to reflect working functionality in `test/dantzig/core/problem_test.exs`
+- [x] T016 [P] [US1] Update LP format string assertions to match actual output format in `test/dantzig/solver/highs_test.exs` (COMPLETE - fixed all increment_objective calls, updated all format assertions to match actual LP output)
+- [ ] T017 [P] [US1] Fix constraint name interpolation assertions in `test/dantzig/problem/dsl/constraint_manager_test.exs` (PARKED - issue with pattern matching for `#{` in binary strings from `quote`, needs deeper investigation)
+- [x] T018 [P] [US1] Update `Problem.constraint/3` tests to reflect working functionality in `test/dantzig/core/problem_test.exs` (COMPLETE - updated all tests to verify functionality works instead of expecting errors)
 
 **Checkpoint**: At this point, all test failures should be resolved or documented
 
@@ -80,12 +82,12 @@
 
 ### Tests for User Story 2
 
-- [ ] T019 [P] [US2] Create example execution validation test in `test/examples/example_execution_test.exs`
-- [ ] T020 [P] [US2] Create example solution validation test in `test/examples/solution_validation_test.exs`
+- [x] T019 [P] [US2] Create example execution validation test in `test/examples/example_execution_test.exs` (COMPLETE - test file exists and validates example compilation/execution)
+- [x] T020 [P] [US2] Create example solution validation test in `test/examples/solution_validation_test.exs` (COMPLETE - created test file that validates solutions from examples)
 
 ### Implementation for User Story 2
 
-- [ ] T021 [US2] Verify all examples in `docs/user/examples/` execute successfully
+- [ ] T021 [US2] Verify all examples in `docs/user/examples/*.exs` execute successfully
 - [ ] T022 [P] [US2] Fix any compilation errors in example files
 - [ ] T023 [P] [US2] Fix any runtime errors in example files
 - [ ] T024 [P] [US2] Verify all examples produce valid optimization solutions
@@ -143,7 +145,55 @@
 - [ ] T044 [US3] Pass bindings correctly through sum expression evaluation
 - [ ] T045 [US3] Integrate with deferred constant evaluation (Issue #1)
 
+#### Issue #6: Constant and Enumerated Constant Access (HIGH PRIORITY)
+
+**Goal**: Implement map/list access support for constants from model_parameters in constraint/objective expressions (e.g., `cost[worker][task]`, `multiplier[i]`, `matrix[i][j]`)
+
+**Dependencies**: Requires model_parameters support (Phase 3.5) and Issue #1 completion
+
+- [ ] T081 [P] [US3] Create tests for scalar constant access (`multiplier`) in `test/dantzig/dsl/constant_access_test.exs`
+- [ ] T082 [P] [US3] Create tests for list index access (`multiplier[i]`) in `test/dantzig/dsl/constant_access_test.exs`
+- [ ] T083 [P] [US3] Create tests for nested list access (`matrix[i][j]`) in `test/dantzig/dsl/constant_access_test.exs`
+- [ ] T084 [P] [US3] Create tests for map access (`cost[worker][task]`) in `test/dantzig/dsl/constant_access_test.exs`
+- [ ] T085 [P] [US3] Create tests for nested map access (`cost[worker][task]`) in `test/dantzig/dsl/constant_access_test.exs`
+- [ ] T086 [P] [US3] Create tests for error cases (undefined constants, invalid indices, type mismatches) in `test/dantzig/dsl/constant_access_test.exs`
+- [ ] T087 [US3] Add `Access.get` AST node handling to `parse_expression_to_polynomial/3` in `lib/dantzig/problem/dsl/expression_parser.ex`
+- [ ] T088 [US3] Add nested `Access.get` support (e.g., `cost[worker][task]`) to expression parser
+- [ ] T089 [US3] Integrate `evaluate_expression_with_bindings` for constant evaluation in polynomial parsing
+- [ ] T090 [US3] Add constant lookup in model_parameters for unknown symbols in expressions
+- [ ] T091 [US3] Add error handling for undefined constants, invalid indices, type mismatches
+- [ ] T092 [DOC] [US3] Fix `params.key` syntax inconsistency in documentation (replace with direct access syntax in any remaining docs)
+- [ ] T093 [DOC] [US3] Verify `docs/user/reference/dsl-syntax.md` constant access examples align with implementation
+
 **Checkpoint**: At this point, all high-priority DSL issues should be resolved
+
+---
+
+## Phase 3.5: Model Parameters & Problem.modify (Priority: P1)
+
+**Goal**: Add model parameters to `Problem.define` and provide `Problem.modify` for incremental updates, without breaking existing DSL
+
+**Independent Test**: New tests under `test/dantzig/dsl/` fail first, then pass after implementation
+
+**Requirements Coverage**: FR-013, FR-014, FR-009
+
+**Dependencies**: Can start after Phase 3 (Issue #1) completion
+
+### Tests
+
+- [ ] T094 [P] [PARAM] Create model parameters tests in `test/dantzig/dsl/model_parameters_test.exs`
+- [ ] T095 [P] [MODIFY] Create Problem.modify tests in `test/dantzig/dsl/problem_modify_test.exs`
+
+### Implementation
+
+- [ ] T096 [PARAM] Implement model parameters in `Problem.define` (thread env/bindings) in `lib/dantzig/core/problem.ex` and/or `lib/dantzig/problem/dsl.ex`
+- [ ] T097 [PARAM] Ensure parameters can be used in generators, expressions, descriptions
+- [ ] T098 [BC] [MODIFY] Implement `Problem.modify` macro in `lib/dantzig/core/problem.ex` or `lib/dantzig/problem/dsl.ex`
+- [ ] T099 [BC] [MODIFY] Support adding variables/constraints/objective updates without rebuild
+- [ ] T100 [BC] [MODIFY] Add/port tests under `test/dantzig/dsl/experimental/problem_modify_test.exs` to reflect `Problem.modify` behavior; remove `test/macro_approach/*` if obsolete
+- [ ] T101 [DOC] Document parameters and modify in `docs/user/reference/dsl-syntax.md` (if not already documented)
+
+**Checkpoint**: At this point, model parameters and Problem.modify should be functional
 
 ---
 
@@ -153,7 +203,7 @@
 
 **Independent Test**: Run enumerator tracking tests and verify enumerators are registered
 
-**Requirements Coverage**: FR-004, FR-011, FR-013
+**Requirements Coverage**: FR-004, FR-011, FR-016
 
 ### Tests for User Story 4
 
@@ -196,7 +246,7 @@
 
 **Independent Test**: Run `mix test --cover` and review quality metrics
 
-**Requirements Coverage**: FR-008, FR-009
+**Requirements Coverage**: FR-008, FR-009, NFR-005
 
 ### Tests for User Story 5
 
@@ -206,12 +256,14 @@
 ### Implementation for User Story 5
 
 - [ ] T065 [US5] Review and categorize all test failures with clear reasons
-- [ ] T066 [P] [US5] Document expected test failures in `TEST_FAILURE_ANALYSIS.md`
+- [ ] T066 [P] [US5] Document expected test failures in `docs/internal/developer-notes/TEST_FAILURE_ANALYSIS.md`
 - [ ] T067 [P] [US5] Update test documentation to reflect current API
 - [ ] T068 [P] [US5] Remove or update outdated experimental tests
-- [ ] T069 [US5] Ensure test coverage meets targets (≥80% overall, ≥85% core modules)
+- [ ] T069 [US5] Ensure test coverage meets targets (≥85% overall)
 - [ ] T070 [P] [US5] Improve error messages in tests for better debugging
 - [ ] T071 [US5] Add tests for edge cases identified in DSL issues
+- [ ] T108 [P] [US5] Validate code files are under 500 lines (refactor if feasible and no other options)
+- [ ] T109 [P] [US5] Validate documentation files are under 300 lines (refactor if feasible and no other options)
 
 **Checkpoint**: At this point, test suite quality should be improved
 
@@ -221,15 +273,17 @@
 
 **Purpose**: Document improvements and validate completion
 
-- [ ] T072 [P] Update `DSL_IMPLEMENTATION_ISSUES.md` with resolved issues
-- [ ] T073 [P] Update `enumerator-tracking-design.md` with implementation status
-- [ ] T074 [P] Update `TEST_FAILURE_ANALYSIS.md` with final status
+- [ ] T072 [P] Update `docs/internal/developer-notes/DSL_IMPLEMENTATION_ISSUES.md` with resolved issues
+- [ ] T073 [P] Update `docs/developer/architecture/enumerator-tracking-design.md` with implementation status
+- [ ] T074 [P] Update `docs/internal/developer-notes/TEST_FAILURE_ANALYSIS.md` with final status
 - [ ] T075 [P] Create comprehensive test suite status report
-- [ ] T076 [US1] Run full test suite validation: `mix test`
-- [ ] T077 [US2] Run all examples validation: execute each example file
-- [ ] T078 [US3] Run DSL feature tests validation
-- [ ] T079 [US4] Run enumerator tracking tests validation
-- [ ] T080 [US5] Run coverage analysis: `mix test --cover`
+- [ ] T102 [US1] Run full test suite validation: `mix test`
+- [ ] T103 [US2] Run all examples validation: execute each example file
+- [ ] T104 [US3] Run DSL feature tests validation
+- [ ] T105 [US3.5] Run model parameters and Problem.modify tests validation
+- [ ] T106 [US4] Run enumerator tracking tests validation
+- [ ] T107 [US5] Run coverage analysis: `mix test --cover`
+- [ ] T110 [US5] Validate file size limits: code files <500 lines, docs <300 lines (unless no other options)
 
 ---
 
@@ -240,6 +294,8 @@
 - **Phase 1 (Test Fixes)**: No dependencies - can start immediately
 - **Phase 2 (Example Fixes)**: Can start in parallel with Phase 1
 - **Phase 3 (DSL Issues)**: Can start in parallel with Phase 1, but benefits from Phase 1 completion
+  - Issue #6 (Constant Access) depends on Phase 3.5 (Model Parameters) completion
+- **Phase 3.5 (Model Parameters)**: Can start after Phase 3 (Issue #1) completion
 - **Phase 4 (Enumerator Tracking)**: Can start after Phase 3 (Issue #1) completion
 - **Phase 5 (Test Quality)**: Depends on Phase 1 completion
 - **Phase 6 (Documentation)**: Depends on all previous phases
@@ -274,9 +330,10 @@
 1. Complete Phase 1 → All tests pass
 2. Add Phase 2 → All examples execute
 3. Add Phase 3 → DSL issues resolved
-4. Add Phase 4 → Enumerator tracking implemented
-5. Add Phase 5 → Test quality improved
-6. Each phase adds value without breaking previous work
+4. Add Phase 3.5 → Model parameters and Problem.modify functional
+5. Add Phase 4 → Enumerator tracking implemented
+6. Add Phase 5 → Test quality improved
+7. Each phase adds value without breaking previous work
 
 ### Parallel Team Strategy
 
@@ -285,8 +342,9 @@ With multiple developers:
 1. Developer A: Phase 1 (Test Fixes)
 2. Developer B: Phase 2 (Example Fixes)
 3. Developer C: Phase 3 (DSL Issues - Issue #1)
-4. Developer D: Phase 4 (Enumerator Tracking - after Issue #1)
-5. Developer E: Phase 5 (Test Quality - after Phase 1)
+4. Developer D: Phase 3.5 (Model Parameters - after Issue #1)
+5. Developer E: Phase 4 (Enumerator Tracking - after Issue #1)
+6. Developer F: Phase 5 (Test Quality - after Phase 1)
 
 ---
 
@@ -306,16 +364,20 @@ With multiple developers:
 | ---------------------------------- | ------------- | ---------- | ---------- |
 | FR-001: All tests pass             | Phase 1 (US1) | 18 tasks   | ✅ Covered |
 | FR-002: All examples execute       | Phase 2 (US2) | 8 tasks    | ✅ Covered |
-| FR-003: DSL issues resolved         | Phase 3 (US3) | 17 tasks   | ✅ Covered |
-| FR-004: Enumerator tracking        | Phase 4 (US4) | 16 tasks   | ✅ Covered |
+| FR-003: DSL issues resolved         | Phase 3 (US3) | 32 tasks   | ✅ Covered |
+| FR-004: Enumerator tracking        | Phase 4 (US4) | 17 tasks   | ✅ Covered |
 | FR-005: API updates                | Phase 1 (US1) | 8 tasks    | ✅ Covered |
 | FR-006: Compilation errors          | Phase 1 (US1) | 4 tasks    | ✅ Covered |
 | FR-007: API-related failures        | Phase 1 (US1) | 6 tasks    | ✅ Covered |
 | FR-008: Document failures           | Phase 5 (US5) | 3 tasks    | ✅ Covered |
-| FR-009: Backward compatibility      | Phase 5 (US5) | 1 task     | ✅ Covered |
+| FR-009: Backward compatibility      | Phase 3.5/5   | 2 tasks    | ✅ Covered |
 | FR-010: Valid solutions             | Phase 2 (US2) | 2 tasks    | ✅ Covered |
 | FR-011: Variable enumerators       | Phase 4 (US4) | 8 tasks    | ✅ Covered |
 | FR-012: Constraint validation       | Phase 4 (US4) | 4 tasks    | ✅ Covered |
-| FR-013: Design documentation        | Phase 4 (US4) | 1 task     | ✅ Covered |
+| FR-013: Model parameters           | Phase 3.5     | 8 tasks    | ✅ Covered |
+| FR-014: Problem.modify             | Phase 3.5     | 8 tasks    | ✅ Covered |
+| FR-015: Constant access            | Phase 3 (US3) | 13 tasks   | ✅ Covered |
+| FR-016: Design documentation       | Phase 4 (US4) | 1 task     | ✅ Covered |
+| NFR-005: File size limits          | Phase 5 (US5) | 3 tasks    | ✅ Covered |
 
-**Total Tasks**: 80 tasks covering all 13 functional requirements
+**Total Tasks**: 105 tasks covering all 16 functional requirements and 1 non-functional requirement

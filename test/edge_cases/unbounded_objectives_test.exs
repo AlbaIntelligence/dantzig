@@ -29,7 +29,7 @@ defmodule Dantzig.EdgeCases.UnboundedObjectivesTest do
   @tag :requires_highs
   describe "Unbounded minimization problems" do
     test "detects unbounded minimization with no constraints" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -50,7 +50,7 @@ defmodule Dantzig.EdgeCases.UnboundedObjectivesTest do
     end
 
     test "detects unbounded minimization with unbounded feasible region" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -77,7 +77,7 @@ defmodule Dantzig.EdgeCases.UnboundedObjectivesTest do
   @tag :requires_highs
   describe "Unbounded maximization problems" do
     test "detects unbounded maximization with no upper bounds" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -98,7 +98,7 @@ defmodule Dantzig.EdgeCases.UnboundedObjectivesTest do
     end
 
     test "detects unbounded maximization with unbounded feasible region" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -125,7 +125,7 @@ defmodule Dantzig.EdgeCases.UnboundedObjectivesTest do
   @tag :requires_highs
   describe "Unbounded problems - multiple variables" do
     test "detects unbounded problem with multiple unbounded variables" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -149,7 +149,7 @@ defmodule Dantzig.EdgeCases.UnboundedObjectivesTest do
     end
 
     test "detects unbounded problem with sum objective and loose constraints" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -176,7 +176,7 @@ defmodule Dantzig.EdgeCases.UnboundedObjectivesTest do
   @tag :requires_highs
   describe "Unbounded problems - edge cases" do
     test "handles problem with no constraints as unbounded" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -196,7 +196,7 @@ defmodule Dantzig.EdgeCases.UnboundedObjectivesTest do
     end
 
     test "handles problem with only non-negativity constraints" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -217,7 +217,7 @@ defmodule Dantzig.EdgeCases.UnboundedObjectivesTest do
     end
 
     test "handles problem with conflicting unbounded directions" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -243,7 +243,7 @@ defmodule Dantzig.EdgeCases.UnboundedObjectivesTest do
   @tag :requires_highs
   describe "Bounded problems - should not be unbounded" do
     test "correctly identifies bounded minimization problem" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -269,7 +269,7 @@ defmodule Dantzig.EdgeCases.UnboundedObjectivesTest do
     end
 
     test "correctly identifies bounded maximization problem" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -295,7 +295,7 @@ defmodule Dantzig.EdgeCases.UnboundedObjectivesTest do
     end
 
     test "correctly identifies bounded problem with variable bounds" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -321,7 +321,7 @@ defmodule Dantzig.EdgeCases.UnboundedObjectivesTest do
   @tag :requires_highs
   describe "Error handling for unbounded problems" do
     test "Dantzig.solve/1 returns appropriate result for unbounded problems" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 
@@ -341,7 +341,7 @@ defmodule Dantzig.EdgeCases.UnboundedObjectivesTest do
     end
 
     test "Dantzig.solve!/1 raises for unbounded problems" do
-      unless highs_available?() do
+      if !highs_available?() do
         flunk("HiGHS solver not available - install HiGHS to run this test")
       end
 

@@ -20,22 +20,22 @@ This document helps AI assistants understand the Dantzig project structure, curr
 
 **Start Here:**
 
-- **`docs/GETTING_STARTED.md`** - Entry point for understanding the project
-- **`docs/DSL_SYNTAX_REFERENCE.md`** - Complete DSL syntax reference (critical for understanding current API)
-- **`docs/COMPREHENSIVE_TUTORIAL.md`** - Comprehensive tutorial with examples
-- **`docs/ARCHITECTURE.md`** - System design and internal architecture
+- **`docs/user/quickstart.md`** - Entry point for understanding the project
+- **`docs/user/reference/dsl-syntax.md`** - Complete DSL syntax reference (critical for understanding current API)
+- **`docs/user/tutorial/comprehensive.md`** - Comprehensive tutorial with examples
+- **`docs/developer/architecture/overview.md`** - System design and internal architecture
 
 **Advanced Topics:**
 
-- **`docs/ADVANCED_AST.md`** - AST transformation details
-- **`docs/MODELING_GUIDE.md`** - Best practices for modeling optimization problems
-- **`docs/PATTERN_BASED_OPERATIONS.md`** - Pattern-based features
-- **`docs/VARIADIC_OPERATIONS.md`** - Variadic operations (max, min, and, or)
+- **`docs/developer/architecture/advanced-ast.md`** - AST transformation details
+- **`docs/user/guides/modeling-patterns.md`** - Best practices for modeling optimization problems
+- **`docs/user/reference/pattern-operations.md`** - Pattern-based features
+- **`docs/user/reference/variadic-operations.md`** - Variadic operations (max, min, and, or)
 
 **Important Notes:**
 
-- **`docs/DEPRECATION_NOTICE.md`** - Old imperative API is deprecated, DSL is current
-- **`docs/STYLE_GUIDE.md`** - Code style conventions
+- **`docs/user/guides/DEPRECATION_NOTICE.md`** - Old imperative API is deprecated, DSL is current
+- **`docs/developer/contributing/style-guide.md`** - Code style conventions
 
 ### Feature Specifications (`specs/`)
 
@@ -58,10 +58,10 @@ This document helps AI assistants understand the Dantzig project structure, curr
 
 **Current Work Context:**
 
-- **`EXAMPLE_TEST_REPORT.md`** - Status of example files (compliance, working status)
-- **`SYNTAX_ISSUES.md`** - Known syntax/parsing issues
+- **`docs/internal/reports/example-reports/EXAMPLE_TEST_REPORT.md`** - Status of example files (compliance, working status)
+- **`docs/internal/development-notes/SYNTAX_ISSUES.md`** - Known syntax/parsing issues
 - **`DEBUG_FINDINGS.md`** - Debug findings and solutions
-- **`TEST_SUMMARY.md`** - Test coverage and status
+- **`docs/internal/reports/test-reports/TEST_SUMMARY.md`** - Test coverage and status
 
 ## 🏗️ Project Structure
 
@@ -98,7 +98,7 @@ This document helps AI assistants understand the Dantzig project structure, curr
 - **`examples/blending_problem.exs`** - Blending optimization
 - **`examples/network_flow.exs`** - Network flow (tuple destructuring issues)
 
-**Status:** Check `EXAMPLE_TEST_REPORT.md` for current compliance and working status.
+**Status:** Check `docs/internal/reports/example-reports/EXAMPLE_TEST_REPORT.md` for current compliance and working status.
 
 ### Tests (`test/`)
 
@@ -203,20 +203,20 @@ problem = Problem.new()
 
 **Where to find...**
 
-- **DSL syntax**: `docs/DSL_SYNTAX_REFERENCE.md`
+- **DSL syntax**: `docs/user/reference/dsl-syntax.md`
 - **Current tasks**: `specs/001-robustify/tasks.md`
-- **Example status**: `EXAMPLE_TEST_REPORT.md`
-- **Architecture**: `docs/ARCHITECTURE.md`
+- **Example status**: `docs/internal/reports/example-reports/EXAMPLE_TEST_REPORT.md`
+- **Architecture**: `docs/developer/architecture/overview.md`
 - **API contracts**: `specs/001-robustify/contracts/`
-- **Getting started**: `docs/GETTING_STARTED.md`
-- **Tutorial**: `docs/COMPREHENSIVE_TUTORIAL.md`
+- **Getting started**: `docs/user/quickstart.md`
+- **Tutorial**: `docs/user/tutorial/comprehensive.md`
 
 **When starting work...**
 
 1. Read `specs/001-robustify/tasks.md` to understand current priorities
-2. Check `EXAMPLE_TEST_REPORT.md` for example file status
+2. Check `docs/internal/reports/example-reports/EXAMPLE_TEST_REPORT.md` for example file status
 3. Review relevant contracts in `specs/001-robustify/contracts/`
-4. Consult `docs/DSL_SYNTAX_REFERENCE.md` for syntax questions
+4. Consult `docs/user/reference/dsl-syntax.md` for syntax questions
 5. Look at working examples in `examples/tutorial_examples.exs` or `examples/knapsack_problem.exs`
 
 ## 🔧 Development Workflow
@@ -245,8 +245,8 @@ mix docs                          # Generate documentation
 
 **When helping with this project:**
 
-1. **Always check DSL syntax** in `docs/DSL_SYNTAX_REFERENCE.md` before suggesting syntax
-2. **Verify example status** in `EXAMPLE_TEST_REPORT.md` before modifying examples
+1. **Always check DSL syntax** in `docs/user/reference/dsl-syntax.md` before suggesting syntax
+2. **Verify example status** in `docs/internal/reports/example-reports/EXAMPLE_TEST_REPORT.md` before modifying examples
 3. **Follow task priorities** in `specs/001-robustify/tasks.md`
 4. **Use public API** in tests and examples (avoid internal functions)
 5. **Handle `:infinity` specially** - never convert to Polynomial

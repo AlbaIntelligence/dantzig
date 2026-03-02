@@ -26,6 +26,7 @@ dantzig-*.tar
 # Temporary files, for example, from tests.
 /tmp/
 TEMP/
+docs/JuMP_tutorials
 
 # The solver binary
 /priv/bin/
@@ -40,3 +41,4 @@ TEMP/
 .cursor/
 .kilocode/
 .specify/
+/specs/__Archives__

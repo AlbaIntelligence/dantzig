@@ -3,34 +3,25 @@
 **Branch**: `003-testing` | **Date**: 2025-11-12 | **Spec**: [spec.md](spec.md)
 **Input**: Feature specification from `/specs/003-testing/spec.md`
 
-**Note**: This plan is based on the feature specification and existing documentation (DSL_IMPLEMENTATION_ISSUES.md, enumerator-tracking-design.md, TEST_FAILURE_ANALYSIS.md).
+**Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/commands/plan.md` for the execution workflow.
 
 ## Summary
 
-**Primary Requirement**: Ensure all tests pass and all examples execute successfully, while resolving DSL implementation issues and implementing enumerator tracking to improve DSL robustness and user experience.
+**Primary Requirement**: Comprehensive testing and DSL improvements for the Dantzig Elixir optimization package, including fixing all test failures, ensuring example execution, resolving DSL implementation issues, implementing enumerator tracking, and improving test suite quality.
 
-**Technical Approach**:
-1. Fix test failures by updating tests to match current API
-2. Fix example execution issues
-3. Resolve high-priority DSL implementation issues (constant access with generator bindings)
-4. Implement Phase 1 of enumerator tracking (variable enumerator registration)
-5. Improve test suite quality and documentation
+**Technical Approach**: Leverage existing Elixir/OTP architecture with HiGHS solver integration, enhance test suite with ExUnit and ExCoveralls, fix API compatibility issues, implement DSL enhancements for constant access and model parameters, and add enumerator tracking infrastructure.
 
 ## Technical Context
 
 **Language/Version**: Elixir 1.15+ / OTP 26+
-**Primary Dependencies**: ExUnit testing framework, HiGHS solver
+**Primary Dependencies**: HiGHS solver, ExUnit testing framework, ExCoveralls for coverage analysis, ExDoc documentation
 **Storage**: N/A (in-memory optimization problems)
 **Testing**: ExUnit with coverage analysis via ExCoveralls
-**Target Platform**: Cross-platform (Linux, macOS, Windows)
+**Target Platform**: Cross-platform (Linux, macOS, Windows) via HiGHS binary management
 **Project Type**: Library package (Hex.pm distribution)
-**Performance Goals**: Maintain current performance characteristics
-**Constraints**: Maintain backward compatibility, zero breaking changes
-**Scale/Scope**:
-- Test suite: ~1182 tests
-- Example files: ~30+ examples
-- DSL implementation issues: 8 identified issues
-- Enumerator tracking: Phase 1 implementation
+**Performance Goals**: Maintain existing performance characteristics (no degradation)
+**Constraints**: Maintain backward compatibility with existing DSL API, zero breaking changes. All fixes must preserve existing functionality.
+**Scale/Scope**: 105 tasks across 6 phases covering test fixes, example execution, DSL improvements, enumerator tracking, and test quality improvements
 
 ## Constitution Check
 
@@ -39,32 +30,32 @@
 ### Library-First Principle ✅
 
 - **Requirement**: Every feature starts as a standalone library
-- **Compliance**: Dantzig is already a self-contained Hex package
-- **Status**: PASS - Package is independently testable
+- **Compliance**: Dantzig is already a self-contained Hex package with clear purpose
+- **Status**: PASS - Package is independently testable and documented
 
 ### Test-First Principle ✅
 
 - **Requirement**: TDD mandatory - Tests written → User approved → Tests fail → Then implement
-- **Compliance**: Will fix existing tests and add new tests for DSL improvements
-- **Status**: PASS - Test-first approach maintained
+- **Compliance**: All tasks follow TDD approach with tests written first (explicitly noted in tasks.md)
+- **Status**: PASS - Test-first approach clearly defined in tasks
 
 ### Integration Testing ✅
 
 - **Requirement**: Focus on new library contract tests, contract changes, inter-service communication
-- **Compliance**: Will maintain integration tests for DSL functionality and solver integration
-- **Status**: PASS - Integration testing scope maintained
+- **Compliance**: Test fixes include integration test updates, example execution validation, DSL feature tests
+- **Status**: PASS - Integration testing scope defined for DSL and solver components
 
 ### Observability ✅
 
 - **Requirement**: Structured logging and debuggability
-- **Compliance**: Will improve error messages and maintain existing logging
-- **Status**: PASS - Observability maintained
+- **Compliance**: Error message improvements specified, test failure documentation required
+- **Status**: PASS - Error handling and debugging improvements specified
 
 ### Simplicity ✅
 
 - **Requirement**: Start simple, YAGNI principles
-- **Compliance**: Focus on fixing existing issues rather than adding new features
-- **Status**: PASS - Scope limited to improvements without breaking changes
+- **Compliance**: Focus on fixing existing functionality rather than adding new features (except Phase 3.5 which adds model parameters and Problem.modify)
+- **Status**: PASS - Scope limited to improving existing package with minimal new features
 
 ## Project Structure
 
@@ -72,213 +63,254 @@
 
 ```text
 specs/003-testing/
-├── plan.md              # This file
+├── plan.md              # This file (/speckit.plan command output)
 ├── spec.md              # Feature specification
-├── tasks.md             # Task breakdown
-├── contracts/           # API contracts (if needed)
-└── checklists/          # Implementation checklists (if needed)
+├── tasks.md             # Detailed task breakdown
+├── checklists/          # Quality checklists (if any)
+└── contracts/           # API contracts (if any)
 ```
 
 ### Source Code (repository root)
 
 ```text
 lib/dantzig/                    # Core library modules
-├── core/                       # Core problem definition
-│   └── problem.ex              # Problem struct (add enumerator fields)
-├── problem/                    # Problem management
-│   └── dsl/                    # Domain Specific Language
-│       ├── expression_parser.ex              # Fix constant access
+├── core/                      # Core problem definition
+│   ├── problem.ex            # Problem struct and management
+│   └── problem/
+│       └── dsl_reducer.ex    # DSL reducer (enumerator tracking)
+├── problem/                   # Problem management
+│   └── dsl/                  # Domain Specific Language
+│       ├── expression_parser.ex          # Expression parsing (constant access)
 │       ├── expression_parser/
-│       │   ├── constant_evaluation.ex       # Enhance constant evaluation
-│       │   └── sum_processing.ex            # Support enumerables
-│       ├── variable_manager.ex              # Add enumerator registration
-│       └── constraint_manager.ex            # Fix AST interpolation
+│       │   └── constant_evaluation.ex    # Constant evaluation
+│       ├── constraint_manager.ex          # Constraint creation (description interpolation)
+│       ├── variable_manager.ex            # Variable creation (enumerator tracking)
+│       └── objective_manager.ex          # Objective setting
 └── solver/                    # HiGHS solver integration
-    └── highs.ex               # Make functions public if needed
+    └── highs.ex               # HiGHS solver (API fixes)
 
 test/                          # Test suite
 ├── dantzig/                   # Unit tests by module
-│   ├── core/                  # Core functionality tests
-│   ├── dsl/                   # DSL tests
-│   │   ├── constant_access_test.exs        # Test constant access fixes
-│   │   ├── enumerator_tracking_test.exs    # Test enumerator tracking
-│   │   └── experimental/                   # Fix experimental tests
-│   └── solver/                # Solver integration tests
-│       └── highs_test.exs                   # Fix API changes
-├── examples/                  # Example validation tests
+│   ├── core/                 # Core functionality tests
+│   ├── dsl/                  # DSL tests
+│   │   ├── constant_access_test.exs
+│   │   ├── model_parameters_test.exs
+│   │   ├── problem_modify_test.exs
+│   │   └── enumerator_tracking_test.exs
+│   └── solver/               # Solver integration tests
+├── examples/                 # Example validation tests
+├── coverage/                 # Coverage validation tests
 └── test_helper.exs
 
-docs/user/examples/             # Example files
-├── [all example files]         # Verify execution
-└── ...
-
-docs/developer/architecture/    # Architecture documentation
-├── dsl-architecture.md         # Existing DSL architecture
-└── enumerator-tracking-design.md # Enumerator tracking design
+docs/user/examples/            # Example files (must execute successfully)
+docs/internal/developer-notes/ # Internal documentation
+docs/developer/architecture/   # Architecture documentation
 ```
 
 **Structure Decision**: Elixir library package structure with clear separation of concerns:
+
 - `lib/dantzig/` contains all library modules organized by functionality
 - `test/` mirrors the lib structure for comprehensive testing
 - `docs/user/examples/` provides learning resources
-- `docs/developer/architecture/` contains technical documentation
+- `docs/` contains user-facing and developer documentation
 
 ## Complexity Tracking
 
 > **No constitution violations detected - all gates passed successfully**
 
-All constitution checks passed without violations. The testing and DSL improvements focus on fixing existing issues and improving robustness rather than adding complexity.
+All constitution checks passed without violations. The testing and DSL improvements focus on fixing existing functionality and adding essential enhancements (model parameters, Problem.modify) while maintaining backward compatibility.
 
-## Key Technical Decisions
+## Phase Structure
 
-### 1. Test Fixes Strategy
+### Phase 1: Fix Test Suite Failures (P1) 🎯 MVP
 
-**Decision**: Update tests to match current API rather than changing API to match tests
-**Rationale**: API changes are already in place and used by examples. Changing API would break examples.
-**Impact**: Requires updating ~18 test files
-
-### 2. DSL Issue Resolution Priority
-
-**Decision**: Fix Issue #1 (Constant Access with Generator Bindings) first
-**Rationale**: This is the highest priority issue blocking 6+ tests and core DSL functionality
-**Impact**: Requires changes to expression parser and constant evaluation
-
-### 3. Enumerator Tracking Implementation
-
-**Decision**: Implement Phase 1 (variable enumerator registration) only
-**Rationale**: Phase 1 provides foundation for future validation. Phase 2 and 3 can be implemented later.
-**Impact**: Adds enumerator tracking fields to Problem struct
-
-### 4. Backward Compatibility
-
-**Decision**: Maintain 100% backward compatibility
-**Rationale**: No breaking changes allowed. All fixes must work with existing code.
-**Impact**: Enumerator tracking is optional (empty maps by default)
-
-## Implementation Phases
-
-### Phase 1: Fix Test Suite Failures (Priority: P1)
-
-**Goal**: Resolve all test failures
-**Duration**: Estimated 2-3 days
-**Tasks**: 18 tasks (T001-T018)
+**Goal**: Resolve all test failures to enable reliable development
 **Dependencies**: None
-
 **Key Activities**:
-- Fix API changes (module names, function signatures)
+
+- Fix API signature mismatches (module aliases, function arities)
 - Fix variable access patterns
 - Fix compilation errors
 - Update test assertions
 
-### Phase 2: Fix Example Execution (Priority: P1)
+### Phase 2: Fix Example Execution (P1)
 
-**Goal**: Ensure all examples execute successfully
-**Duration**: Estimated 1-2 days
-**Tasks**: 8 tasks (T019-T026)
-**Dependencies**: May benefit from DSL fixes
-
+**Goal**: Ensure all example files execute successfully
+**Dependencies**: Can run in parallel with Phase 1
 **Key Activities**:
-- Verify example execution
-- Fix compilation/runtime errors
-- Validate solution correctness
-- Update documentation
 
-### Phase 3: Resolve DSL Implementation Issues (Priority: P1)
+- Fix compilation errors in examples
+- Fix runtime errors in examples
+- Verify examples produce valid solutions
+- Update example documentation
 
-**Goal**: Fix high-priority DSL issues
-**Duration**: Estimated 3-5 days
-**Tasks**: 17 tasks (T027-T045)
-**Dependencies**: None (can start in parallel)
+### Phase 3: Resolve DSL Implementation Issues (P1)
 
+**Goal**: Fix all high-priority DSL implementation issues
+**Dependencies**: Can start in parallel with Phase 1, but benefits from Phase 1 completion
 **Key Activities**:
-- Fix constant access with generator bindings (Issue #1)
-- Fix description interpolation (Issue #2)
-- Support enumerable types in generators (Issue #3)
-- Support nested map access (Issue #4)
-- Fix sum function constant access (Issue #5)
 
-### Phase 4: Implement Enumerator Tracking (Priority: P2)
+- Constant access with generator bindings
+- Description interpolation with AST
+- Generator domain type support
+- Nested map access with bindings
+- Sum function with constant access
+- Constant and enumerated constant access (depends on Phase 3.5)
 
-**Goal**: Implement Phase 1 enumerator tracking
-**Duration**: Estimated 2-3 days
-**Tasks**: 16 tasks (T046-T062)
-**Dependencies**: Benefits from Issue #1 resolution
+### Phase 3.5: Model Parameters & Problem.modify (P1)
 
+**Goal**: Add model parameters and Problem.modify capability
+**Dependencies**: Can start after Phase 3 (Issue #1) completion
 **Key Activities**:
+
+- Implement model parameters in Problem.define
+- Implement Problem.modify macro
+- Ensure backward compatibility
+- Document new features
+
+### Phase 4: Implement Enumerator Tracking (P2)
+
+**Goal**: Implement Phase 1 of enumerator tracking
+**Dependencies**: Can start after Phase 3 (Issue #1) completion
+**Key Activities**:
+
 - Add enumerator fields to Problem struct
-- Implement enumerator registration
-- Track enumerator sequences per variable
-- Document design
+- Register enumerators during variable creation
+- Validate enumerators during constraint generation
+- Document enumerator tracking design
 
-### Phase 5: Test Suite Quality (Priority: P2)
+### Phase 5: Test Suite Quality (P2)
 
-**Goal**: Improve test suite quality
-**Duration**: Estimated 1-2 days
-**Tasks**: 9 tasks (T063-T071)
+**Goal**: Improve test suite quality and maintain coverage
 **Dependencies**: Depends on Phase 1 completion
-
 **Key Activities**:
+
 - Document test failures
 - Update test documentation
-- Improve error messages
-- Maintain coverage
+- Ensure coverage targets met (≥80% overall, ≥85% core)
+- Add edge case tests
 
-### Phase 6: Documentation and Validation (Priority: P2)
+### Phase 6: Documentation and Validation
 
 **Goal**: Document improvements and validate completion
-**Duration**: Estimated 1 day
-**Tasks**: 9 tasks (T072-T080)
 **Dependencies**: Depends on all previous phases
-
 **Key Activities**:
-- Update issue documentation
-- Create status reports
-- Run comprehensive validation
-- Verify success criteria
+
+- Update implementation status documents
+- Run validation tests
+- Create comprehensive status report
+
+## Technical Decisions
+
+### Test Framework
+
+- **Decision**: Use ExUnit with ExCoveralls for coverage
+- **Rationale**: Standard Elixir testing stack, already in use
+- **Alternatives Considered**: None (existing choice)
+
+### DSL Enhancement Approach
+
+- **Decision**: Extend existing expression parser with constant evaluation
+- **Rationale**: Minimal changes to existing architecture, maintains backward compatibility
+- **Alternatives Considered**: Complete rewrite (rejected - too risky, breaks compatibility)
+
+### Model Parameters Implementation
+
+- **Decision**: Thread model_parameters through macro expansion and expression evaluation
+- **Rationale**: Enables direct name access without `params.key` syntax, cleaner DSL
+- **Alternatives Considered**: Explicit `params.key` syntax (rejected - less ergonomic)
+
+### Enumerator Tracking Storage
+
+- **Decision**: Add fields to Problem struct (`enumerators`, `variable_enumerators`)
+- **Rationale**: Keeps enumerator metadata with problem definition, enables validation
+- **Alternatives Considered**: Separate registry module (rejected - adds complexity)
+
+### Backward Compatibility Strategy
+
+- **Decision**: Maintain 100% backward compatibility, no breaking changes
+- **Rationale**: Critical for existing users, enables incremental adoption
+- **Alternatives Considered**: Breaking changes with migration guide (rejected - violates FR-009)
+
+## Data Model
+
+### Problem Struct Extensions
+
+- `enumerators`: Dictionary of enumerator metadata
+- `variable_enumerators`: Map of variable names to enumerator sequences
+- `linearization_variables`: Placeholder for future linearization variable tracking
+
+### Enumerator Metadata
+
+- Domain: The enumerable collection (list, map, range, etc.)
+- Name: Generated name from AST/expression
+- Source: Where the enumerator was defined (variable, constraint)
+
+### Model Parameters
+
+- Map structure: `%{key => value}` where keys are atom or string identifiers
+- Access pattern: Direct name access in DSL (e.g., `food_names`, not `params.food_names`)
+- Evaluation: At macro expansion time using generator bindings
+
+## Constraints
+
+### Backward Compatibility
+
+- **Constraint**: Zero breaking changes to public API
+- **Impact**: All fixes must preserve existing function signatures and behavior
+- **Mitigation**: Comprehensive backward compatibility tests (FR-009)
+
+### Test Coverage Targets
+
+- **Constraint**: ≥80% overall, ≥85% core modules
+- **Impact**: May require additional tests beyond fixes
+- **Mitigation**: Coverage validation tests and monitoring (NFR-001)
+
+### File Size Limits
+
+- **Constraint**: Code files under 500 lines, documentation files under 300 lines (unless no other options)
+- **Impact**: May require refactoring large files or splitting into modules
+- **Mitigation**: Review file sizes during implementation, refactor if feasible
+
+### DSL Syntax Consistency
+
+- **Constraint**: Model parameters and Problem.modify must use same DSL syntax as Problem.define
+- **Impact**: Requires careful macro design
+- **Mitigation**: Reuse existing DSL infrastructure
 
 ## Risk Assessment
 
 ### High Risk
 
-- **DSL Issue #1 Complexity**: Constant access with generator bindings may require significant refactoring
-  - **Mitigation**: Start with minimal fix, test incrementally
-- **Enumerator Tracking Breaking Changes**: Risk of breaking existing code
-  - **Mitigation**: Make enumerator tracking optional, maintain backward compatibility
+- **Breaking backward compatibility**: Mitigated by explicit compatibility tests
+- **DSL parsing complexity**: Mitigated by incremental implementation and comprehensive tests
 
 ### Medium Risk
 
-- **Test Fixes Scope**: Large number of test files to update
-  - **Mitigation**: Fix in parallel, use automated search/replace where safe
-- **Example Execution Issues**: May reveal additional DSL limitations
-  - **Mitigation**: Document issues, prioritize fixes
+- **Enumerator tracking performance**: Low impact, metadata only
+- **Test coverage gaps**: Mitigated by coverage validation
 
 ### Low Risk
 
-- **Test Coverage**: May decrease temporarily during fixes
-  - **Mitigation**: Monitor coverage, add tests as needed
-- **Performance Impact**: Enumerator tracking may add overhead
-  - **Mitigation**: Profile performance, optimize if needed
+- **Example execution failures**: Straightforward fixes
+- **Documentation updates**: Mechanical task
 
 ## Success Metrics
 
-- **Test Pass Rate**: 100% (0 failures)
-- **Example Execution Rate**: 100% (all examples execute)
-- **DSL Issue Resolution**: 100% of high-priority issues resolved
-- **Enumerator Tracking**: Phase 1 implemented and tested
-- **Test Coverage**: Maintain ≥80% overall, ≥85% core modules
-- **Documentation**: All improvements documented
+- **SC-001**: All tests compile and run (FR-001)
+- **SC-002**: All examples execute (FR-002, FR-010)
+- **SC-003**: DSL issues resolved (FR-003)
+- **SC-004**: Enumerator tracking implemented (FR-004, FR-011)
+- **SC-005**: Coverage targets met (NFR-001)
+- **SC-011**: Model parameters work (FR-013)
+- **SC-012**: Problem.modify works (FR-014)
+- **SC-013**: Constant access works (FR-015)
+- **SC-015**: Code files under 500 lines, documentation files under 300 lines (unless no other options) (NFR-005)
 
-## Open Questions
+## Notes
 
-1. **Enumerator Tracking Performance**: What is the performance impact of enumerator tracking?
-2. **Test Migration**: Should experimental tests be migrated or removed?
-3. **DSL Issue Priority**: Are all medium-priority issues worth fixing now?
-4. **Example Validation**: What level of solution validation is required?
-
-## Next Steps
-
-1. Review and approve this plan
-2. Start Phase 1 (Test Fixes) - can begin immediately
-3. Start Phase 2 (Example Fixes) - can begin in parallel
-4. Start Phase 3 (DSL Issues) - can begin in parallel
-5. Proceed with remaining phases based on priorities
+- All phases follow TDD: tests written first, then implementation
+- Tasks are organized to enable independent implementation
+- Phase 3.5 is a capability addition, not a bug fix
+- Enumerator tracking Phase 1 focuses on registration; validation is Phase 2 (future)
+- Documentation updates are deferred to Phase 6 to avoid churn during implementation

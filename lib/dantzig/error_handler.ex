@@ -1,8 +1,3 @@
-# Error struct for consistent error reporting
-defmodule Dantzig.Error do
-  defstruct [:type, :message, :suggestions, :code_location]
-end
-
 defmodule Dantzig.ErrorHandler do
   @moduledoc """
   Enhanced error handling for the Dantzig optimization library.
@@ -105,8 +100,8 @@ defmodule Dantzig.ErrorHandler do
             "• Problem formulation may need review."
 
         :constraint_conflict ->
-          "Constraint conflict detected: #{details.conflict_description} " <>
-            "Two or more constraints cannot be satisfied simultaneously."
+          "Constraint conflict detected: #{details.conflict_description}" <>
+            " Two or more constraints cannot be satisfied simultaneously."
 
         _ ->
           "Constraint validation error: #{inspect(details)}"
@@ -299,7 +294,7 @@ defmodule Dantzig.ErrorHandler do
     ]
   end
 
-  defp get_parameter_suggestions(:invalid_parameter_type, _details) do
+  defp get_parameter_suggestions(:invalid_parameter_type, details) do
     [
       "Check that parameter values match expected types",
       "Ensure collections are enumerable",

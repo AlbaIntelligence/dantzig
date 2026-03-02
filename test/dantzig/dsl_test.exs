@@ -12,7 +12,8 @@ defmodule Dantzig.DSLTest do
 
   describe "DSL.variables macro - various arities" do
     test "variables/5 with generators, type, description, and opts" do
-      # Test macro expansion for variables/5
+      # Test macro expansion for variables/5 (valid form used inside Problem.define blocks)
+      # Note: variables(problem, ...) form is deprecated, use add_variables/5 instead
       ast =
         quote do
           DSL.variables("x", [i <- 1..3], :continuous, "Variable x", min_bound: 0, max_bound: 10)

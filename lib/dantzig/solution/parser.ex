@@ -29,10 +29,7 @@ defmodule Dantzig.Solution.Parser do
   line = utf8_string([not: ?\n, not: ?\r], min: 0)
 
   model_status =
-    ignore(
-      string("Model status")
-      |> concat(ignore(newline))
-    )
+    ignore(string("Model status") |> concat(ignore(newline)))
     |> concat(line)
     |> unwrap_and_tag(:model_status)
 
@@ -46,10 +43,7 @@ defmodule Dantzig.Solution.Parser do
   exponential_notation_float =
     optional(string("-"))
     |> ascii_string([?0..?9], min: 1)
-    |> optional(
-      string(".")
-      |> ascii_string([?0..?9], min: 1)
-    )
+    |> optional(string(".") |> ascii_string([?0..?9], min: 1))
     |> string("e")
     |> optional(string("-"))
     |> ascii_string([?0..?9], min: 1)
