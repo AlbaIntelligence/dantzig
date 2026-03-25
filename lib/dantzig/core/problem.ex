@@ -440,14 +440,26 @@ defmodule Dantzig.Problem do
   Additionally, rewrites nested `sum(...)` calls to `Dantzig.Problem.DSL.sum/1`
   so they expand correctly without requiring explicit imports in user code.
   """
+  # `Problem.modify(problem) do … end` — no extra options
   defmacro modify(problem, do: block) do
+    modify_impl(problem, block, nil)
+  end
+
+  # `Problem.modify(problem, model_parameters: params) do … end`
+  # Elixir parses this as arity-3: (problem, [model_parameters: …], [do: block])
+  defmacro modify(problem, opts, do: block) do
+    model_params_ast = Keyword.get(opts, :model_parameters, nil)
+    modify_impl(problem, block, model_params_ast)
+  end
+
+  defp modify_impl(problem, block, model_params_ast) do
     rewritten_block =
       Macro.prewalk(block, fn
         {:sum, meta, args} ->
           {{:., meta, [Dantzig.Problem.DSL, :sum]}, meta, args}
 
-        {:objective, meta, [objective_expr, opts]} ->
-          {:objective, meta, [objective_expr, opts]}
+        {:objective, meta, [objective_expr, inner_opts]} ->
+          {:objective, meta, [objective_expr, inner_opts]}
 
         {:objective, meta, [objective_expr]} ->
           {:objective, meta, [objective_expr, []]}
@@ -472,15 +484,28 @@ defmodule Dantzig.Problem do
       end
 
     quote do
-      # Ensure macros expand for both fully-qualified and aliased usage
       require Dantzig.Problem.DSL
       require Dantzig.Problem.DSL, as: DSL
       import Dantzig.Problem.DSL, only: [objective: 1, objective: 2]
 
+      model_params = unquote(model_params_ast || quote(do: %{}))
+      caller_binding = binding()
+
+      extended_binding =
+        case model_params do
+          %{} = params_map when map_size(params_map) > 0 ->
+            Enum.reduce(params_map, caller_binding, fn {key, value}, acc ->
+              Keyword.put(acc, key, value)
+            end)
+
+          _ ->
+            caller_binding
+        end
+
       unquote(__MODULE__).__modify_with_env__(
         unquote(problem),
         unquote(Macro.escape(exprs)),
-        binding()
+        extended_binding
       )
     end
   end

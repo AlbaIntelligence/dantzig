@@ -303,9 +303,12 @@ defmodule Dantzig.HiGHS do
     end
   end
 
-  # Format :infinity for LP export - convert to large finite number
-  # LP solvers don't understand the atom :infinity, so we use 1e+30
+  # Format :infinity / :neg_infty for LP export — convert to large finite values.
+  # LP solvers don't understand Elixir atoms, so we use ±1e+30.
   defp format_lp_value(:infinity), do: "1e+30"
+  defp format_lp_value(:neg_infty), do: "-1e+30"
+  defp format_lp_value(:neg_infinity), do: "-1e+30"
+  defp format_lp_value(:neg_inf), do: "-1e+30"
 
   # Handle Polynomial structs specially
   defp format_lp_value(%Polynomial{} = poly), do: Polynomial.serialize(poly)

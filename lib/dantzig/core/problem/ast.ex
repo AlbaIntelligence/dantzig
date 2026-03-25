@@ -276,7 +276,20 @@ defmodule Dantzig.Problem.AST do
             _ -> raise ArgumentError, "Invalid variable name: #{inspect(var_name)}"
           end
 
-        Polynomial.variable(var_name_str)
+        if not is_nil(problem) do
+          var_def = Dantzig.Problem.get_variable(problem, var_name_str)
+
+          if var_def do
+            Polynomial.variable(var_name_str)
+          else
+            case try_evaluate_constant_from_env(expr) do
+              {:ok, val} when is_number(val) -> Polynomial.const(val)
+              _ -> Polynomial.variable(var_name_str)
+            end
+          end
+        else
+          Polynomial.variable(var_name_str)
+        end
 
       # Handle variable access patterns like x(1) which expand to {x, meta, [1]}
       {var_name, _meta, [index]} when is_atom(var_name) and is_integer(index) ->
