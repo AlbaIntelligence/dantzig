@@ -59,11 +59,11 @@ end
 **Solutions:**
 ```elixir
 # ✅ Correct: Generator variable in scope
-constraints([i <- 1..n], x(i) <= limit[i], "Bound #{i}")
+constraints([i <- 1..n], x[i] <= limit[i], "Bound #{i}")
 
 # ❌ Wrong: Generator variable outside scope
 variables("x", [i <- 1..n], :continuous)
-constraints(x(i) <= limit[i], "Bound")  # i not in scope
+constraints(x[i] <= limit[i], "Bound")  # i not in scope
 ```
 
 ## Infinity Bounds

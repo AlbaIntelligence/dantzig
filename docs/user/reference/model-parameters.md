@@ -18,8 +18,8 @@ data = %{
 problem = Problem.define(model_parameters: data) do
   new(direction: :maximize)
   variables("qty", [product <- products], :continuous, min_bound: 0)
-  constraints([i <- 0..1], qty(products[i]) <= limits[i], "Limit")
-  objective(sum(profits[i] * qty(products[i]) for i <- 0..1), :maximize)
+  constraints([i <- 0..1], qty[products[i]] <= limits[i], "Limit")
+  objective(sum(profits[i] * qty[products[i]] for i <- 0..1), :maximize)
 end
 ```
 
@@ -39,7 +39,7 @@ end
 ```elixir
 Problem.define(model_parameters: %{costs: [10, 20, 30]}) do
   variables("x", [i <- 0..2], :continuous)
-  constraints(x(i) <= costs[i], "Cost bound")
+  constraints(x[i] <= costs[i], "Cost bound")
 end
 ```
 
@@ -52,7 +52,7 @@ the generator values. This ensures `costs[i]` resolves correctly for any `i` in 
 # Generator i <- 1..3: use a map with keys 1, 2, 3
 Problem.define(model_parameters: %{costs: %{1 => 10, 2 => 20, 3 => 30}}) do
   variables("x", [i <- 1..3], :continuous)
-  constraints([i <- 1..3], x(i) <= costs[i], "Cost bound #{i}")
+  constraints([i <- 1..3], x[i] <= costs[i], "Cost bound #{i}")
 end
 ```
 
@@ -63,7 +63,7 @@ Problem.define(model_parameters: %{
   cost: %{"A" => 10, "B" => 20}
 }) do
   variables("x", ["A", "B"], :continuous)
-  constraints(x("A") <= cost["A"], "Cost A")
+  constraints(x["A"] <= cost["A"], "Cost A")
 end
 ```
 
@@ -76,7 +76,7 @@ Problem.define(model_parameters: %{
   }
 }) do
   variables("assign", ["worker"], ["task1", "task2"], :binary)
-  constraints(assign("worker", "task1") * data["worker"]["task1"] <= 100)
+  constraints(assign["worker"]["task1"] * data["worker"]["task1"] <= 100)
 end
 ```
 

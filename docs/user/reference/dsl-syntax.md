@@ -24,10 +24,10 @@ problem = Problem.define do
   variables("x", [i <- 1..3], :continuous, "Decision variables")
 
   # Add constraints
-  constraints([i <- 1..3], x(i) >= 0, "Non-negative constraint #{i}")
+  constraints([i <- 1..3], x[i] >= 0, "Non-negative constraint #{i}")
 
   # Set objective
-  objective(sum(x(:_)), :maximize)
+  objective(sum(x[:_]), :maximize)
 end
 ```
 
@@ -340,16 +340,16 @@ problem = Problem.define do
   # constraints/2 takes a constraint and a description
   # :_ is a wildcard for any value of anindex
   # In this case,
-  #   sum(queen2d(:_, :_)) means something like:
+  #   sum(queen2d[:_][:_]) means something like:
   #   1) create a list of all possible indices:
   #      listIndices = list of tuples (i, j) where i and j are integers between 1 and 4
   #   2) create a list of all possible queen2d variables:
-  #      listVariables = list of queen2d(i, j) where i and j are integers between 1 and 4
+  #      listVariables = list of queen2d[i][j] where i and j are integers between 1 and 4
   #   3) sum all the queen2d variables.
 
   # The constraints/2 has no iterators like constraints/3 (see below). This statement
   # creates a SINGLE constraint summing ALL the queen2d variables.
-  constraints(sum(queen2d(:_, :_)) == 4, "4 queens in total")
+  constraints(sum(queen2d[:_][:_]) == 4, "4 queens in total")
   # It would generate a single constraint/2 statement like:
   # constraints(
   #     queen2d_1_1 + queen2d_1_2 + queen2d_1_3 + queen2d_1_4 +
@@ -369,7 +369,7 @@ problem = Problem.define(modelParameters: iterators) do
 
   variables("val", [var_1 <- iterator_1, var_2 <- iterator_2], :binary, "Variable description")
 
-  constraints(sum(val(:_, :_)) == 4, "sum of all vals across all var_1 and var_2 possibilities")
+  constraints(sum(val[:_][:_]) == 4, "sum of all vals across all var_1 and var_2 possibilities")
 end
 ```
 
@@ -383,12 +383,12 @@ problem = Problem.define do
 
   # constraints/3 takes a list of generators, a constraint and a description
   # Here the generator will create one constraints/2 for each combination of the generators
-  constraints([i <- 1..4], sum(queen2d(i, :_)) == 1, "One queen per row")
+  constraints([i <- 1..4], sum(queen2d[i][:_]) == 1, "One queen per row")
   # This will generate 4 constraints/2 like:
-  # constraints(sum(queen2d(1, :_)) == 1, "One queen per row 1")
-  # constraints(sum(queen2d(2, :_)) == 1, "One queen per row 2")
-  # constraints(sum(queen2d(3, :_)) == 1, "One queen per row 3")
-  # constraints(sum(queen2d(4, :_)) == 1, "One queen per row 4")
+  # constraints(sum(queen2d[1][:_]) == 1, "One queen per row 1")
+  # constraints(sum(queen2d[2][:_]) == 1, "One queen per row 2")
+  # constraints(sum(queen2d[3][:_]) == 1, "One queen per row 3")
+  # constraints(sum(queen2d[4][:_]) == 1, "One queen per row 4")
 
   # In turn, the constraints/2 will generate:
   # constraints(queen2d_1_1 + queen2d_1_2 + queen2d_1_3 + queen2d_1_4 == 1, "One queen per row 1")
@@ -407,14 +407,14 @@ problem = Problem.define do
 
   # Multiple generators
   # In the following statement, we have 2 generators: i <- 1..2 and k <- 1..3.
-  constraints([i <- 1..2, k <- 1..3], sum(queen3d(i, :_, k)) == 1, "One queen on first axis #{i} and 3rd axis #{k}")
+  constraints([i <- 1..2, k <- 1..3], sum(queen3d[i][:_][k]) == 1, "One queen on first axis #{i} and 3rd axis #{k}")
   # The statement will create 6 constraints/2 like:
-  # constraints(sum(queen3d(1, :_, 1)) == 1, "One queen on first axis 1 and 3rd axis 1")
-  # constraints(sum(queen3d(1, :_, 2)) == 1, "One queen on first axis 1 and 3rd axis 2")
-  # constraints(sum(queen3d(1, :_, 3)) == 1, "One queen on first axis 1 and 3rd axis 3")
-  # constraints(sum(queen3d(2, :_, 1)) == 1, "One queen on first axis 2 and 3rd axis 1")
-  # constraints(sum(queen3d(2, :_, 2)) == 1, "One queen on first axis 2 and 3rd axis 2")
-  # constraints(sum(queen3d(2, :_, 3)) == 1, "One queen on first axis 2 and 3rd axis 3")
+  # constraints(sum(queen3d[1][:_][1]) == 1, "One queen on first axis 1 and 3rd axis 1")
+  # constraints(sum(queen3d[1][:_][2]) == 1, "One queen on first axis 1 and 3rd axis 2")
+  # constraints(sum(queen3d[1][:_][3]) == 1, "One queen on first axis 1 and 3rd axis 3")
+  # constraints(sum(queen3d[2][:_][1]) == 1, "One queen on first axis 2 and 3rd axis 1")
+  # constraints(sum(queen3d[2][:_][2]) == 1, "One queen on first axis 2 and 3rd axis 2")
+  # constraints(sum(queen3d[2][:_][3]) == 1, "One queen on first axis 2 and 3rd axis 3")
   #
   # In turn, the 6 constraints/2 will respectively generate:
   # constraints(queen3d_1_1_1 + queen3d_1_2_1 == 1, "One queen on first axis 1 and 3rd axis 1")
@@ -438,8 +438,8 @@ problem = Problem.define do
   variables("queen2d", [i <- 1..4, j <- 1..4], :binary, "Queen position")
 
   # Single generator
-  constraints([i <- 1..4], sum(queen2d(i, :_)) == 1, "One queen per row")
-  constraints([j <- 1..4], sum(queen2d(:_, j)) == 1, "One queen per column")
+  constraints([i <- 1..4], sum(queen2d[i][:_]) == 1, "One queen per row")
+  constraints([j <- 1..4], sum(queen2d[:_][j]) == 1, "One queen per column")
 end
 ```
 
@@ -450,11 +450,11 @@ problem = Problem.define do
   variables("queen2d", [i <- 1..4, j <- 1..4], :binary, "Queen position")
 
   # Single generator
-  constraints([i <- 1..4], sum(queen2d(i, :_)) == 1, "One queen per row")
+  constraints([i <- 1..4], sum(queen2d[i][:_]) == 1, "One queen per row")
 end
 
 problem = Problem.modify(problem) do
-  constraints([j <- 1..4], sum(queen2d(:_, j)) == 1, "One queen per column")
+  constraints([j <- 1..4], sum(queen2d[:_][j]) == 1, "One queen per column")
 end
 ```
 
@@ -478,7 +478,7 @@ problem = Problem.add_constraint(problem, queen2d_1_2 + queen2d_2_2 == 1, "Colum
 
 `Problem.add_constraint()` returns a new problem with the constraint added.
 
-**Note**: The expression `queen2d_1_1 + queen2d_1_2 == 1` must use the actual names (e.g., `queen2d_1_1`) that were generated by the `variables()` call, not the pattern generator syntax like `queen2d(1, :_)`.
+**Note**: The expression `queen2d_1_1 + queen2d_1_2 == 1` must use the actual names (e.g., `queen2d_1_1`) that were generated by the `variables()` call, not the pattern generator syntax like `queen2d[1][:_]`.
 
 ### Objective Functions
 
@@ -505,7 +505,7 @@ problem = Problem.define do
   variables("queen2d", [i <- 1..4, j <- 1..4], :binary, "Queen position")
 
   # Using sum with patterns
-  objective(sum(queen2d(:_, :_)), :maximize)
+  objective(sum(queen2d[:_][:_]), :maximize)
   # It would generate a single objective/2 statement like:
   objective(
     queen2d_1_1 + queen2d_1_2 + queen2d_1_3 + queen2d_1_4 +
@@ -524,10 +524,10 @@ problem = Problem.define do
   variables("queen2d", [i <- 1..4, j <- 1..4], :binary, "Queen position")
 
   # Using sum with patterns
-  objective(sum(queen2d(:_, :_)), :maximize)
+  objective(sum(queen2d[:_][:_]), :maximize)
 
   # Add another objective
-  objective(sum(queen2d(:_, :_)), :maximize) # <-- This triggers an error even if the objective is identical.>
+  objective(sum(queen2d[:_][:_]), :maximize) # <-- This triggers an error even if the objective is identical.>
 end
 ```
 
@@ -551,7 +551,7 @@ problem = Problem.set_objective(
 
 problem = Problem.set_objective(
   problem,
-  sum(queen2d(:_, :_)), # <-- ERROR: Not allowed because iterators are not allowed outside of Problem.define or Problem.modify
+  sum(queen2d[:_][:_]), # <-- ERROR: Not allowed because iterators are not allowed outside of Problem.define or Problem.modify
   :maximize
 )
 ```
@@ -570,7 +570,7 @@ problem = Problem.define do
   variables("qty", [food <- food_names], :continuous, "Amount of food")
 
   # Using sum with patterns
-  objective(sum(qty(:_)), :minimize)
+  objective(sum(qty[:_]), :minimize)
 end
 ```
 
@@ -580,7 +580,7 @@ problem = Problem.define do
   variables("qty", [food <- food_names], :continuous, "Amount of food")
 
   # Using for comprehensions
-  objective(sum(for food <- food_names, do: qty(food)), :minimize)
+  objective(sum(for food <- food_names, do: qty[food]), :minimize)
 end
 ```
 
@@ -593,7 +593,7 @@ end
 # Using for comprehensions
 problem = Problem.set_objective(
   problem,
-  sum(for food <- food_names, do: qty(food)),
+  sum(for food <- food_names, do: qty[food]),
   :minimize
 )
 ```
@@ -653,7 +653,7 @@ defmodule Dantzig.DSL.SimpleGeneratorTest do
       Problem.define(model_parameters: params) do
         new(name: "Simple Test", description: "Test generator with objective")
         variables("qty", [food <- food_names], :continuous, "Amount of food")
-        objective(sum(for food <- food_names, do: qty(food)), :minimize)
+        objective(sum(for food <- food_names, do: qty[food]), :minimize)
       end
 
     assert problem.direction == :minimize
@@ -681,13 +681,13 @@ problem2d =
     variables("queen2d", [i <- 1..4, j <- 1..4], :binary, "Queen position")
 
     # Add constraints: one queen per row
-    constraints([i <- 1..4], sum(queen2d(i, :_)) == 1, "One queen per row")
+    constraints([i <- 1..4], sum(queen2d[i][:_]) == 1, "One queen per row")
 
     # Add constraints: one queen per column
-    constraints([j <- 1..4], sum(queen2d(:_, j)) == 1, "One queen per column")
+    constraints([j <- 1..4], sum(queen2d[:_][j]) == 1, "One queen per column")
 
     # Set objective (squeeze as many queens as possible)
-    objective(sum(queen2d(:_, :_)), :maximize)
+    objective(sum(queen2d[:_][:_]), :maximize)
   end
 ```
 
@@ -738,17 +738,17 @@ Bracket notation uses the generator value directly as the key — the same value
 
 **Parenthesis notation** (alternative, also supports wildcards):
 
-- `queen2d(i, :_)` — "_for each value of i, all values of the second dimension_"
-- `queen2d(:_, j)` — "_all values of the first dimension, for each j_"
-- `queen2d(:_, :_)` — "_all values across both dimensions_"
+- `queen2d[i][:_]` — "_for each value of i, all values of the second dimension_"
+- `queen2d[:_][j]` — "_all values of the first dimension, for each j_"
+- `queen2d[:_][:_]` — "_all values across both dimensions_"
 
 Both notations support wildcards. Bracket notation is preferred for its uniformity with constant access.
 
 ### 3. Sum Functions
 
-- **Pattern sums**: `sum(queen2d(i, :_))` means "_create a sum statement for each value of the first iterator (i) where all the values of the second iterator (j) are summed_".
-- **For comprehensions**: `sum(for food <- food_names, do: qty(food))` means "_create a sum statement for each value of the food iterator (food) where the value of the `qty`'s variables are summed_".
-- **All variables**: `sum(queen2d(:_, :_))` means "_create a single sum statement where all the values of the `queen2d`'s variables (every cross product of the first iterator (i) and the second iterator (j)) are summed_".
+- **Pattern sums**: `sum(queen2d[i][:_])` means "_create a sum statement for each value of the first iterator (i) where all the values of the second iterator (j) are summed_".
+- **For comprehensions**: `sum(for food <- food_names, do: qty[food])` means "_create a sum statement for each value of the food iterator (food) where the value of the `qty`'s variables are summed_".
+- **All variables**: `sum(queen2d[:_][:_])` means "_create a single sum statement where all the values of the `queen2d`'s variables (every cross product of the first iterator (i) and the second iterator (j)) are summed_".
 
 ### 4. Pattern Functions
 
@@ -756,24 +756,24 @@ The DSL supports several pattern functions that expand expressions with wildcard
 
 #### Sum Function
 
-- **Pattern sums**: `sum(queen2d(i, :_))` expands to `queen2d_1_1 + queen2d_1_2 + queen2d_1_3 + queen2d_1_4` for each value of `i`
-- **All variables**: `sum(queen2d(:_, :_))` expands to a single sum of all queen2d variables
-- **Generator sums**: `sum(for food <- food_names, do: qty(food))` expands to `qty_bread + qty_milk`
+- **Pattern sums**: `sum(queen2d[i][:_])` expands to `queen2d_1_1 + queen2d_1_2 + queen2d_1_3 + queen2d_1_4` for each value of `i`
+- **All variables**: `sum(queen2d[:_][:_])` expands to a single sum of all queen2d variables
+- **Generator sums**: `sum(for food <- food_names, do: qty[food])` expands to `qty_bread + qty_milk`
 
 #### Max Function (Future Extension)
 
-- **Pattern max**: `max(queen2d(i, :_))` expands to `max(queen2d_1_1, queen2d_1_2, queen2d_1_3, queen2d_1_4)` for each value of `i`
-- **All variables**: `max(queen2d(:_, :_))` expands to `max(queen2d_1_1, queen2d_1_2, ..., queen2d_4_4)`
+- **Pattern max**: `max(queen2d[i][:_])` expands to `max(queen2d_1_1, queen2d_1_2, queen2d_1_3, queen2d_1_4)` for each value of `i`
+- **All variables**: `max(queen2d[:_][:_])` expands to `max(queen2d_1_1, queen2d_1_2, ..., queen2d_4_4)`
 
 #### Min Function (Future Extension)
 
-- **Pattern min**: `min(queen2d(i, :_))` expands to `min(queen2d_1_1, queen2d_1_2, queen2d_1_3, queen2d_1_4)` for each value of `i`
-- **All variables**: `min(queen2d(:_, :_))` expands to `min(queen2d_1_1, queen2d_1_2, ..., queen2d_4_4)`
+- **Pattern min**: `min(queen2d[i][:_])` expands to `min(queen2d_1_1, queen2d_1_2, queen2d_1_3, queen2d_1_4)` for each value of `i`
+- **All variables**: `min(queen2d[:_][:_])` expands to `min(queen2d_1_1, queen2d_1_2, ..., queen2d_4_4)`
 
 #### Count Function (Future Extension)
 
-- **Pattern count**: `count(queen2d(i, :_))` expands to `queen2d_1_1 + queen2d_1_2 + queen2d_1_3 + queen2d_1_4` for each value of `i` (same as sum for binary variables)
-- **All variables**: `count(queen2d(:_, :_))` expands to sum of all queen2d variables
+- **Pattern count**: `count(queen2d[i][:_])` expands to `queen2d_1_1 + queen2d_1_2 + queen2d_1_3 + queen2d_1_4` for each value of `i` (same as sum for binary variables)
+- **All variables**: `count(queen2d[:_][:_])` expands to sum of all queen2d variables
 
 Note: `max()` and `min()` functions require linearization techniques for linear optimization solvers.
 
@@ -965,9 +965,9 @@ The DSL implementation MUST support:
 2. **Literal lists** in generators: `[food <- ["bread", "milk"]]`
 3. **Literal dictionaries** in generators: `[k, v <- [{"bread", 1}, {"milk", 2}]]`
 4. **Range syntax**: `[i <- 1..4, j <- 1..4]`
-5. **Pattern matching** in variable access: `queen2d(i, :_)`
-6. **Pattern functions** with wildcards: `sum(queen2d(i, :_))`, `max(queen2d(i, :_))`, `min(queen2d(i, :_))`, `count(queen2d(i, :_))`
-7. **For comprehensions** in objectives: `sum(for food <- food_names, do: qty(food))`
+5. **Pattern matching** in variable access: `queen2d[i][:_]`
+6. **Pattern functions** with wildcards: `sum(queen2d[i][:_])`, `max(queen2d[i][:_])`, `min(queen2d[i][:_])`, `count(queen2d[i][:_])`
+7. **For comprehensions** in objectives: `sum(for food <- food_names, do: qty[food])`
 8. **Variable interpolation** in constraint descriptions: `"One queen per row #{i}"`
 9. **Constraint deduplication** and naming clash warnings
 10. **Variable range validation** for constraints
@@ -996,8 +996,8 @@ If a constraint with the same name is added multiple times, an error is issued:
 problem = Problem.define do
   variables("queen2d", [i <- 1..4, j <- 1..4], :binary, "Queen position")
 
-  constraints([i <- 1..4], sum(queen2d(i, :_)) == 1, "One queen per row")
-  constraints([i <- 1..4], sum(queen2d(i, :_)) == 1, "One queen per row") # Error: duplicate constraint
+  constraints([i <- 1..4], sum(queen2d[i][:_]) == 1, "One queen per row")
+  constraints([i <- 1..4], sum(queen2d[i][:_]) == 1, "One queen per row") # Error: duplicate constraint
 end
 ```
 
@@ -1010,7 +1010,7 @@ problem = Problem.define do
   variables("queen2d", [i <- 1..4, j <- 1..4], :binary, "Queen position")
 
   # ERROR: constraint range (1..5) doesn't match variable range (1..4)
-  constraints([i <- 1..5], sum(queen2d(i, :_)) == 1, "One queen per row")
+  constraints([i <- 1..5], sum(queen2d[i][:_]) == 1, "One queen per row")
 end
 ```
 
@@ -1023,7 +1023,7 @@ problem = Problem.define do
   variables("queen2d", [i <- 1..4, j <- 1..4], :binary, "Queen position")
 
   # ERROR: queen3d variable not declared
-  constraints([i <- 1..4], sum(queen3d(i, :_)) == 1, "One queen per row")
+  constraints([i <- 1..4], sum(queen3d[i][:_]) == 1, "One queen per row")
 end
 ```
 
@@ -1050,11 +1050,11 @@ All syntax patterns in this reference must:
 
 ```elixir
 # ❌ Wrong - generator outside block
-problem = Problem.add_constraint(problem, queen2d(i, :_) == 1, "Constraint")
+problem = Problem.add_constraint(problem, queen2d[i][:_] == 1, "Constraint")
 
 # ✅ Correct - inside block
 problem = Problem.define do
-  constraints([i <- 1..4], sum(queen2d(i, :_)) == 1, "Constraint")
+  constraints([i <- 1..4], sum(queen2d[i][:_]) == 1, "Constraint")
 end
 
 # ✅ Correct - imperative with actual names
@@ -1089,10 +1089,10 @@ end
 
 ```elixir
 # ❌ Wrong - no placeholder
-constraints([i <- 1..4], sum(queen2d(i, :_)) == 1, "One queen per diagonal")
+constraints([i <- 1..4], sum(queen2d[i][:_]) == 1, "One queen per diagonal")
 
 # ✅ Correct - with placeholder
-constraints([i <- 1..4], sum(queen2d(i, :_)) == 1, "One queen per diagonal #{i}")
+constraints([i <- 1..4], sum(queen2d[i][:_]) == 1, "One queen per diagonal #{i}")
 ```
 
 ### Debugging DSL Issues
@@ -1127,7 +1127,7 @@ end
 ```elixir
 problem = Problem.new(name: "Test")
 problem = Problem.add_variables(problem, [i <- 1..3], "x", :continuous)
-problem = Problem.add_constraints(problem, [i <- 1..3], x(i) >= 0, "Constraint")
+problem = Problem.add_constraints(problem, [i <- 1..3], x[i] >= 0, "Constraint")
 ```
 
 **New syntax**:
@@ -1136,7 +1136,7 @@ problem = Problem.add_constraints(problem, [i <- 1..3], x(i) >= 0, "Constraint")
 problem = Problem.define do
   new(name: "Test", description: "Test")
   variables("x", [i <- 1..3], :continuous, "Variable")
-  constraints([i <- 1..3], x(i) >= 0, "Constraint")
+  constraints([i <- 1..3], x[i] >= 0, "Constraint")
 end
 ```
 
@@ -1156,10 +1156,10 @@ variables("q", [i <- 1..8, j <- 1..8], :binary, "q")
 
 ```elixir
 # ✅ Good - descriptive and unique
-constraints([i <- 1..8], sum(queen_position(i, :_)) == 1, "One queen per row #{i}")
+constraints([i <- 1..8], sum(queen_position[i][:_]) == 1, "One queen per row #{i}")
 
 # ❌ Poor - not unique
-constraints([i <- 1..8], sum(queen_position(i, :_)) == 1, "Row constraint")
+constraints([i <- 1..8], sum(queen_position[i][:_]) == 1, "Row constraint")
 ```
 
 #### 3. Group related variables
@@ -1176,7 +1176,7 @@ problem = Problem.define do
   variables("inventory", [product <- products, month <- months], :continuous, "Inventory level")
 
   # Constraints
-  constraints([product <- products], sum(produce(product, :_)) >= demand(product), "Demand constraint")
+  constraints([product <- products], sum(produce[product][:_]) >= demand(product), "Demand constraint")
 end
 ```
 
@@ -1227,10 +1227,10 @@ variables("assign", [task <- tasks, worker <- workers], :continuous, "Assignment
 
 ```elixir
 # ✅ Good - simple constraints
-constraints([task <- tasks], sum(assign(task, :_)) == 1, "One worker per task")
+constraints([task <- tasks], sum(assign[task][:_]) == 1, "One worker per task")
 
 # ❌ Poor - complex nested constraints (when possible)
-constraints([task <- tasks], sum(for worker <- workers, do: assign(task, worker) * skill(worker)) >= 1, "Skilled worker")
+constraints([task <- tasks], sum(for worker <- workers, do: assign[task][worker] * skill(worker)) >= 1, "Skilled worker")
 ```
 
 #### 3. Use model parameters for scalability

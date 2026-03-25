@@ -20,13 +20,13 @@ problem =
     variables("x", [i <- 1..8, j <- 1..8], :binary, "Queen position")
 
     # One queen per row: sum over j for each i
-    constraints([i <- 1..8], sum(x(i, :_)) == 1, "One queen per row")
+    constraints([i <- 1..8], sum(x[i][:_]) == 1, "One queen per row")
 
     # One queen per column: sum over i for each j
-    constraints([j <- 1..8], sum(x(:_, j)) == 1, "One queen per column")
+    constraints([j <- 1..8], sum(x[:_][j]) == 1, "One queen per column")
 
     # Maximize queens placed (will be 8 for valid N-Queens solution)
-    objective(sum(x(:_, :_)), direction: :maximize)
+    objective(sum(x[:_][:_]), direction: :maximize)
   end
 
 {:ok, solution} = Dantzig.solve(problem)
@@ -40,8 +40,8 @@ problem =
 # Instead of manually creating x11, x12, x13, x21, x22, x23, ...
 variables("x", [i <- 1..3, j <- 1..3], :binary)
 
-# Use natural patterns: x(i, :_) sums over second dimension
-constraints([i <- 1..3], sum(x(i, :_)) == 1, "Row constraint")
+# Use natural patterns: x[i][:_] sums over second dimension
+constraints([i <- 1..3], sum(x[i][:_]) == 1, "Row constraint")
 ```
 
 **Automatic Linearization**: Non-linear expressions become linear constraints automatically
@@ -73,14 +73,14 @@ end
 # Start with base problem
 base = Problem.define do
   variables("x", [i <- 1..3], :continuous)
-  constraints([i <- 1..3], x(i) >= 0)
+  constraints([i <- 1..3], x[i] >= 0)
 end
 
 # Add more constraints and variables
 problem = Problem.modify(base) do
   variables("y", [j <- 1..2], :binary)
-  constraints(x(1) + x(2) + x(3) <= 10, "Capacity")
-  objective(x(1) + 2*x(2) + 3*x(3), :maximize)
+  constraints(x[1] + x[2] + x[3] <= 10, "Capacity")
+  objective(x[1] + 2*x[2] + 3*x[3], :maximize)
 end
 ```
 
@@ -186,14 +186,14 @@ Express complex constraints naturally:
 
 ```elixir
 # Sum over specific dimensions
-constraints([i <- 1..5], sum(x(i, :_)) == 1, "One per row")
-constraints([j <- 1..5], sum(x(:_, j)) == 1, "One per column")
+constraints([i <- 1..5], sum(x[i][:_]) == 1, "One per row")
+constraints([j <- 1..5], sum(x[:_][j]) == 1, "One per column")
 
 # Complex aggregations
-constraints([i <- 1..3], sum(x(i, :_)) >= demand[i], "Demand satisfaction")
+constraints([i <- 1..3], sum(x[i][:_]) >= demand[i], "Demand satisfaction")
 
 # Multi-dimensional constraints
-constraints([i <- 1..3, j <- 1..3], x(i, j) <= capacity[i][j], "Capacity limits")
+constraints([i <- 1..3, j <- 1..3], x[i][j] <= capacity[i][j], "Capacity limits")
 ```
 
 ## 💡 Examples
@@ -234,8 +234,8 @@ require Dantzig.Problem, as: Problem
 problem = Problem.define do
   new(direction: :maximize)
   variables("x", [i <- 1..3], :continuous, min_bound: 0)
-  constraints([i <- 1..3], x(i) <= 10, "Bound")
-  objective(sum(x(:_)), direction: :maximize)
+  constraints([i <- 1..3], x[i] <= 10, "Bound")
+  objective(sum(x[:_]), direction: :maximize)
 end
 ```
 
@@ -252,8 +252,8 @@ evaluated values. Use `model_parameters:` to pass runtime data into the DSL:
 Problem.define(model_parameters: %{capacity: 100}) do
   new(direction: :minimize)
   variables("x", [i <- 1..3], :continuous, min_bound: 0)
-  constraints(sum(x(:_)) <= capacity, "Capacity")   # capacity resolved at runtime ✓
-  objective(sum(x(:_)), direction: :minimize)
+  constraints(sum(x[:_]) <= capacity, "Capacity")   # capacity resolved at runtime ✓
+  objective(sum(x[:_]), direction: :minimize)
 end
 ```
 

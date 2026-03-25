@@ -24,28 +24,28 @@ variables("qty", [food <- food_names], :continuous, "Food quantity")
 # Syntax A: Explicit for comprehension with bracket access
 constraints(
   [nutrient <- nutrient_names],
-  sum(for food <- food_names, do: qty(food) * foods[food][nutrient]) <= limit[nutrient],
+  sum(for food <- food_names, do: qty[food] * foods[food][nutrient]) <= limit[nutrient],
   "Max #{nutrient}"
 )
 
 # Syntax B: Explicit for comprehension with dot notation
 constraints(
   [nutrient <- nutrient_names],
-  sum(for food <- food_names, do: qty(food) * foods[food].nutrient) <= limit[nutrient],
+  sum(for food <- food_names, do: qty[food] * foods[food].nutrient) <= limit[nutrient],
   "Max #{nutrient}"
 )
 
 # Syntax C: Wildcard with bracket access (concise)
 constraints(
   [nutrient <- nutrient_names],
-  sum(qty(:_) * foods[:_][nutrient]) <= limit[nutrient],
+  sum(qty[:_] * foods[:_][nutrient]) <= limit[nutrient],
   "Max #{nutrient}"
 )
 
 # Syntax D: Wildcard with dot notation (concise)
 constraints(
   [nutrient <- nutrient_names],
-  sum(qty(:_) * foods[:_].nutrient) <= limit[nutrient],
+  sum(qty[:_] * foods[:_].nutrient) <= limit[nutrient],
   "Max #{nutrient}"
 )
 ```
@@ -101,17 +101,17 @@ problem = Problem.define model_parameters: %{
   # CONCISE SYNTAX using wildcards:
   constraints(
     [nutrient <- nutrient_names],
-    sum(qty(:_) * foods[:_][nutrient]) >= nutrient_limits[nutrient].min,
+    sum(qty[:_] * foods[:_][nutrient]) >= nutrient_limits[nutrient].min,
     "Min #{nutrient}"
   )
 
   constraints(
     [nutrient <- nutrient_names],
-    sum(qty(:_) * foods[:_][nutrient]) <= nutrient_limits[nutrient].max,
+    sum(qty[:_] * foods[:_][nutrient]) <= nutrient_limits[nutrient].max,
     "Max #{nutrient}"
   )
 
-  objective(sum(qty(:_) * foods[:_].cost), :minimize)
+  objective(sum(qty[:_] * foods[:_].cost), :minimize)
 end
 ```
 
@@ -130,21 +130,21 @@ customers = ["Customer #1", "NYC Office"]
 variables("ship", [s <- suppliers, c <- customers], :continuous)
 
 # DSL level (what you write):
-ship(Supplier A, Customer #1)
-ship(Supplier A, NYC Office)
+ship[Supplier A][Customer #1]
+ship[Supplier A][NYC Office]
 ship(Tokyo (Main), Customer #1)
 
 # LP level (parentheses preserved, contents sanitized):
-ship(Supplier_A,Customer_1)
-ship(Supplier_A,NYC_Office)
-ship(Tokyo_Main,Customer_1)
+ship[Supplier_A][Customer_1]
+ship[Supplier_A][NYC_Office]
+ship[Tokyo_Main][Customer_1]
 ```
 
 **Key Point:** Parentheses are **preserved** in LP format. Only spaces and special characters **within** the indices are sanitized.
 
 **Best Practice:** Use simple identifiers when possible:
-- ✅ Good: `["supplier_a", "supplier_b"]` → `ship(supplier_a,customer_1)`
-- ⚠️ Works: `["Supplier A", "Tokyo (Main)"]` → `ship(Supplier_A,Tokyo_Main)` (contents sanitized)
+- ✅ Good: `["supplier_a", "supplier_b"]` → `ship[supplier_a][customer_1]`
+- ⚠️ Works: `["Supplier A", "Tokyo (Main)"]` → `ship[Supplier_A][Tokyo_Main]` (contents sanitized)
 - ❌ Avoid: Excessively long names or extreme special characters
 
 ### Map Keys in Nested Access
@@ -168,7 +168,7 @@ nutrient_names = ["total calories", "protein (g)", "fat %"]
 # This works correctly:
 constraints(
   [nutrient <- nutrient_names],
-  sum(qty(:_) * foods[:_][nutrient]) >= min_nutrient[nutrient],
+  sum(qty[:_] * foods[:_][nutrient]) >= min_nutrient[nutrient],
   "Min #{nutrient}"
 )
 
@@ -200,7 +200,7 @@ nutrient_names = ["total calories", "protein (g)", "fat %"]
 foods = %{"bread" => %{"total calories": 100, "protein (g)": 3}}
 
 # Works perfectly:
-sum(qty(:_) * foods[:_][nutrient])  # ✅
+sum(qty[:_] * foods[:_][nutrient])  # ✅
 ```
 
 ### Dot Notation (Syntactic Sugar - Simple Keys Only)
@@ -219,7 +219,7 @@ nutrient_names = [:calories, :protein, :fat]  # Atoms, no spaces
 foods = %{bread: %{calories: 100, protein: 3}}
 
 # Clean and idiomatic:
-sum(qty(:_) * foods[:_].nutrient)  # ✅
+sum(qty[:_] * foods[:_].nutrient)  # ✅
 ```
 
 **Avoid dot notation when:**
@@ -265,7 +265,7 @@ The LP sanitization process:
 - **Generator Scope:** Generator variables (like `nutrient`) are evaluated before map access
 - **Type Conversion:** String keys are automatically converted to atom keys when accessing maps
 - **Validation:** The DSL validates that all accessed keys exist in the model parameters
-- **DSL ≡ LP Format:** Both use parentheses `ship(A,B)`, only contents are sanitized `ship(A_sanitized,B_sanitized)`
+- **DSL ≡ LP Format:** Both use parentheses `ship[A][B]`, only contents are sanitized `ship[A_sanitized][B_sanitized]`
 - **Parentheses Preserved:** Maintains traceability from DSL to LP output for debugging
 
 ## Related Documentation

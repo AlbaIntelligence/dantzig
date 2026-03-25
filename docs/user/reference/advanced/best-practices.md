@@ -18,10 +18,10 @@ variables("q", [i <- 1..8, j <- 1..8], :binary, "q")
 
 ```elixir
 # ✅ Good - descriptive and unique
-constraints([i <- 1..8], sum(queen_position(i, :_)) == 1, "One queen per row #{i}")
+constraints([i <- 1..8], sum(queen_position[i][:_]) == 1, "One queen per row #{i}")
 
 # ❌ Poor - not unique
-constraints([i <- 1..8], sum(queen_position(i, :_)) == 1, "Row constraint")
+constraints([i <- 1..8], sum(queen_position[i][:_]) == 1, "Row constraint")
 ```
 
 ### 3. Group related variables
@@ -38,7 +38,7 @@ problem = Problem.define do
   variables("inventory", [product <- products, month <- months], :continuous, "Inventory level")
 
   # Constraints
-  constraints([product <- products], sum(produce(product, :_)) >= demand(product), "Demand constraint")
+  constraints([product <- products], sum(produce[product][:_]) >= demand[product], "Demand constraint")
 end
 ```
 
@@ -89,10 +89,10 @@ variables("assign", [task <- tasks, worker <- workers], :continuous, "Assignment
 
 ```elixir
 # ✅ Good - simple constraints
-constraints([task <- tasks], sum(assign(task, :_)) == 1, "One worker per task")
+constraints([task <- tasks], sum(assign[task][:_]) == 1, "One worker per task")
 
 # ❌ Poor - complex nested constraints (when possible)
-constraints([task <- tasks], sum(for worker <- workers, do: assign(task, worker) * skill(worker)) >= 1, "Skilled worker")
+constraints([task <- tasks], sum(for worker <- workers, do: assign[task][worker] * skill(worker)) >= 1, "Skilled worker")
 ```
 
 ### 3. Use model parameters for scalability

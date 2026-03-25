@@ -53,7 +53,7 @@ Generator variables create bindings available during expression evaluation:
 
 ```elixir
 variables("x", [i <- 1..n], :continuous)
-constraints([i <- 1..n], x(i) <= limit[i], "Bound #{i}")
+constraints([i <- 1..n], x[i] <= limit[i], "Bound #{i}")
 ```
 
 **Binding Scope:**
@@ -85,10 +85,10 @@ constraints(x > 0, "Greater than")
 
 ```elixir
 # Sum with wildcards
-constraints(sum(x(:_)) <= 100, "Total")
+constraints(sum(x[:_]) <= 100, "Total")
 
 # Sum with generators
-constraints([i <- 1..n], sum(x(i, :_) for i <- 1..n) <= limit, "Row sum")
+constraints([i <- 1..n], sum(x[i][:_] for i <- 1..n) <= limit, "Row sum")
 ```
 
 ### Non-Linear Functions (Auto-Linearized)

@@ -44,14 +44,14 @@ Best practices and patterns for building robust optimization models in Dantzig.
 
 ```elixir
 variables("production", [product <- products, time <- 1..T], :continuous, min_bound: 0)
-constraints([time <- 1..T], sum(production(product, time) for product <- products) <= capacity[time])
+constraints([time <- 1..T], sum(production[product][time] for product <- products) <= capacity[time])
 ```
 
 ### Assignment Problems
 
 ```elixir
 variables("assign", [worker <- workers, task <- tasks], :binary)
-constraints([task <- tasks], sum(assign(worker, task) for worker <- workers) == 1)
+constraints([task <- tasks], sum(assign[worker][task] for worker <- workers) == 1)
 ```
 
 ### Network Flow
@@ -59,7 +59,7 @@ constraints([task <- tasks], sum(assign(worker, task) for worker <- workers) == 
 ```elixir
 variables("flow", [from <- nodes, to <- nodes], :continuous, min_bound: 0)
 constraints([node <- nodes],
-  sum(flow(from, node) for from <- nodes) == sum(flow(node, to) for to <- nodes))
+  sum(flow[from][node] for from <- nodes) == sum(flow[node][to] for to <- nodes))
 ```
 
 ## Related Documentation

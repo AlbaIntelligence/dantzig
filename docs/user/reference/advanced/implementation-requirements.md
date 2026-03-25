@@ -14,11 +14,11 @@ This document lists the implementation requirements that the DSL implementation 
 
 4. **Range syntax**: `[i <- 1..4, j <- 1..4]`
 
-5. **Pattern matching** in variable access: `queen2d(i, :_)`
+5. **Pattern matching** in variable access: `queen2d[i][:_]`
 
-6. **Pattern functions** with wildcards: `sum(queen2d(i, :_))`, `max(queen2d(i, :_))`, `min(queen2d(i, :_))`, `count(queen2d(i, :_))`
+6. **Pattern functions** with wildcards: `sum(queen2d[i][:_])`, `max(queen2d[i][:_])`, `min(queen2d[i][:_])`, `count(queen2d[i][:_])`
 
-7. **For comprehensions** in objectives: `sum(for food <- food_names, do: qty(food))`
+7. **For comprehensions** in objectives: `sum(for food <- food_names, do: qty[food])`
 
 8. **Variable interpolation** in constraint descriptions: `"One queen per row #{i}"`
 

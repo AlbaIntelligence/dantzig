@@ -23,8 +23,8 @@ objective(expression, :direction)
 **Examples:**
 
 ```elixir
-objective(sum(x(:_)), :maximize)
-objective(sum(for food <- food_names, do: qty(food)), :minimize)
+objective(sum(x[:_]), :maximize)
+objective(sum(for food <- food_names, do: qty[food]), :minimize)
 ```
 
 ## `Problem.set_objective/3`

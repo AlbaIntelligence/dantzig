@@ -11,9 +11,9 @@ The `:_` symbol means "iterate through all values" for that dimension.
 **Syntax:**
 
 ```elixir
-var_name(index1, :_, index3)    # Wildcard in second position
-var_name(:_, index2)             # Wildcard in first position
-var_name(:_, :_)                 # All variables
+var_name[index1][:_][index3]    # Wildcard in second position
+var_name[:_][index2]             # Wildcard in first position
+var_name[:_][:_]                 # All variables
 ```
 
 **Rules:**
@@ -25,9 +25,9 @@ var_name(:_, :_)                 # All variables
 **Examples:**
 
 ```elixir
-queen2d(i, :_)      # All j values for fixed i
-queen2d(:_, j)      # All i values for fixed j
-queen2d(:_, :_)     # All (i, j) combinations
+queen2d[i][:_]      # All j values for fixed i
+queen2d[:_][j]      # All i values for fixed j
+queen2d[:_][:_]     # All (i, j) combinations
 ```
 
 ## Wildcard in Sum Functions
@@ -35,15 +35,15 @@ queen2d(:_, :_)     # All (i, j) combinations
 **Syntax:**
 
 ```elixir
-sum(var_name(i, :_))      # Sum over j for each i
-sum(var_name(:_, :_))     # Sum all variables
-sum(qty(:_) * cost[:_])   # With nested map access (see Constants)
+sum(var_name[i][:_])      # Sum over j for each i
+sum(var_name[:_][:_])     # Sum all variables
+sum(qty[:_] * cost[:_])   # With nested map access (see Constants)
 ```
 
 **Rules:**
 
 - ✅ `sum()` expands wildcards to sum all matching variables
-- ✅ Can combine with generator constraints: `constraints([i <- 1..4], sum(x(i, :_)) == 1, "...")`
+- ✅ Can combine with generator constraints: `constraints([i <- 1..4], sum(x[i][:_]) == 1, "...")`
 
 ## Related Documentation
 

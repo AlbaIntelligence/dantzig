@@ -36,7 +36,7 @@ defmodule Dantzig.DSL.SimpleGeneratorTest do
       Problem.define(model_parameters: params) do
         new(name: "Simple Test", description: "Test generator with objective")
         variables("qty", [food <- food_names], :continuous, "Amount of food")
-        objective(sum(for food <- food_names, do: qty(food)), :minimize)
+        objective(sum(for food <- food_names, do: qty[food]), :minimize)
       end
 
     assert problem.direction == :minimize
@@ -64,13 +64,13 @@ problem2d =
     variables("queen2d", [i <- 1..4, j <- 1..4], :binary, "Queen position")
 
     # Add constraints: one queen per row
-    constraints([i <- 1..4], sum(queen2d(i, :_)) == 1, "One queen per row")
+    constraints([i <- 1..4], sum(queen2d[i][:_]) == 1, "One queen per row")
 
     # Add constraints: one queen per column
-    constraints([j <- 1..4], sum(queen2d(:_, j)) == 1, "One queen per column")
+    constraints([j <- 1..4], sum(queen2d[:_][j]) == 1, "One queen per column")
 
     # Set objective (squeeze as many queens as possible)
-    objective(sum(queen2d(:_, :_)), :maximize)
+    objective(sum(queen2d[:_][:_]), :maximize)
   end
 ```
 

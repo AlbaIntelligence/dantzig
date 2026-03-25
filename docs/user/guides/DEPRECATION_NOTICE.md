@@ -76,8 +76,8 @@ The preferred style for statically-shaped problems:
 problem = Problem.define do
   new(direction: :maximize)
   variables("x", [i <- 1..3], :continuous, min_bound: 0)
-  constraints([i <- 1..3], x(i) <= 10, "Bound #{i}")
-  objective(sum(x(:_)), direction: :maximize)
+  constraints([i <- 1..3], x[i] <= 10, "Bound #{i}")
+  objective(sum(x[:_]), direction: :maximize)
 end
 ```
 
@@ -94,6 +94,41 @@ problem = Problem.increment_objective(problem, x)
 ```
 
 See the README section **"Choosing an API Style"** for a full comparison of when to use each.
+
+---
+
+### ❌ Deprecated: Parenthesis notation for variable access
+
+The old parenthesis form `var_name(i)`, `var_name(i, j)`, `var_name(i, :_)` is **deprecated** in
+favour of the bracket notation introduced to align with Elixir's standard `Access` protocol and LP
+format conventions (square brackets appear in LP files; parentheses do not).
+
+**❌ DEPRECATED:**
+
+```elixir
+constraints([i <- 1..8], sum(queen[i, :_]) == 1, "Row")    # comma form
+constraints([i <- 1..8], sum(queen(i, :_)) == 1, "Row")    # parenthesis form
+objective(sum(assign(task, :_)), :maximize)
+```
+
+**✅ USE INSTEAD — bracket notation:**
+
+```elixir
+constraints([i <- 1..8], sum(queen[i][:_]) == 1, "Row")
+objective(sum(assign[task][:_]), :maximize)
+```
+
+The parser **silently accepts both forms for backward compatibility**, but all new code should use
+bracket notation. The parenthesis form may emit a compile-time warning in a future version and will
+be removed in v1.0.0.
+
+| Old form | New form |
+|---|---|
+| `x(i)` | `x[i]` |
+| `x(i, j)` | `x[i][j]` |
+| `x(i, :_)` | `x[i][:_]` |
+| `x(:_, j)` | `x[:_][j]` |
+| `x(:_, :_)` | `x[:_][:_]` |
 
 ---
 

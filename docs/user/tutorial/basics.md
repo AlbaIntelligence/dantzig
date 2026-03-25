@@ -89,13 +89,13 @@ defmodule GeneratorExample do
       variables("x", [i <- 1..3, j <- 1..3], :binary, "Binary variables")
 
       # Constraints: exactly one variable per row
-      constraints([i <- 1..3], sum(x(i, :_)) == 1, "One per row")
+      constraints([i <- 1..3], sum(x[i][:_]) == 1, "One per row")
 
       # Constraints: exactly one variable per column
-      constraints([j <- 1..3], sum(x(:_, j)) == 1, "One per column")
+      constraints([j <- 1..3], sum(x[:_][j]) == 1, "One per column")
 
       # Objective: maximize total sum
-      objective(sum(x(:_, :_)), direction: :maximize)
+      objective(sum(x[:_][:_]), direction: :maximize)
     end
 
     {:ok, solution} = Dantzig.solve(problem)

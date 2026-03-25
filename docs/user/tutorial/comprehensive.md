@@ -134,10 +134,10 @@ For N-dimensional problems:
 
 ```elixir
 # One constraint per index
-constraints([i <- 1..5], sum(x(i, :_)) <= capacity, "Row capacity")
+constraints([i <- 1..5], sum(x[i][:_]) <= capacity, "Row capacity")
 
 # One constraint per combination
-constraints([i <- 1..3, j <- 1..3], x(i, j) <= demand[i], "Demand limit")
+constraints([i <- 1..3, j <- 1..3], x[i][j] <= demand[i], "Demand limit")
 ```
 
 ### Advanced Constraint Patterns
@@ -146,7 +146,7 @@ constraints([i <- 1..3, j <- 1..3], x(i, j) <= demand[i], "Demand limit")
 # Complex constraints with multiple indices
 constraints(
   [i <- 1..n, j <- 1..m],
-  sum(for k <- 1..k, do: x(i, k)) >= demand[i][j],
+  sum(for k <- 1..k, do: x[i][k]) >= demand[i][j],
   "Complex demand constraint"
 )
 ```
@@ -168,7 +168,7 @@ objective(total_cost, direction: :minimize)
 ```elixir
 # Multi-dimensional objective
 objective(
-  sum(for i <- 1..n, j <- 1..m, do: profit[i][j] * x(i, j)),
+  sum(for i <- 1..n, j <- 1..m, do: profit[i][j] * x[i][j]),
   direction: :maximize
 )
 ```
@@ -201,10 +201,10 @@ variables("y", [i <- 1..2, j <- 1..3, k <- 1..4], :continuous)
 
 ```elixir
 # Access specific indices
-x(1, 2)        # x[1,2]
-x(i, :_)       # sum over second index for fixed first index
-x(:_, j)       # sum over first index for fixed second index
-x(:_, :_)      # sum over all indices
+x[1][2]        # x[1,2]
+x[i][:_]       # sum over second index for fixed first index
+x[:_][j]       # sum over first index for fixed second index
+x[:_][:_]      # sum over all indices
 ```
 
 ## ⚡ Advanced Features
@@ -254,12 +254,12 @@ problem =
     variables("select", [item <- items], :binary, "Item selection")
 
     constraints(
-      sum(for item <- items, do: select(item) * weights[item]) <= capacity,
+      sum(for item <- items, do: select[item] * weights[item]) <= capacity,
       "Weight capacity"
     )
 
     objective(
-      sum(for item <- items, do: select(item) * values[item]),
+      sum(for item <- items, do: select[item] * values[item]),
       direction: :maximize
     )
   end
@@ -283,13 +283,13 @@ problem =
     variables("assign", [w <- workers, t <- tasks], :binary, "Assignment")
 
     # Each worker assigned to exactly one task
-    constraints([w <- workers], sum(assign(w, :_)) == 1, "Worker constraint")
+    constraints([w <- workers], sum(assign[w][:_]) == 1, "Worker constraint")
 
     # Each task assigned to exactly one worker
-    constraints([t <- tasks], sum(assign(:_, t)) == 1, "Task constraint")
+    constraints([t <- tasks], sum(assign[:_][t]) == 1, "Task constraint")
 
     objective(
-      sum(for w <- workers, t <- tasks, do: assign(w, t) * costs[w][t]),
+      sum(for w <- workers, t <- tasks, do: assign[w][t] * costs[w][t]),
       direction: :minimize
     )
   end
@@ -312,11 +312,11 @@ problem =
     variables("inventory", [t <- periods], :continuous, min_bound: 0)
 
     # Inventory balance constraints
-    constraints([t <- [1]], produce(t) - demand[1] == -initial_inventory)
-    constraints([t <- 2..4], inventory(t-1) + produce(t) - demand[t] == 0)
+    constraints([t <- [1]], produce[t] - demand[1] == -initial_inventory)
+    constraints([t <- 2..4], inventory[t-1] + produce[t] - demand[t] == 0)
 
     objective(
-      sum(for t <- periods, do: produce(t) * production_cost[t] + inventory(t) * holding_cost),
+      sum(for t <- periods, do: produce[t] * production_cost[t] + inventory[t] * holding_cost),
       direction: :minimize
     )
   end
@@ -339,8 +339,8 @@ variables("x", :binary, description: "Include item in solution")
 
 ```elixir
 # Group related constraints
-constraints([i <- 1..n], sum(x(i, :_)) == 1, "Row coverage")
-constraints([j <- 1..m], sum(x(:_, j)) == 1, "Column coverage")
+constraints([i <- 1..n], sum(x[i][:_]) == 1, "Row coverage")
+constraints([j <- 1..m], sum(x[:_][j]) == 1, "Column coverage")
 ```
 
 ### 3. Variable Bounds
@@ -379,7 +379,7 @@ constraints(x <= 10)         # Then use
 ```elixir
 # Problem: sum() expressions in simple constraints
 # Solution: Use pattern-based constraints
-constraints([i <- 1..n], sum(x(i, :_)) <= capacity)
+constraints([i <- 1..n], sum(x[i][:_]) <= capacity)
 ```
 
 **3. Type Mismatches**

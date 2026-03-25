@@ -26,8 +26,8 @@ If a constraint with the same name is added multiple times, an error is issued:
 problem = Problem.define do
   variables("queen2d", [i <- 1..4, j <- 1..4], :binary, "Queen position")
 
-  constraints([i <- 1..4], sum(queen2d(i, :_)) == 1, "One queen per row")
-  constraints([i <- 1..4], sum(queen2d(i, :_)) == 1, "One queen per row") # Error: duplicate constraint
+  constraints([i <- 1..4], sum(queen2d[i][:_]) == 1, "One queen per row")
+  constraints([i <- 1..4], sum(queen2d[i][:_]) == 1, "One queen per row") # Error: duplicate constraint
 end
 ```
 
@@ -40,7 +40,7 @@ problem = Problem.define do
   variables("queen2d", [i <- 1..4, j <- 1..4], :binary, "Queen position")
 
   # ERROR: constraint range (1..5) doesn't match variable range (1..4)
-  constraints([i <- 1..5], sum(queen2d(i, :_)) == 1, "One queen per row")
+  constraints([i <- 1..5], sum(queen2d[i][:_]) == 1, "One queen per row")
 end
 ```
 
@@ -53,7 +53,7 @@ problem = Problem.define do
   variables("queen2d", [i <- 1..4, j <- 1..4], :binary, "Queen position")
 
   # ERROR: queen3d variable not declared
-  constraints([i <- 1..4], sum(queen3d(i, :_)) == 1, "One queen per row")
+  constraints([i <- 1..4], sum(queen3d[i][:_]) == 1, "One queen per row")
 end
 ```
 
@@ -69,11 +69,11 @@ end
 
 ```elixir
 # ❌ Wrong - generator outside block
-problem = Problem.add_constraint(problem, queen2d(i, :_) == 1, "Constraint")
+problem = Problem.add_constraint(problem, queen2d[i][:_] == 1, "Constraint")
 
 # ✅ Correct - inside block
 problem = Problem.define do
-  constraints([i <- 1..4], sum(queen2d(i, :_)) == 1, "Constraint")
+  constraints([i <- 1..4], sum(queen2d[i][:_]) == 1, "Constraint")
 end
 
 # ✅ Correct - imperative with actual names
@@ -108,10 +108,10 @@ end
 
 ```elixir
 # ❌ Wrong - no placeholder
-constraints([i <- 1..4], sum(queen2d(i, :_)) == 1, "One queen per diagonal")
+constraints([i <- 1..4], sum(queen2d[i][:_]) == 1, "One queen per diagonal")
 
 # ✅ Correct - with placeholder
-constraints([i <- 1..4], sum(queen2d(i, :_)) == 1, "One queen per diagonal #{i}")
+constraints([i <- 1..4], sum(queen2d[i][:_]) == 1, "One queen per diagonal #{i}")
 ```
 
 ## Debugging DSL Issues
@@ -146,7 +146,7 @@ end
 ```elixir
 problem = Problem.new(name: "Test")
 problem = Problem.add_variables(problem, [i <- 1..3], "x", :continuous)
-problem = Problem.add_constraints(problem, [i <- 1..3], x(i) >= 0, "Constraint")
+problem = Problem.add_constraints(problem, [i <- 1..3], x[i] >= 0, "Constraint")
 ```
 
 **New syntax**:
@@ -155,7 +155,7 @@ problem = Problem.add_constraints(problem, [i <- 1..3], x(i) >= 0, "Constraint")
 problem = Problem.define do
   new(name: "Test", description: "Test")
   variables("x", [i <- 1..3], :continuous, "Variable")
-  constraints([i <- 1..3], x(i) >= 0, "Constraint")
+  constraints([i <- 1..3], x[i] >= 0, "Constraint")
 end
 ```
 

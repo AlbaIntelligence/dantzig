@@ -73,18 +73,18 @@ problem = Problem.define do
 
   # Constraints: capacity limits by time period
   constraints([time <- 1..4],
-    sum(production(product, time) for product <- ["A", "B"]) <= 100,
+    sum(production[product][time] for product <- ["A", "B"]) <= 100,
     "Capacity for period #{time}"
   )
 
   # Constraints: demand minimums by product
   constraints([product <- ["A", "B"]],
-    sum(production(product, time) for time <- 1..4) >= 50,
+    sum(production[product][time] for time <- 1..4) >= 50,
     "Demand for #{product}"
   )
 
   # Objective: maximize total production
-  objective(sum(production(product, time) for product <- ["A", "B"], time <- 1..4), :maximize)
+  objective(sum(production[product][time] for product <- ["A", "B"], time <- 1..4), :maximize)
 end
 ```
 
@@ -140,13 +140,13 @@ end
 
 # Add capacity constraints
 with_capacity = Problem.modify(base_problem) do
-  constraints([i <- 1..3], production(i) <= 50, "Capacity #{i}")
+  constraints([i <- 1..3], production[i] <= 50, "Capacity #{i}")
 end
 
 # Add quality constraints
 final_problem = Problem.modify(with_capacity) do
-  constraints(production(1) + production(2) + production(3) <= 100, "Total capacity")
-  objective(10*production(1) + 15*production(2) + 8*production(3), :maximize)
+  constraints(production[1] + production[2] + production[3] <= 100, "Total capacity")
+  objective(10*production[1] + 15*production[2] + 8*production[3], :maximize)
 end
 
 # Solve the incrementally built problem
@@ -193,9 +193,9 @@ problem = Problem.define do
   variables("use_machine", [i <- 1..5], :binary)
 
   # Constraints mixing types
-  constraints(num_workers <= 10 + 2*sum(use_machine(i) for i <- 1..5), "Workforce")
+  constraints(num_workers <= 10 + 2*sum(use_machine[i] for i <- 1..5), "Workforce")
 
-  objective(100*num_workers + sum(50*use_machine(i) for i <- 1..5), :minimize)
+  objective(100*num_workers + sum(50*use_machine[i] for i <- 1..5), :minimize)
 end
 ```
 

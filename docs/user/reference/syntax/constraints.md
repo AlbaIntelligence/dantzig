@@ -14,15 +14,15 @@ constraints(expression, "description")
 
 - ✅ `==`, `<=`, `>=`, `<`, `>`
 - ✅ Arithmetic: `+`, `-`, `*`, `/`
-- ✅ Variable access: `var_name(index1, index2, ...)`
-- ✅ Wildcards: `var_name(:_, index)` (see [Wildcards Syntax](wildcards.md))
+- ✅ Variable access: `var_name[index1][index2]` (bracket notation)
+- ✅ Wildcards: `var_name[:_][index]` (see [Wildcards Syntax](wildcards.md))
 
 **Examples:**
 
 ```elixir
 constraints(x >= 0, "Non-negative")
 constraints(queen2d_1_1 + queen2d_1_2 == 1, "Row 1")
-constraints(sum(queen2d(:_, :_)) == 4, "Total queens")
+constraints(sum(queen2d[:_][:_]) == 4, "Total queens")
 ```
 
 ## Generator Constraints (`constraints/3`)
@@ -40,8 +40,8 @@ constraints([generators], expression, "description")
 **Examples:**
 
 ```elixir
-constraints([i <- 1..4], sum(queen2d(i, :_)) == 1, "Row #{i}")
-constraints([i <- 1..2, k <- 1..3], sum(queen3d(i, :_, k)) == 1, "Axis #{i},#{k}")
+constraints([i <- 1..4], sum(queen2d[i][:_]) == 1, "Row #{i}")
+constraints([i <- 1..2, k <- 1..3], sum(queen3d[i][:_][k]) == 1, "Axis #{i},#{k}")
 ```
 
 **Rules:**
@@ -59,7 +59,7 @@ Problem.add_constraint(problem, expression, "description")
 
 **Rules:**
 
-- ❌ **No generators allowed** - must use actual variable names (e.g., `queen2d_1_1`, not `queen2d(1, :_)`)
+- ❌ **No generators allowed** - must use actual variable names (e.g., `queen2d_1_1`, not `queen2d[1][:_]`)
 - ✅ Use `Problem.modify` block if generators needed
 
 ## Operators
