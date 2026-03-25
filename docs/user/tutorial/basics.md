@@ -122,37 +122,38 @@ constraint = Dantzig.Constraint.new_linear(2*x + 3*y <= 20, name: "capacity")
 
 **Use the new DSL syntax instead** (shown in examples above).
 
-## 4) Implicit problem style (macros)
+## 4) Building problems with many variables
 
-Dantzig supports an implicit style to reduce boilerplate when creating many variables and constraints. Inside the macro block, `v!` declares a variable and binds its monomial, while `constraint!` inserts a new constraint, and `increment_objective!`/`decrement_objective!` adjust the objective.
+When creating many variables and constraints, use `Problem.define` with individual `variables/3` calls. Each call can carry its own description and bounds:
 
 ```elixir
 require Dantzig.Problem, as: Problem
-use Dantzig.Polynomial.Operators
 
 total_width = 300.0
 
-Problem.with_implicit_problem problem do
-  v!(left_margin, min_bound: 0.0)
-  v!(center, min_bound: 0.0)
-  v!(right_margin, min_bound: 0.0)
+problem = Problem.define do
+  new(name: "Layout", direction: :maximize)
 
-  v!(canvas1, min_bound: 0.0)
-  v!(canvas2, min_bound: 0.0)
-  v!(canvas3, min_bound: 0.0)
+  variables("left_margin",  :continuous, "Left margin",  min_bound: 0.0)
+  variables("center",       :continuous, "Center width", min_bound: 0.0)
+  variables("right_margin", :continuous, "Right margin", min_bound: 0.0)
 
-  constraint!(canvas1 + canvas2 + canvas3 == center)
-  constraint!(canvas1 == 2*canvas2)
-  constraint!(canvas1 == 2*canvas3)
+  variables("canvas1", :continuous, "Canvas 1", min_bound: 0.0)
+  variables("canvas2", :continuous, "Canvas 2", min_bound: 0.0)
+  variables("canvas3", :continuous, "Canvas 3", min_bound: 0.0)
 
-  constraint!(left_margin + center + right_margin == total_width)
-  increment_objective!(center - left_margin - right_margin)
+  constraints(canvas1 + canvas2 + canvas3 == center, "canvases fill center")
+  constraints(canvas1 == 2 * canvas2, "canvas1 twice canvas2")
+  constraints(canvas1 == 2 * canvas3, "canvas1 twice canvas3")
+  constraints(left_margin + center + right_margin == total_width, "total width")
+
+  objective(center - left_margin - right_margin, :maximize)
 end
 ```
 
-This macro-based style expands to the explicit `Problem.new_variable/3`, `Problem.add_constraint/3`, and objective helpers at compile time.
+> **Note:** The `variables/3` DSL call (single variable, no generator list) does **not** support bare-atom variable access inside the same `define` block — use the name string form `"canvas1"` for string-keyed variables, or use `variables/4` with a generator list for index-based families.
 
-## 4) Evaluating expressions at the solution
+## 5) Evaluating expressions at the solution
 
 ```elixir
 value = Dantzig.Solution.evaluate(solution, 2*x + y)
@@ -165,7 +166,7 @@ If an expression contains free variables, the reduced polynomial is returned ins
 
 `Solution.evaluate/2` substitutes variable values into any polynomial. If the result has no free variables, a number is returned even for quadratic expressions.
 
-## 5) Debugging: dump the model
+## 6) Debugging: dump the model
 
 ```elixir
 Dantzig.dump_problem_to_file(problem, "model.lp")
@@ -177,7 +178,7 @@ Open the file to inspect the exact LP/QP sent to HiGHS.
 
 You can examine the serialized LP to verify bounds, variable names, and normalized constraints. Consider logging with `IO.iodata_to_binary/1` on `Dantzig.HiGHS.to_lp_iodata(problem)` for quick inspection.
 
-## 6) Tips and pitfalls
+## 7) Tips and pitfalls
 
 - Ensure the HiGHS binary path is correct (see Configuration below)
 - Keep objective/constraints at degree ≤ 2
@@ -186,7 +187,7 @@ You can examine the serialized LP to verify bounds, variable names, and normaliz
 - Keep variable bounds numeric; if you pass a polynomial, it will be coerced using `Polynomial.to_number!/1`
 - QP objective uses `[ ... ] / 2` convention; you may see doubled quadratic terms inside the brackets
 
-## 7) Configuration
+## 8) Configuration
 
 ```elixir
 # config/runtime.exs or config/dev.exs
@@ -196,21 +197,21 @@ config :dantzig, :highs_version, "1.9.0"
 
 With the default path (`priv/bin/highs`), see downloader utilities in `Dantzig.HiGHSDownloader`.
 
-## 8) Next steps
+## 9) Next steps
 
 - Explore `Dantzig.Constraint.solve_for_variable/2` for symbolic insights
 - Enforce integrality (future): list integer variables in the LP `General/Binary` sections
 - Add domain constraints (reserved `:in` operator)
 - Integrate with another solver by implementing a module analogous to `Dantzig.HiGHS`
 
-## 9) Troubleshooting
+## 10) Troubleshooting
 
 - "Couldn't generate a solution": open the printed solver output and `model.lp` to diagnose
 - Degree errors: simplify expressions or substitute constants to keep degree ≤ 2
 - Missing variable errors: ensure variables are created on `Problem` before being referenced
 - For intermittent network errors during binary download, set `:highs_binary_path` to a local `highs`
 
-## 10) Advanced example: N-Queens (step-by-step)
+## 11) Advanced example: N-Queens (step-by-step)
 
 Place N queens on an N×N chessboard so no two attack each other. We use binary-like variables x[i,j] ∈ {0,1} (modeled as 0–1 bounds) with:
 
